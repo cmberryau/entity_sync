@@ -1,14 +1,20 @@
 import 'package:entity_sync/entity_sync.dart';
+import 'package:entity_sync/src/sync.dart';
 import 'package:test/test.dart';
 
-class TestEntity with SerializableMixin {
+/// An entity which is serializable via SerializableMixin
+class TestEntity with SerializableMixin, SyncableMixin {
   int id;
   String name;
   DateTime created;
 
+  /// The key of the entity
+  final syncableKey = IntegerField('id');
+
   TestEntity(this.id, this.name, this.created);
 }
 
+/// A serializer for TestEntity
 class TestEntitySerializer extends Serializer {
   final fields = <SerializableField>[
     IntegerField('id'),
