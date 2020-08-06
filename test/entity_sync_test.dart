@@ -7,21 +7,6 @@ class TestEntity with SerializableMixin{
   DateTime created;
 
   TestEntity(this.id, this.name, this.created);
-
-  @override
-  Future getFieldValue(String fieldName) async {
-    if (fieldName == 'id') {
-      return id;
-    }
-
-    if (fieldName == 'name') {
-      return name;
-    }
-
-    if (fieldName == 'created') {
-      return created;
-    }
-  }
 }
 
 class TestEntitySerializer extends Serializer {
@@ -39,33 +24,32 @@ class TestEntitySerializer extends Serializer {
     return fields;
   }
 
-  @override
-  Future<bool> isFieldValid(String fieldName, value) async {
-    if(fieldName == 'id') {
-      return isIdValid(value);
+  int validateId(int value) {
+    if (value < 0) {
+      throw ValidationException('id must be positive value');
     }
 
-    if(fieldName == 'name') {
-      return isNameValid(value);
+    return value;
+  }
+
+  String validateName(String value) {
+    if (value == null) {
+      throw ValidationException('name must not be null');
     }
 
-    if(fieldName == 'created') {
-      return isCreatedValid(value);
+    if (value.isEmpty) {
+      throw ValidationException('name must not be empty');
     }
 
-    throw ArgumentError('No matching field found');
+    return value;
   }
 
-  Future<bool> isIdValid(int value) async {
-    return value > -1;
-  }
+  DateTime validateCreated(DateTime value) {
+    if (value == null) {
+      throw ValidationException('created must not be null');
+    }
 
-  Future<bool> isNameValid(String value) async {
-    return value != null && value.isNotEmpty;
-  }
-
-  Future<bool> isCreatedValid(DateTime value) async {
-    return value != null;
+    return value;
   }
 }
 
@@ -75,11 +59,33 @@ void main() {
 
     });
 
-    test('Test TestEntitySerializer.isValid method', () async {
+    test('Test TestEntitySerializer.isValid method with valid entity', () async {
       final entity = TestEntity(0, 'TestName', DateTime.now());
       final serializer = TestEntitySerializer(instance: entity);
 
       expect(await serializer.isValid(), isTrue);
+    });
+
+    test('Test TestEntitySerializer.isValid method with invalid entity', () async {
+      var entity = TestEntity(0, null, DateTime.now());
+      var serializer = TestEntitySerializer(instance: entity);
+
+      expect(await serializer.isValid(), isFalse);
+
+      entity = TestEntity(0, '', DateTime.now());
+      serializer = TestEntitySerializer(instance: entity);
+
+      expect(await serializer.isValid(), isFalse);
+
+      entity = TestEntity(-1, 'TestName', DateTime.now());
+      serializer = TestEntitySerializer(instance: entity);
+
+      expect(await serializer.isValid(), isFalse);
+
+      entity = TestEntity(0, 'TestName', null);
+      serializer = TestEntitySerializer(instance: entity);
+
+      expect(await serializer.isValid(), isFalse);
     });
   });
 }

@@ -1,3 +1,6 @@
+import 'dart:mirrors';
+
+
 /// Represents a syncable endpoint
 abstract class Endpoint {
 
@@ -27,12 +30,14 @@ class SerializableField {
 
 /// Added to a class to support serialization
 abstract class SerializableMixin {
-  // TODO: replace getFieldValue with reflection
-  Future<dynamic> getFieldValue(String fieldName);
+  dynamic getFieldValue(String fieldName) {
+    return reflect(this).getField(Symbol(fieldName)).reflectee;
+  }
 }
 
-mixin ValidationException implements Exception {
-
+class ValidationException implements Exception {
+  String cause;
+  ValidationException(this.cause);
 }
 
 /// Performs serialization
@@ -58,7 +63,7 @@ abstract class Serializer {
       dynamic value;
 
       if (instance != null) {
-        value = await instance.getFieldValue(field.name);
+        value = instance.getFieldValue(field.name);
       } else if (data != null) {
         value = data[field.name];
       } else {
@@ -66,7 +71,7 @@ abstract class Serializer {
       }
 
       try {
-        await isFieldValid(field.name, value);
+        validateField(field.name, value);
       } on ValidationException catch(e) {
         exceptions.add(e);
       }
@@ -75,7 +80,20 @@ abstract class Serializer {
     return exceptions.isEmpty;
   }
 
-  /// Determines if a single field is valid
-  // TODO: replace getFieldValue with reflection
-  Future<bool> isFieldValid(String fieldName, dynamic value);
+  dynamic validateField(String fieldName, dynamic value) {
+    /// Get a mirror for the concrete instance and class
+    final instanceMirror = reflect(this);
+    final classMirror = instanceMirror.type;
+
+    /// The validation method naming expectation is 'validateFieldName'
+    final methodName = 'validate${fieldName[0].toUpperCase()}${fieldName.substring(1)}';
+    final methodSymbol = Symbol(methodName);
+
+    /// Find out if the concrete class has a validation method for the field
+    if (classMirror.instanceMembers.containsKey(methodSymbol)) {
+      /// Call the validation method
+      final methodMirror = classMirror.instanceMembers[methodSymbol];
+      instanceMirror.invoke(methodMirror.simpleName, [value]);
+    }
+  }
 }
