@@ -19,9 +19,9 @@ class TestEntity with SerializableMixin{
 }
 class TestEntitySerializer extends Serializer {
   final fields = <SerializableField>[
-    SerializableField('id', int),
-    SerializableField('name', String),
-    SerializableField('created', DateTime),
+    IntegerField('id'),
+    StringField('name'),
+    DateTimeField('created'),
   ];
 
   TestEntitySerializer({Map<String, dynamic>data, SerializableMixin instance})
@@ -62,6 +62,6 @@ main() {
   final serializer = TestEntitySerializer(instance: entity);
 
   final valid = serializer.isValid();
-  final json = serializer.toJson();
+  final json = serializer.toRepresentation();
 }
 ```

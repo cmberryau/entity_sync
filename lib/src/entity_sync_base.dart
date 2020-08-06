@@ -1,4 +1,5 @@
 import 'dart:mirrors';
+import 'dart:convert';
 
 
 /// Represents a syncable endpoint
@@ -14,17 +15,64 @@ class DjangoRestFrameworkApi extends Endpoint {
 }
 
 /// Represents a field which may be serialized
-class SerializableField {
+abstract class SerializableField {
   /// The name of the field
   String name;
-  /// The type of the field
-  Type type;
 
-  SerializableField(this.name, this.type);
+  SerializableField(this.name);
 
   /// Evaluates if the passed value is valid
-  bool isValid(dynamic value) {
-    return true;
+  dynamic isValid(dynamic value);
+  /// Outputs the passed value to a representation
+  dynamic toRepresentation(dynamic value);
+  /// Gets the value of the field for the instance
+  dynamic getValue(SerializableMixin instance) {
+    return instance.getFieldValue(name);
+  }
+}
+
+/// Represents an integer field which may be serialized
+class IntegerField extends SerializableField{
+  IntegerField(String name) : super(name);
+
+  @override
+  dynamic isValid(value) {
+    return value;
+  }
+
+  @override
+  dynamic toRepresentation(value) {
+    return value;
+  }
+}
+
+/// Represents an string field which may be serialized
+class StringField extends SerializableField{
+  StringField(String name) : super(name);
+
+  @override
+  dynamic isValid(value) {
+    return value;
+  }
+
+  @override
+  dynamic toRepresentation(value) {
+    return value;
+  }
+}
+
+/// Represents an datetime field which may be serialized
+class DateTimeField extends SerializableField{
+  DateTimeField(String name) : super(name);
+
+  @override
+  dynamic isValid(value) {
+    return value;
+  }
+
+  @override
+  dynamic toRepresentation(value) {
+    return (value as DateTime).toIso8601String();
   }
 }
 
@@ -57,10 +105,10 @@ abstract class Serializer {
   }
 
   /// Determines if the serializer is valid
-  Future<bool> isValid() async {
+  bool isValid() {
     final exceptions = <ValidationException>[];
 
-    final fields = await getFields();
+    final fields = getFields();
     for (final field in fields) {
       dynamic value;
 
@@ -97,5 +145,27 @@ abstract class Serializer {
       final methodMirror = classMirror.instanceMembers[methodSymbol];
       instanceMirror.invoke(methodMirror.simpleName, [value]);
     }
+  }
+
+  /// Returns the serializable representation
+  dynamic toRepresentation() {
+    final fields = getFields();
+    final representationMap = <String, dynamic>{};
+
+    for (final field in fields) {
+      dynamic value;
+
+      if (instance != null) {
+        value = instance.getFieldValue(field.name);
+      } else if (data != null) {
+        value = data[field.name];
+      } else {
+        return null;
+      }
+
+      representationMap[field.name] = field.toRepresentation(value);
+    }
+
+    return json.encode(representationMap);
   }
 }

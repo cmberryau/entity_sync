@@ -11,9 +11,9 @@ class TestEntity with SerializableMixin{
 
 class TestEntitySerializer extends Serializer {
   final fields = <SerializableField>[
-    SerializableField('id', int),
-    SerializableField('name', String),
-    SerializableField('created', DateTime),
+    IntegerField('id'),
+    StringField('name'),
+    DateTimeField('created'),
   ];
 
   TestEntitySerializer({Map<String, dynamic>data, SerializableMixin instance})
@@ -54,33 +54,41 @@ void main() {
 
     });
 
-    test('Test TestEntitySerializer.isValid method with valid entity', () async {
+    test('Test TestEntitySerializer.isValid method with valid entity', () {
       final entity = TestEntity(0, 'TestName', DateTime.now());
       final serializer = TestEntitySerializer(instance: entity);
 
-      expect(await serializer.isValid(), isTrue);
+      expect(serializer.isValid(), isTrue);
     });
 
-    test('Test TestEntitySerializer.isValid method with invalid entity', () async {
+    test('Test TestEntitySerializer.isValid method with invalid entity', () {
       var entity = TestEntity(0, null, DateTime.now());
       var serializer = TestEntitySerializer(instance: entity);
 
-      expect(await serializer.isValid(), isFalse);
+      expect(serializer.isValid(), isFalse);
 
       entity = TestEntity(0, '', DateTime.now());
       serializer = TestEntitySerializer(instance: entity);
 
-      expect(await serializer.isValid(), isFalse);
+      expect(serializer.isValid(), isFalse);
 
       entity = TestEntity(-1, 'TestName', DateTime.now());
       serializer = TestEntitySerializer(instance: entity);
 
-      expect(await serializer.isValid(), isFalse);
+      expect(serializer.isValid(), isFalse);
 
       entity = TestEntity(0, 'TestName', null);
       serializer = TestEntitySerializer(instance: entity);
 
-      expect(await serializer.isValid(), isFalse);
+      expect(serializer.isValid(), isFalse);
+    });
+
+    test('Test TestEntitySerializer.toJson method with valid entity', () {
+      final entity = TestEntity(0, 'TestName', DateTime.now());
+      final serializer = TestEntitySerializer(instance: entity);
+
+      expect(serializer.toRepresentation(), isNotNull);
+      expect(serializer.toRepresentation(), isNotEmpty);
     });
   });
 }
