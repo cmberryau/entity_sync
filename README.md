@@ -27,11 +27,6 @@ class TestEntitySerializer extends Serializer {
   TestEntitySerializer({Map<String, dynamic>data, SerializableMixin instance})
       : super(data: data, instance: instance);
 
-  @override
-  Future<List<SerializableField>> getFields() async {
-    return fields;
-  }
-
   int validateId(int value) {
     if (value < 0) {
       throw ValidationException('id must be positive value');

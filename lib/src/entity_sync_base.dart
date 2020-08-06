@@ -52,7 +52,9 @@ abstract class Serializer {
   }
 
   /// Gets all fields for serialization
-  Future<List<SerializableField>> getFields();
+  List<SerializableField> getFields() {
+    return reflect(this).getField(Symbol('fields')).reflectee;
+  }
 
   /// Determines if the serializer is valid
   Future<bool> isValid() async {
