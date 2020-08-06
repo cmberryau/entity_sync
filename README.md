@@ -10,7 +10,7 @@ A simple usage example:
 ```dart
 import 'package:entity_sync/entity_sync.dart';
 
-class TestEntity with SerializableMixin{
+class TestEntity with SerializableMixin {
   int id;
   String name;
   DateTime created;
@@ -30,10 +30,12 @@ class TestEntitySerializer extends Serializer {
 
 
 main() {
-  final entity = TestEntity(0, 'TestName', DateTime.now());
-  final serializer = TestEntitySerializer(instance: entity);
+  final instance = TestEntity(0, 'TestName', DateTime.now());
+  final serializer = TestEntitySerializer(instance: instance);
 
+  /// validate that the instance provided is valid
   final valid = serializer.isValid();
+  /// get a json representation of the instance
   final json = serializer.toRepresentation();
 }
 ```

@@ -1,7 +1,7 @@
 import 'package:entity_sync/entity_sync.dart';
 import 'package:test/test.dart';
 
-class TestEntity with SerializableMixin{
+class TestEntity with SerializableMixin {
   int id;
   String name;
   DateTime created;
