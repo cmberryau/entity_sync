@@ -26,34 +26,6 @@ class TestEntitySerializer extends Serializer {
 
   TestEntitySerializer({Map<String, dynamic>data, SerializableMixin instance})
       : super(data: data, instance: instance);
-
-  int validateId(int value) {
-    if (value < 0) {
-      throw ValidationException('id must be positive value');
-    }
-
-    return value;
-  }
-
-  String validateName(String value) {
-    if (value == null) {
-      throw ValidationException('name must not be null');
-    }
-
-    if (value.isEmpty) {
-      throw ValidationException('name must not be empty');
-    }
-
-    return value;
-  }
-
-  DateTime validateCreated(DateTime value) {
-    if (value == null) {
-      throw ValidationException('created must not be null');
-    }
-
-    return value;
-  }
 }
 
 
