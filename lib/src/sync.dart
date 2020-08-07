@@ -1,58 +1,58 @@
 import 'dart:mirrors';
 
+import 'package:http/http.dart' as http;
+
 import 'serialization.dart';
 
 /// Represents the result of an operation with an endpoint
 class EndpointResult<TSyncable extends SyncableMixin> {
-  bool successful;
+  http.Response response;
+
+  EndpointResult(this.response);
 }
 
-/// Represents the result of syncing
-class SyncResult<TSyncable extends SyncableMixin>
-    extends EndpointResult {
-
-}
-
-/// Represents an endpoint, such as a restful api
+/// Represents an entity endpoint
+/// Responsible for pulling & pushing entities
 abstract class Endpoint<TSyncable extends SyncableMixin,
                         TSerializer extends Serializer<TSyncable>> {
-  /// Syncs a single syncable entity with the endpoint
-  Future<SyncResult<TSyncable>> sync(TSyncable syncable) async {
-    /// do push, get result of push and pull
-  }
-
   /// Pushes a single entity and returns any updates
-  Future<EndpointResult<TSyncable>> push(TSyncable syncable);
+  Future<EndpointResult<TSyncable>> push(TSyncable instance);
 
   /// Pulls and returns a single entity
-  Future<EndpointResult<TSyncable>> pull(TSyncable syncable);
+  Future<EndpointResult<TSyncable>> pull(TSyncable instance);
 }
 
-/// Represents a restful api endpoint for syncing
-class RestfulApiSyncEndpoint<TSyncable extends SyncableMixin,
-                             TSerializer extends Serializer<TSyncable>>
-                             extends Endpoint {
-  @override
-  Future<EndpointResult<SyncableMixin>> push(syncable) {
-    // TODO: implement push
-    throw UnimplementedError();
+/// Represents a restful api endpoint
+class RestfulApiEndpoint<TSyncable extends SyncableMixin,
+                         TSerializer extends Serializer<TSyncable>>
+    extends Endpoint {
+  final String url;
+  http.Client client;
+
+  RestfulApiEndpoint(this.url, {http.Client client}) {
+    this.client = client ??= http.Client();
   }
 
   @override
-  Future<EndpointResult<SyncableMixin>> pull(syncable) {
-    // TODO: implement pull
-    throw UnimplementedError();
+  Future<EndpointResult<TSyncable>> push(instance) async {
+    final response = await client.get(_instanceUrl(instance));
+    return EndpointResult<TSyncable>(response);
+  }
+
+  @override
+  Future<EndpointResult<TSyncable>> pull(instance) async {
+    final response = await client.get(_instanceUrl(instance));
+    return EndpointResult<TSyncable>(response);
+  }
+
+  String _instanceUrl(TSyncable instance) {
+    return '${url}/${instance.getKeyRepresentation()}';
   }
 }
 
 /// Added to a class to support syncing
 /// Syncable classes also must be serializable
 abstract class SyncableMixin implements SerializableMixin {
-  /// Syncs the entity with an endpoint
-  Future<SyncResult> sync(Endpoint endpoint) async {
-    return await endpoint.sync(this);
-  }
-
   /// Gets the key field of the entity
   SerializableField getKeyField() {
     return reflect(this).getField(Symbol('keyField')).reflectee;

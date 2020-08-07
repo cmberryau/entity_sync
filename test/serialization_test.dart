@@ -1,6 +1,7 @@
+import 'package:test/test.dart';
+
 import 'package:entity_sync/entity_sync.dart';
 import 'package:entity_sync/src/sync.dart';
-import 'package:test/test.dart';
 
 /// An entity which is serializable via SerializableMixin
 class TestEntity with SerializableMixin, SyncableMixin {
@@ -18,15 +19,14 @@ class TestEntity with SerializableMixin, SyncableMixin {
 }
 
 /// A serializer for TestEntity
-class TestEntitySerializer<TSerializable extends SerializableMixin>
-    extends Serializer {
+class TestEntitySerializer extends Serializer<TestEntity> {
   final fields = <SerializableField>[
     IntegerField('id'),
     StringField('name'),
     DateTimeField('created'),
   ];
 
-  TestEntitySerializer({Map<String, dynamic>data, TSerializable instance})
+  TestEntitySerializer({Map<String, dynamic>data, TestEntity instance})
       : super(data: data, instance: instance);
 
   int validateId(int value) {
@@ -59,7 +59,7 @@ class TestEntitySerializer<TSerializable extends SerializableMixin>
 }
 
 void main() {
-  group('TestEntitySerializer tests', () {
+  group('Test Serializer', () {
     setUp(() {
 
     });
@@ -96,6 +96,8 @@ void main() {
     test('Test TestEntitySerializer.toJson method with valid entity', () {
       final entity = TestEntity(0, 'TestName', DateTime.now());
       final serializer = TestEntitySerializer(instance: entity);
+
+      final repr = serializer.toRepresentation();
 
       expect(serializer.toRepresentation(), isNotNull);
       expect(serializer.toRepresentation(), isNotEmpty);
