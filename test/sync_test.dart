@@ -30,11 +30,12 @@ void main() {
       expect(response.statusCode, equals(statusCode));
 
       /// Create the endpoint and an 'outdated' instance
-      final endpoint = RestfulApiEndpoint<TestEntity, TestEntitySerializer>(url, client: client);
+      final endpoint = RestfulApiEndpoint<TestEntity>(url, client: client);
       final instance = TestEntity(1, 'OutdatedName', DateTime.now());
+      final serializer = TestEntitySerializer();
 
       /// Pull the entity using the endpoint
-      final result = await endpoint.pull();
+      final result = await endpoint.pull(instance, serializer);
 
       /// Test the results of pulling the entity
       expect(result, isNotNull);

@@ -177,4 +177,7 @@ abstract class Serializer<TSerializable extends SerializableMixin> {
 
     return json.encode(representationMap);
   }
+
+  /// Returns an instance from the serializer
+  TSerializable toInstance();
 }
