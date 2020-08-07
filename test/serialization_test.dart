@@ -56,6 +56,13 @@ class TestEntitySerializer extends Serializer<TestEntity> {
 
     return value;
   }
+
+  @override
+  TestEntity createInstance(validatedData) {
+    return TestEntity(validatedData['id'],
+                      validatedData['name'],
+                      validatedData['created']);
+  }
 }
 
 void main() {

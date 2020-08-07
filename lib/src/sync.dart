@@ -44,11 +44,10 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin> extends Endpoint {
     try {
       final response = await client.post(url, body: body);
 
-      /// If the response is 200, process it
       if (response.statusCode == 200) {
         instance = _responseToInstance(serializer, response, instance);
-        return EndpointResult<TSyncable>(response, instance);
       }
+      return EndpointResult<TSyncable>(response, instance);
 
     } on HttpException catch(e) {
       print(e);
@@ -61,11 +60,11 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin> extends Endpoint {
     try {
       final response = await client.get(_instanceUrl(instance));
 
-      /// If the response is 200, process it
       if (response.statusCode == 200) {
         instance = _responseToInstance(serializer, response, instance);
-        return EndpointResult<TSyncable>(response, instance);
       }
+      return EndpointResult<TSyncable>(response, instance);
+
     } on HttpException catch (e) {
       print(e);
       rethrow;
@@ -84,7 +83,7 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin> extends Endpoint {
     } else {
       instance = null;
     }
-    
+
     return instance;
   }
 

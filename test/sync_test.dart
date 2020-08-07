@@ -42,8 +42,8 @@ void main() {
       expect(result, isA<EndpointResult>());
       expect(result.response, isNotNull);
       expect(result.response, isA<http.Response>());
-//      expect(result.instance, isNotNull);
-//      expect(result.instance, isA<TestEntity>());
+      expect(result.instance, isNotNull);
+      expect(result.instance, isA<TestEntity>());
     });
 
     test('Test RestfulApiSyncEndpoint.push', () async {

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:mirrors';
 import 'dart:convert';
 
@@ -26,7 +27,7 @@ class IntegerField extends SerializableField {
 
   @override
   dynamic isValid(value) {
-    return value;
+    return value as int;
   }
 
   @override
@@ -41,7 +42,7 @@ class StringField extends SerializableField {
 
   @override
   dynamic isValid(value) {
-    return value;
+    return value as String;
   }
 
   @override
@@ -56,6 +57,12 @@ class DateTimeField extends SerializableField {
 
   @override
   dynamic isValid(value) {
+    if (value.runtimeType == String) {
+      value = DateTime.parse(value);
+    } else if (value.runtimeType != DateTime) {
+      throw ValidationException('Must be formatted String or DateTime');
+    }
+
     return value;
   }
 
@@ -96,11 +103,16 @@ class ValidationException implements Exception {
 abstract class Serializer<TSerializable extends SerializableMixin> {
   TSerializable instance;
   Map<String, dynamic> data;
+  Map<String, dynamic> _validatedData;
+  final exceptions = <ValidationException>[];
 
   Serializer({this.data, this.instance}) {
     if(getFields() == null) {
       throw AbstractClassInstantiationError((Serializer).toString());
     }
+
+    data = {};
+    _validatedData = {};
   }
 
   /// Gets all fields for serialization
@@ -110,7 +122,7 @@ abstract class Serializer<TSerializable extends SerializableMixin> {
 
   /// Determines if the serializer is valid
   bool isValid() {
-    final exceptions = <ValidationException>[];
+    exceptions.clear();
 
     final fields = getFields();
     for (final field in fields) {
@@ -127,7 +139,7 @@ abstract class Serializer<TSerializable extends SerializableMixin> {
 
       /// Validate the field and collect any exceptions
       try {
-        validateField(field.name, value);
+        _validatedData[field.name] = validateField(field, value);
       } on ValidationException catch(e) {
         exceptions.add(e);
       }
@@ -136,8 +148,17 @@ abstract class Serializer<TSerializable extends SerializableMixin> {
     return exceptions.isEmpty;
   }
 
-  /// Validates a field, using reflection to find any additional validation methods
-  dynamic validateField(String fieldName, dynamic value) {
+  /// Validate a field
+  dynamic validateField(SerializableField field, dynamic value) {
+    /// Do basic field validation
+    value = field.isValid(value);
+
+    /// Do any additional concrete validation
+    return isValidConcrete(field.name, value);
+  }
+
+  /// Use reflection to find any additional validation methods
+  dynamic isValidConcrete(String fieldName, dynamic value) {
     /// Get a mirror for the concrete instance and class
     final instanceMirror = reflect(this);
     final classMirror = instanceMirror.type;
@@ -150,8 +171,10 @@ abstract class Serializer<TSerializable extends SerializableMixin> {
     if (classMirror.instanceMembers.containsKey(methodSymbol)) {
       /// Call the validation method
       final methodMirror = classMirror.instanceMembers[methodSymbol];
-      instanceMirror.invoke(methodMirror.simpleName, [value]);
+      return instanceMirror.invoke(methodMirror.simpleName, [value]).reflectee;
     }
+
+    return value;
   }
 
   /// Returns the serializable representation
@@ -179,5 +202,13 @@ abstract class Serializer<TSerializable extends SerializableMixin> {
   }
 
   /// Returns an instance from the serializer
-  TSerializable toInstance();
+  TSerializable toInstance() {
+    if (isValid()) {
+      return createInstance(_validatedData);
+    }
+    return null;
+  }
+
+  /// Creates an instance from validated data
+  TSerializable createInstance(Map<String, dynamic> validatedData);
 }
