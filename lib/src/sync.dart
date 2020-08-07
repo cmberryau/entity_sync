@@ -4,19 +4,21 @@ import 'serialization.dart';
 
 
 /// Represents an endpoint for syncing, such as a restful api
-abstract class SyncEndpoint {
+abstract class SyncEndpoint<TSyncable extends SyncableMixin,
+                            TSerializer extends Serializer<TSyncable>> {
   /// Syncs the syncable entity with the endpoint
-  Future<SyncResult> sync(SyncableMixin syncable);
+  Future<SyncResult> sync(TSyncable syncable);
 }
 
 /// Represents a restful api endpoint for syncing
-class RestfulApiSyncEndpoint extends SyncEndpoint {
+class RestfulApiSyncEndpoint<TSyncable extends SyncableMixin,
+                             TSerializer extends Serializer<TSyncable>>
+                             extends SyncEndpoint {
   @override
-  Future<SyncResult> sync(SyncableMixin syncable) {
+  Future<SyncResult> sync(syncable) {
     // TODO: implement sync
     throw UnimplementedError();
   }
-
 }
 
 /// Represents the result of syncing

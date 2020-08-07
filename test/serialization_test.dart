@@ -18,14 +18,15 @@ class TestEntity with SerializableMixin, SyncableMixin {
 }
 
 /// A serializer for TestEntity
-class TestEntitySerializer extends Serializer {
+class TestEntitySerializer<TSerializable extends SerializableMixin>
+    extends Serializer {
   final fields = <SerializableField>[
     IntegerField('id'),
     StringField('name'),
     DateTimeField('created'),
   ];
 
-  TestEntitySerializer({Map<String, dynamic>data, SerializableMixin instance})
+  TestEntitySerializer({Map<String, dynamic>data, TSerializable instance})
       : super(data: data, instance: instance);
 
   int validateId(int value) {

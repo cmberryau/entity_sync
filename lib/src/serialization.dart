@@ -93,8 +93,8 @@ class ValidationException implements Exception {
 }
 
 /// Performs serialization
-abstract class Serializer {
-  SerializableMixin instance;
+abstract class Serializer<TSerializable extends SerializableMixin> {
+  TSerializable instance;
   Map<String, dynamic> data;
 
   Serializer({this.data, this.instance}) {
