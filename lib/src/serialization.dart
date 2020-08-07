@@ -21,7 +21,7 @@ abstract class SerializableField {
 }
 
 /// Represents an integer field which may be serialized
-class IntegerField extends SerializableField{
+class IntegerField extends SerializableField {
   IntegerField(String name) : super(name);
 
   @override
@@ -36,7 +36,7 @@ class IntegerField extends SerializableField{
 }
 
 /// Represents an string field which may be serialized
-class StringField extends SerializableField{
+class StringField extends SerializableField {
   StringField(String name) : super(name);
 
   @override
@@ -51,7 +51,7 @@ class StringField extends SerializableField{
 }
 
 /// Represents an datetime field which may be serialized
-class DateTimeField extends SerializableField{
+class DateTimeField extends SerializableField {
   DateTimeField(String name) : super(name);
 
   @override
@@ -64,6 +64,20 @@ class DateTimeField extends SerializableField{
     return (value as DateTime).toIso8601String();
   }
 }
+
+/// Represents a boolean field which may be serialized
+class BoolField extends SerializableField {
+  BoolField(String name) : super(name);
+
+  @override
+  dynamic isValid(value) {
+    return value;
+  }
+
+  @override
+  dynamic toRepresentation(value) {
+    return json.encode(value);
+  }}
 
 /// Added to a class to support serialization
 abstract class SerializableMixin {

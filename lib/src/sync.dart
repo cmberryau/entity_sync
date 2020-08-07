@@ -4,12 +4,18 @@ import 'serialization.dart';
 
 
 /// Represents an endpoint for syncing, such as a restful api
-class SyncEndpoint {
-
+abstract class SyncEndpoint {
+  /// Syncs the syncable entity with the endpoint
+  Future<SyncResult> sync(SyncableMixin syncable);
 }
 
 /// Represents a restful api endpoint for syncing
-class RestfulApiSyncEndpoint {
+class RestfulApiSyncEndpoint extends SyncEndpoint {
+  @override
+  Future<SyncResult> sync(SyncableMixin syncable) {
+    // TODO: implement sync
+    throw UnimplementedError();
+  }
 
 }
 
@@ -23,17 +29,27 @@ class SyncResult {
 abstract class SyncableMixin implements SerializableMixin {
   /// Syncs the entity with an endpoint
   Future<SyncResult> sync(SyncEndpoint endpoint) async {
-
+    return await endpoint.sync(this);
   }
 
   /// Gets the key field of the entity
   SerializableField getKeyField() {
-    return reflect(this).getField(Symbol('syncableKey')).reflectee;
+    return reflect(this).getField(Symbol('keyField')).reflectee;
+  }
+
+  /// Gets the flag field of the entity
+  BoolField getFlagField() {
+    return reflect(this).getField(Symbol('flagField')).reflectee;
   }
 
   /// Gets the key value of the entity
   dynamic getKeyValue(SerializableField keyField) {
     return reflect(this).getField(Symbol(keyField.name)).reflectee;
+  }
+
+  /// Gets the flag value of the entity
+  bool getFlagValue(BoolField flagField) {
+    return reflect(this).getField(Symbol(flagField.name)).reflectee;
   }
 
   /// Gets the representation of the key of the entity

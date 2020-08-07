@@ -7,9 +7,12 @@ class TestEntity with SerializableMixin, SyncableMixin {
   int id;
   String name;
   DateTime created;
+  bool shouldSync;
 
-  /// The key of the entity
-  final syncableKey = IntegerField('id');
+  /// The unique syncable key of the entity
+  final keyField = IntegerField('id');
+  /// The flag to indicate the entity needs to be synced
+  final flagField = BoolField('shouldSync');
 
   TestEntity(this.id, this.name, this.created);
 }
