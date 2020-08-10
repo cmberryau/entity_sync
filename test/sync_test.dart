@@ -44,11 +44,14 @@ void main() {
       expect(result.response, isA<http.Response>());
       expect(result.response.statusCode, equals(200));
 
-      expect(result.instance, isNotNull);
-      expect(result.instance, isA<TestEntity>());
-      expect(result.instance.id, equals(1));
-      expect(result.instance.name, equals('TestName'));
-      expect(result.instance.created, DateTime.parse("2020-08-07T12:30:15.123456"));
+      expect(result.instances, isNotNull);
+      expect(result.instances, isA<List<TestEntity>>());
+      expect(result.instances.length, equals(1));
+      expect(result.instances[0], isNotNull);
+      expect(result.instances[0], isA<TestEntity>());
+      expect(result.instances[0].id, equals(1));
+      expect(result.instances[0].name, equals('TestName'));
+      expect(result.instances[0].created, DateTime.parse("2020-08-07T12:30:15.123456"));
     });
 
     test('Test RestfulApiSyncEndpoint.push', () async {
@@ -63,7 +66,7 @@ void main() {
       final instance = TestEntity(1, 'OutdatedName', DateTime.now());
       final mockTestSerializer = TestEntitySerializer(instance:instance);
 
-      when(client.post('${url}/1', body:mockTestSerializer.toRepresentation()))
+      when(client.post('${url}', body:mockTestSerializer.toRepresentation()))
           .thenAnswer((_) async => http.Response(body, statusCode));
 
       /// Pull the entity using the endpoint
@@ -72,16 +75,18 @@ void main() {
 
       /// Test the results of pulling the entity
       expect(result, isNotNull);
-      expect(result, isA<EndpointResult>());
       expect(result.response, isNotNull);
       expect(result.response, isA<http.Response>());
       expect(result.response.statusCode, equals(200));
 
-      expect(result.instance, isNotNull);
-      expect(result.instance, isA<TestEntity>());
-      expect(result.instance.id, equals(1));
-      expect(result.instance.name, equals('TestName'));
-      expect(result.instance.created, DateTime.parse("2020-08-07T12:30:15.123456"));
+      expect(result.instances, isNotNull);
+      expect(result.instances, isA<List<TestEntity>>());
+      expect(result.instances.length, equals(1));
+      expect(result.instances[0], isNotNull);
+      expect(result.instances[0], isA<TestEntity>());
+      expect(result.instances[0].id, equals(1));
+      expect(result.instances[0].name, equals('TestName'));
+      expect(result.instances[0].created, DateTime.parse("2020-08-07T12:30:15.123456"));
     });
   });
 }

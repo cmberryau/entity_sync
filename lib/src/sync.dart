@@ -9,9 +9,9 @@ import 'serialization.dart';
 /// Represents the result of an operation with an endpoint
 class EndpointResult<TSyncable extends SyncableMixin> {
   http.Response response;
-  TSyncable instance;
+  List<TSyncable> instances;
 
-  EndpointResult(this.response, this.instance);
+  EndpointResult(this.response, this.instances);
 }
 
 /// Represents an entity endpoint
@@ -47,7 +47,7 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin> extends Endpoint {
       if (response.statusCode == 200) {
         instance = _responseToInstance(serializer, response, instance);
       }
-      return EndpointResult<TSyncable>(response, instance);
+      return EndpointResult<TSyncable>(response, [instance]);
 
     } on HttpException catch(e) {
       print(e);
@@ -63,7 +63,7 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin> extends Endpoint {
       if (response.statusCode == 200) {
         instance = _responseToInstance(serializer, response, instance);
       }
-      return EndpointResult<TSyncable>(response, instance);
+      return EndpointResult<TSyncable>(response, [instance]);
 
     } on HttpException catch (e) {
       print(e);
