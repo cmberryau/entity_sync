@@ -3,7 +3,7 @@ import 'package:test/test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:http/http.dart' as http;
 
-import 'package:entity_sync/src/endpoints.dart';
+import 'package:entity_sync/entity_sync.dart';
 import 'serialization_test.dart';
 
 class MockClient extends Mock implements http.Client {}
@@ -30,9 +30,9 @@ void main() {
       expect(response.statusCode, equals(statusCode));
 
       /// Create the endpoint and an 'outdated' instance
-      final endpoint = RestfulApiEndpoint<TestEntity>(url, client: client);
-      final instance = TestEntity(1, 'OutdatedName', DateTime.now());
       final serializer = TestEntitySerializer();
+      final endpoint = RestfulApiEndpoint<TestEntity>(url, serializer, client: client);
+      final instance = TestEntity(1, 'OutdatedName', DateTime.now());
 
       /// Pull the entity using the endpoint
       final result = await endpoint.pull(instance, serializer);
@@ -71,11 +71,10 @@ void main() {
       expect(response.statusCode, equals(statusCode));
 
       /// Create the endpoint and an 'outdated' instance
-      final endpoint = RestfulApiEndpoint<TestEntity>(url, client: client);
-      final instance = TestEntity(1, 'OutdatedName', DateTime.now());
       final serializer = TestEntitySerializer();
+      final endpoint = RestfulApiEndpoint<TestEntity>(url, serializer, client: client);
 
-      /// Pull the entity using the endpoint
+      /// Pull all entities using the endpoint
       final result = await endpoint.pullAll(serializer);
 
       /// Test the results of pulling the entity
@@ -110,15 +109,15 @@ void main() {
       final statusCode = 200;
 
       /// Create the endpoint and an 'outdated' instance
-      final endpoint = RestfulApiEndpoint<TestEntity>(url, client: client);
+      final serializer = TestEntitySerializer();
+      final endpoint = RestfulApiEndpoint<TestEntity>(url, serializer, client: client);
       final instance = TestEntity(1, 'OutdatedName', DateTime.now());
       final mockTestSerializer = TestEntitySerializer(instance:instance);
 
       when(client.post('${url}', body:mockTestSerializer.toRepresentation()))
           .thenAnswer((_) async => http.Response(body, statusCode));
 
-      /// Pull the entity using the endpoint
-      final serializer = TestEntitySerializer();
+      /// Push the entity using the endpoint
       final result = await endpoint.push(instance, serializer);
 
       /// Test the results of pulling the entity

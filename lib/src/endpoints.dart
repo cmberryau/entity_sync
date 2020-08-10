@@ -1,10 +1,10 @@
 import 'dart:io';
-import 'dart:mirrors';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
 import 'serialization.dart';
+import 'sync.dart';
 
 /// Represents the result of an operation with an endpoint
 class EndpointResult<TSyncable extends SyncableMixin> {
@@ -32,14 +32,17 @@ abstract class Endpoint<TSyncable extends SyncableMixin> {
 /// Represents a restful api endpoint
 class RestfulApiEndpoint<TSyncable extends SyncableMixin> extends Endpoint {
   final String url;
+  final Serializer<TSyncable> serializer;
   http.Client client;
 
-  RestfulApiEndpoint(this.url, {http.Client client}) {
+  RestfulApiEndpoint(this.url, this.serializer, {http.Client client}) {
     this.client = client ??= http.Client();
   }
 
   @override
-  Future<EndpointResult<TSyncable>> push(instance, serializer) async {
+  Future<EndpointResult<TSyncable>> push(instance, [serializer]) async {
+    serializer = _getSerializer(serializer);
+
     /// Get the representation of the instance
     serializer.instance = instance;
     final body = serializer.toRepresentation();
@@ -59,7 +62,9 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin> extends Endpoint {
   }
 
   @override
-  Future<EndpointResult<TSyncable>> pull(instance, serializer) async {
+  Future<EndpointResult<TSyncable>> pull(instance, [serializer]) async {
+    serializer = _getSerializer(serializer);
+
     try {
       final response = await client.get(_instanceUrl(instance));
 
@@ -75,7 +80,9 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin> extends Endpoint {
   }
 
   @override
-  Future<EndpointResult<TSyncable>> pullAll(serializer) async {
+  Future<EndpointResult<TSyncable>> pullAll([serializer]) async {
+    serializer = _getSerializer(serializer);
+
     try {
       final response = await client.get(url);
 
@@ -127,39 +134,12 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin> extends Endpoint {
   String _instanceUrl(TSyncable instance) {
     return '${url}/${instance.getKeyRepresentation()}';
   }
-}
 
-/// Added to a class to support syncing
-/// Syncable classes also must be serializable
-abstract class SyncableMixin implements SerializableMixin {
-  /// Gets the key field of the entity
-  SerializableField getKeyField() {
-    return reflect(this).getField(Symbol('keyField')).reflectee;
+  Serializer<SyncableMixin> _getSerializer(Serializer<SyncableMixin> serializer) {
+    if (serializer == null) {
+      return this.serializer;
+    }
+
+    return serializer;
   }
-
-  /// Gets the flag field of the entity
-  BoolField getFlagField() {
-    return reflect(this).getField(Symbol('flagField')).reflectee;
-  }
-
-  /// Gets the key value of the entity
-  dynamic getKeyValue(SerializableField keyField) {
-    return reflect(this).getField(Symbol(keyField.name)).reflectee;
-  }
-
-  /// Gets the flag value of the entity
-  bool getFlagValue(BoolField flagField) {
-    return reflect(this).getField(Symbol(flagField.name)).reflectee;
-  }
-
-  /// Gets the representation of the key of the entity
-  dynamic getKeyRepresentation() {
-    final keyField = getKeyField();
-    final keyValue = getKeyValue(keyField);
-
-    return keyField.toRepresentation(keyValue);
-  }
-
-  @override
-  dynamic getFieldValue(String fieldName);
 }
