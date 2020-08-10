@@ -1,7 +1,7 @@
 import 'package:test/test.dart';
 
 import 'package:entity_sync/entity_sync.dart';
-import 'package:entity_sync/src/sync.dart';
+import 'package:entity_sync/src/endpoints.dart';
 
 /// An entity which is serializable via SerializableMixin
 class TestEntity with SerializableMixin, SyncableMixin {

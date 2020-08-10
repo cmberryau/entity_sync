@@ -3,7 +3,7 @@ import 'package:test/test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:http/http.dart' as http;
 
-import 'package:entity_sync/src/sync.dart';
+import 'package:entity_sync/src/endpoints.dart';
 import 'serialization_test.dart';
 
 class MockClient extends Mock implements http.Client {}
@@ -14,7 +14,7 @@ void main() {
 
     });
 
-    test('Test RestfulApiSyncEndpoint.pull', () async {
+    test('Test RestfulApiEndpoint.pull', () async {
       /// Set up the mock client
       final client = MockClient();
       final url = 'https://www.example.com/test-entity';
@@ -54,7 +54,7 @@ void main() {
       expect(result.instances[0].created, DateTime.parse("2020-08-07T12:30:15.123456"));
     });
 
-    test('Test RestfulApiSyncEndpoint.pullAll', () async {
+    test('Test RestfulApiEndpoint.pullAll', () async {
       /// Set up the mock client
       final client = MockClient();
       final url = 'https://www.example.com/test-entity';
@@ -102,7 +102,7 @@ void main() {
       expect(result.instances[1].created, DateTime.parse("2020-08-10T12:30:15.123456"));
     });
 
-    test('Test RestfulApiSyncEndpoint.push', () async {
+    test('Test RestfulApiEndpoint.push', () async {
       /// Set up the mock client
       final client = MockClient();
       final url = 'https://www.example.com/test-entity';
