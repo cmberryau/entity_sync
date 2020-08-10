@@ -17,4 +17,7 @@ class TestMoorEntityProxy extends TestMoorEntity with SerializableMixin, Syncabl
   final keyField = IntegerField('id');
   /// The flag to indicate the entity needs to be synced
   final flagField = BoolField('shouldSync');
+
+  TestMoorEntityProxy(id, name, created) :
+        super(id: id, name: name, created: created, shouldSync: false);
 }

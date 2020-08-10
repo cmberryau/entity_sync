@@ -4,6 +4,13 @@ import 'test_entities.dart';
 part 'database.g.dart';
 
 @UseMoor(tables: [TestMoorEntities])
-class TestDatabase {
+class TestDatabase extends _$TestDatabase {
+  TestDatabase(QueryExecutor e) : super(e);
 
+  @override
+  int get schemaVersion => 1;
+
+  Future<List<TestMoorEntityProxy>> getTestMoorEntities() async {
+    return select(testMoorEntities).get();
+  }
 }
