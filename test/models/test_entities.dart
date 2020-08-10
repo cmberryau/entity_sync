@@ -12,7 +12,7 @@ class TestMoorEntities extends Table {
   BoolColumn get shouldSync => boolean().clientDefault(() => true)();
 }
 
-class TestMoorEntitySyncable extends TestMoorEntity with SerializableMixin, SyncableMixin {
+class TestMoorEntityProxy extends TestMoorEntity with SerializableMixin, SyncableMixin {
   /// The unique syncable key of the entity
   final keyField = IntegerField('id');
   /// The flag to indicate the entity needs to be synced
