@@ -17,25 +17,28 @@ class EndpointResult<TSyncable extends SyncableMixin> {
 /// Represents an entity endpoint
 /// Responsible for pulling & pushing entities
 abstract class Endpoint<TSyncable extends SyncableMixin> {
+  final Serializer<TSyncable> serializer;
+
+  Endpoint(this.serializer);
+
   /// Pushes a single entity and returns any updates
   Future<EndpointResult<TSyncable>> push(TSyncable instance,
-      Serializer<TSyncable> serializer);
+      [Serializer<TSyncable> serializer]);
 
   /// Pulls and returns a single entity
   Future<EndpointResult<TSyncable>> pull(TSyncable instance,
-      Serializer<TSyncable> serializer);
+      [Serializer<TSyncable> serializer]);
 
   /// Pulls and returns a single entity
-  Future<EndpointResult<TSyncable>> pullAll(Serializer<TSyncable> serializer);
+  Future<EndpointResult<TSyncable>> pullAll([Serializer<TSyncable> serializer]);
 }
 
 /// Represents a restful api endpoint
 class RestfulApiEndpoint<TSyncable extends SyncableMixin> extends Endpoint {
   final String url;
-  final Serializer<TSyncable> serializer;
   http.Client client;
 
-  RestfulApiEndpoint(this.url, this.serializer, {http.Client client}) {
+  RestfulApiEndpoint(this.url, serializer, {http.Client client}) : super(serializer) {
     this.client = client ??= http.Client();
   }
 

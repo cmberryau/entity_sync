@@ -10,7 +10,7 @@ class TestDatabase extends _$TestDatabase {
   @override
   int get schemaVersion => 1;
 
-  Future<List<TestMoorEntityProxy>> getTestMoorEntities() async {
+  Future<List<TestMoorEntity>> getTestMoorEntities() async {
     return select(testMoorEntities).get();
   }
 }

@@ -14,10 +14,10 @@ class TestMoorEntities extends Table {
 
 class TestMoorEntityProxy extends TestMoorEntity with SerializableMixin, SyncableMixin {
   /// The unique syncable key of the entity
-  final keyField = IntegerField('id');
+  static final keyField = IntegerField('id');
   /// The flag to indicate the entity needs to be synced
-  final flagField = BoolField('shouldSync');
+  static final flagField = BoolField('shouldSync');
 
-  TestMoorEntityProxy(id, name, created) :
-        super(id: id, name: name, created: created, shouldSync: false);
+  TestMoorEntityProxy(id, name, created) : super(id: id, name: name,
+      created: created, shouldSync: false);
 }

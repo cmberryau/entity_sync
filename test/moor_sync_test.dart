@@ -71,7 +71,7 @@ void main() {
       /// Set up the mock client
       final client = MockClient();
       final url = 'https://www.example.com/test-entity';
-      final body = '{"id": 1, "name": "TestName", "created": "2020-08-07T12:30:15.123456"}';
+      final body = '[{"id": 2, "name": "TestName", "created": "2020-08-07T12:30:15.123456"}]';
       final statusCode = 200;
       when(client.get('${url}')).thenAnswer((_) async => http.Response(body, statusCode));
 
@@ -85,17 +85,24 @@ void main() {
       var entities = await database.getTestMoorEntities();
       expect(entities, isNotNull);
       expect(entities.length, equals(0));
-      
+
+      final testEntity = TestMoorEntity(id: 1, name: "OutdatedTestName", created: DateTime.now(), shouldSync: true);
+      await database.into(database.testMoorEntities).insert(testEntity);
+
+      entities = await database.getTestMoorEntities();
+      expect(entities, isNotNull);
+      expect(entities.length, equals(1));
+
       /// Create the endpoint and the sync controller
       final endpoint = RestfulApiEndpoint<TestMoorEntityProxy>(url, TestMoorEntityProxySerializer(), client: client);
-      final syncController = MoorSyncController(endpoint, database.testMoorEntities, database);
+      final syncController = MoorSyncController<TestMoorEntityProxy>(endpoint, database.testMoorEntities, database);
 
       /// Perform the sync
       final results = await syncController.sync();
 
       entities = await database.getTestMoorEntities();
       expect(entities, isNotNull);
-      expect(entities.length, equals(1));
+      expect(entities.length, equals(2));
     });
     
     tearDown(() async {
