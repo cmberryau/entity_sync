@@ -104,10 +104,10 @@ void main() {
       final entity = TestEntity(0, 'TestName', DateTime.now());
       final serializer = TestEntitySerializer(instance: entity);
 
-      final repr = serializer.toRepresentation();
+      final repr = serializer.toRepresentationString();
 
-      expect(serializer.toRepresentation(), isNotNull);
-      expect(serializer.toRepresentation(), isNotEmpty);
+      expect(serializer.toRepresentationString(), isNotNull);
+      expect(serializer.toRepresentationString(), isNotEmpty);
     });
   });
 }

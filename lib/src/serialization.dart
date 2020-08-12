@@ -58,6 +58,8 @@ class DateTimeField extends SerializableField {
   dynamic isValid(value) {
     if (value.runtimeType == String) {
       value = DateTime.parse(value);
+    } else if (value.runtimeType == int) {
+      value = DateTime.fromMillisecondsSinceEpoch(value);
     } else if (value.runtimeType != DateTime) {
       throw ValidationException('Must be formatted String or DateTime');
     }
@@ -122,6 +124,7 @@ abstract class Serializer<TSerializable extends SerializableMixin> {
   /// Determines if the serializer is valid
   bool isValid() {
     exceptions.clear();
+    _validatedData.clear();
 
     final fields = getFields();
     for (final field in fields) {
@@ -181,23 +184,23 @@ abstract class Serializer<TSerializable extends SerializableMixin> {
     final fields = getFields();
     final representationMap = <String, dynamic>{};
 
-    for (final field in fields) {
-      dynamic value;
-
-      /// The data could be coming from an instance or raw data
-      if (instance != null) {
-        value = instance.getFieldValue(field.name);
-      } else if (data != null) {
-        value = data[field.name];
-      } else {
-        return null;
-      }
-
-      /// Fill the representation map with the field representation
-      representationMap[field.name] = field.toRepresentation(value);
+    /// Validate the data first
+    if (!isValid()) {
+      return null;
     }
 
-    return json.encode(representationMap);
+    for (final field in fields) {
+      /// Fill the representation map with the validated field value representation
+      representationMap[field.name] = field
+          .toRepresentation(_validatedData[field.name]);
+    }
+
+    return representationMap;
+  }
+
+  /// Returns the serializable representation string
+  dynamic toRepresentationString() {
+    return json.encode(toRepresentation());
   }
 
   /// Returns an instance from the serializer

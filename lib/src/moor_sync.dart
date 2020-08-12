@@ -12,18 +12,10 @@ class MoorSyncController<TSyncable extends SyncableMixin> extends SyncController
   final GeneratedDatabase database;
   /// The moor table that we are syncing with
   final Table table;
-
   /// The name of the flag field for TSyncable
   String flagFieldName;
 
-  /// The name of the table
-  String sqlTableName;
-  String sqlFlagColumnName;
-
   MoorSyncController(endpoint, this.table, this.database) : super(endpoint) {
-    /// get the actual table name, have to reflect for it
-    sqlTableName = reflect(table).getField(Symbol('actualTableName')).reflectee;
-
     /// get the actual flag field name, have to reflect for it
     final actualFlagField = reflectClass(TSyncable).getField(Symbol('flagField')).reflectee;
 
@@ -36,27 +28,23 @@ class MoorSyncController<TSyncable extends SyncableMixin> extends SyncController
     }
 
     flagFieldName = (actualFlagField as BoolField).name;
-
-    final camelCaseRegex = RegExp(r'(?<=[a-z])[A-Z]');
-    sqlFlagColumnName = flagFieldName.replaceAllMapped(camelCaseRegex,
-            (m) => ('_' + m.group(0))).toLowerCase();
   }
 
   Future<SyncResult<TSyncable>> sync() async {
     /// get all entities with flag == true
-    final toSyncSql = 'SELECT * FROM ${sqlTableName} WHERE ${sqlFlagColumnName} == true;';
-    final toSyncRawInstances = await database.customSelect(toSyncSql).get();
-    final flagColumn = reflect(table).getField(Symbol('shouldSync')).reflectee;
-    final toSyncConcreteInstances = await (database.select(table)..where((t) => flagColumn.equals(true))).get();
+    final flagColumn = reflect(table).getField(Symbol(flagFieldName)).reflectee;
+    final toSyncInstances = await (database.select(table)
+      ..where((t) => flagColumn.equals(true))).get();
     
     /// push to endpoint
-    for (var rawInstance in toSyncRawInstances) {
-      final pushToEndpoint = await endpoint.push(null);
+    for (var instance in toSyncInstances) {
+      final pushToEndpoint = await endpoint.pushJson(instance.toJson());
+
+      /// TODO write changes from endpoint to moor table
     }
 
-    /// write changes from endpoint to moor table
-
-    /// pull all from endpoint
+    /// pull all from endpoint since last sync
+    /// TODO add last sync filter
     final endpointPullAll = await endpoint.pullAll();
     final endpointEntities = endpointPullAll.instances;
 

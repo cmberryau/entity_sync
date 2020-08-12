@@ -71,23 +71,32 @@ void main() {
       /// Set up the mock client
       final client = MockClient();
       final url = 'https://www.example.com/test-entity';
-      final body = '[{"id": 2, "name": "TestName", "created": "2020-08-07T12:30:15.123456"}]';
+      final getResponseBody = '[{"id": 2, "name": "TestName", "created": "2020-08-07T12:30:15.123456"}]';
+      final postResponseBody = '{"id": 1, "name": "UpdatedTestName", "created": "2020-08-07T12:30:15.123456"}';
       final statusCode = 200;
-      when(client.get('${url}')).thenAnswer((_) async => http.Response(body, statusCode));
+
+      final now = DateTime.now();
+      final nowWithoutSubsecondPrecision = DateTime(now.year, now.month, now.day, now.hour, now.minute, now.second);
+      final postTestEntity = TestMoorEntityProxy(1, "OutdatedTestName", nowWithoutSubsecondPrecision, shouldSync: true);
+      final postTestSerializer = TestMoorEntityProxySerializer(instance: postTestEntity);
+      final postTestRepresentation = postTestSerializer.toRepresentationString();
+
+      when(client.get('${url}')).thenAnswer((a) async => http.Response(getResponseBody, statusCode));
+      when(client.post('${url}', body: postTestRepresentation)).thenAnswer((a) async => http.Response(postResponseBody, statusCode));
 
       /// Test the mock client
       final response = await client.get('${url}');
       expect(response, isNotNull);
       expect(response, isA<http.Response>());
-      expect(response.body, equals(body));
+      expect(response.body, equals(getResponseBody));
       expect(response.statusCode, equals(statusCode));
 
       var entities = await database.getTestMoorEntities();
       expect(entities, isNotNull);
       expect(entities.length, equals(0));
 
-      final testEntity = TestMoorEntity(id: 1, name: "OutdatedTestName", created: DateTime.now(), shouldSync: true);
-      await database.into(database.testMoorEntities).insert(testEntity);
+
+      await database.into(database.testMoorEntities).insert(postTestEntity);
 
       entities = await database.getTestMoorEntities();
       expect(entities, isNotNull);

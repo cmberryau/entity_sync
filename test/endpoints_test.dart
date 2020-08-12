@@ -114,7 +114,7 @@ void main() {
       final instance = TestEntity(1, 'OutdatedName', DateTime.now());
       final mockTestSerializer = TestEntitySerializer(instance:instance);
 
-      when(client.post('${url}', body:mockTestSerializer.toRepresentation()))
+      when(client.post('${url}', body:mockTestSerializer.toRepresentationString()))
           .thenAnswer((_) async => http.Response(body, statusCode));
 
       /// Push the entity using the endpoint

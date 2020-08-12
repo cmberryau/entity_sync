@@ -25,6 +25,10 @@ abstract class Endpoint<TSyncable extends SyncableMixin> {
   Future<EndpointResult<TSyncable>> push(TSyncable instance,
       [Serializer<TSyncable> serializer]);
 
+  /// Pushes a single entity that is already encoded in json
+  Future<EndpointResult<TSyncable>> pushJson(Map<String, dynamic> data,
+      [serializer]);
+
   /// Pulls and returns a single entity
   Future<EndpointResult<TSyncable>> pull(TSyncable instance,
       [Serializer<TSyncable> serializer]);
@@ -43,16 +47,23 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin> extends Endpoint {
   }
 
   @override
-  Future<EndpointResult<TSyncable>> push(instance, [serializer]) async {
+  Future<EndpointResult<TSyncable>> pushJson(Map<String, dynamic> data,
+      [serializer]) async {
     serializer = _getSerializer(serializer);
 
-    /// Get the representation of the instance
-    serializer.instance = instance;
-    final body = serializer.toRepresentation();
+    /// Validate the incoming data
+    serializer.instance = null;
+    serializer.data = data;
+
+    if (!serializer.isValid()) {
+      throw ArgumentError('Invalid json provided');
+    }
 
     try {
-      final response = await client.post(url, body: body);
+      final representation = serializer.toRepresentationString();
+      final response = await client.post(url, body: representation);
 
+      TSyncable instance;
       if (response.statusCode == 200) {
         instance = _responseToInstance(serializer, response);
       }
@@ -62,6 +73,17 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin> extends Endpoint {
       print(e);
       rethrow;
     }
+  }
+
+  @override
+  Future<EndpointResult<TSyncable>> push(instance, [serializer]) async {
+    serializer = _getSerializer(serializer);
+
+    /// Get the representation of the instance
+    serializer.instance = instance;
+    final body = serializer.toRepresentation();
+
+    return pushJson(body, serializer);
   }
 
   @override

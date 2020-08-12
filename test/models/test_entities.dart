@@ -1,6 +1,7 @@
 import 'package:moor/moor.dart';
 
 import 'package:entity_sync/entity_sync.dart';
+import 'package:entity_sync/moor_entity_sync.dart';
 
 import 'database.dart';
 
@@ -18,6 +19,6 @@ class TestMoorEntityProxy extends TestMoorEntity with SerializableMixin, Syncabl
   /// The flag to indicate the entity needs to be synced
   static final flagField = BoolField('shouldSync');
 
-  TestMoorEntityProxy(id, name, created) : super(id: id, name: name,
-      created: created, shouldSync: false);
+  TestMoorEntityProxy(id, name, created, {bool shouldSync = false}) :
+        super(id: id, name: name, created: created, shouldSync: shouldSync);
 }
