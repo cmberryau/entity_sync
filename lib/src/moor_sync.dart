@@ -12,8 +12,8 @@ class MoorSyncController<TSyncable extends SyncableMixin> extends SyncController
   final GeneratedDatabase database;
   /// The moor table that we are syncing with
   final Table table;
-  /// The name of the flag field for TSyncable
-  String flagFieldName;
+  /// The flag column of the table
+  Column flagColumn;
 
   MoorSyncController(endpoint, this.table, this.database) : super(endpoint) {
     /// get the actual flag field name, have to reflect for it
@@ -27,12 +27,13 @@ class MoorSyncController<TSyncable extends SyncableMixin> extends SyncController
       throw ArgumentError('TSyncable.flagField is not BoolField');
     }
 
-    flagFieldName = (actualFlagField as BoolField).name;
+    /// Resolve the flag column of the table
+    final flagFieldName = (actualFlagField as BoolField).name;
+    flagColumn = reflect(table).getField(Symbol(flagFieldName)).reflectee;
   }
 
   Future<SyncResult<TSyncable>> sync() async {
     /// get all entities with flag == true
-    final flagColumn = reflect(table).getField(Symbol(flagFieldName)).reflectee;
     final toSyncInstances = await (database.select(table)
       ..where((t) => flagColumn.equals(true))).get();
     
@@ -40,7 +41,7 @@ class MoorSyncController<TSyncable extends SyncableMixin> extends SyncController
     for (var instance in toSyncInstances) {
       final pushToEndpoint = await endpoint.pushJson(instance.toJson());
 
-      /// TODO write changes from endpoint to moor table
+      /// TODO compare and write changes from endpoint to moor table
     }
 
     /// pull all from endpoint since last sync

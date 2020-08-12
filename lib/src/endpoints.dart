@@ -35,6 +35,10 @@ abstract class Endpoint<TSyncable extends SyncableMixin> {
 
   /// Pulls and returns a single entity
   Future<EndpointResult<TSyncable>> pullAll([Serializer<TSyncable> serializer]);
+
+  /// Pulls and returns a single entity
+  Future<EndpointResult<TSyncable>> pullAllSince(DateTime since,
+      [Serializer<TSyncable> serializer]);
 }
 
 /// Represents a restful api endpoint
@@ -121,6 +125,13 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin> extends Endpoint {
       print(e);
       rethrow;
     }
+  }
+
+  @override
+  Future<EndpointResult<SyncableMixin>> pullAllSince(DateTime since,
+      [Serializer<SyncableMixin> serializer]) {
+    // TODO: implement pullAllModifiedSince
+    throw UnimplementedError();
   }
 
   List<TSyncable> _responseToInstances(Serializer<SyncableMixin> serializer,
