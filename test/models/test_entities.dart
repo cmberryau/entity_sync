@@ -6,11 +6,10 @@ import 'package:entity_sync/moor_entity_sync.dart';
 import 'database.dart';
 
 @DataClassName('TestMoorEntity')
-class TestMoorEntities extends Table {
+class TestMoorEntities extends SyncableMoorTable {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text().withLength(min: 3, max: 100)();
   DateTimeColumn get created => dateTime()();
-  BoolColumn get shouldSync => boolean().clientDefault(() => true)();
 }
 
 class TestMoorEntityProxyFactory extends ProxyFactory<TestMoorEntityProxy,

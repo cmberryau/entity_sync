@@ -8,6 +8,7 @@ import 'package:entity_sync/src/sync.dart';
 
 /// Responsible for creating proxies
 abstract class ProxyFactory<TProxy, TEntity extends DataClass> {
+  /// Creates a proxy from a moor instance
   TProxy proxyFromInstance(TEntity instance);
 }
 
@@ -18,7 +19,12 @@ abstract class ProxyMixin implements SyncableMixin, SerializableMixin {
   }
 }
 
-class MoorStorage<TProxy extends ProxyMixin> extends Storage<TProxy> {
+abstract class SyncableMoorTable extends Table {
+  BoolColumn get shouldSync => boolean().clientDefault(() => true)();
+}
+
+/// Responsible for local storage through moor
+class MoorStorage<TProxy extends ProxyMixin> implements Storage<TProxy> {
   /// The moor database that we are syncing with
   final GeneratedDatabase database;
   /// The moor table that we are syncing with
@@ -45,6 +51,10 @@ class MoorStorage<TProxy extends ProxyMixin> extends Storage<TProxy> {
     /// get the actual flag field name
     final actualFlagField = reflectClass(TProxy)
         .getField(Symbol('flagField')).reflectee;
+
+    if (table is! SyncableMoorTable) {
+      throw ArgumentError('Table argument must be SyncableMoorTable');
+    }
 
     if (actualFlagField == null) {
       throw ArgumentError('TSyncable does not have static BoolField member');
