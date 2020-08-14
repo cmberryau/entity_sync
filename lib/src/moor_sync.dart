@@ -41,28 +41,32 @@ class MoorSyncController<TSyncable extends SyncableMixin> extends SyncController
     final endpointResults = <EndpointResult<TSyncable>>[];
 
     /// push to endpoint
-    for (var instance in toSyncInstances) {
+    for (var instanceToPush in toSyncInstances) {
       /// push the instance as json to get around types
-      final pushToEndpoint = await endpoint.pushJson(instance.toJson());
+      final pushToEndpoint = await endpoint.pushJson(instanceToPush.toJson());
       /// save the endpoint results for the sync result
       endpointResults.add(pushToEndpoint);
       successful &= pushToEndpoint.successful;
 
-      /// compare and write changes from endpoint to table
       if (pushToEndpoint.successful) {
         if (pushToEndpoint.instances.isNotEmpty) {
-          /// TODO Warn if more than one returned
           if (pushToEndpoint.instances.length > 1) {
+            /// TODO Warn if more than one returned
             throw UnimplementedError();
           }
 
           final returnedInstance = pushToEndpoint.instances[0];
-        /// TODO Warn if none returned
+          /// Compare and write any changes to table
+          if(!endpoint.serializer.areEqual(instanceToPush, returnedInstance)) {
+            /// TODO Write endpoint changes
+            throw UnimplementedError();
+          }
         } else {
+          /// TODO Warn if none returned
           throw UnimplementedError();
         }
-      /// TODO Warn if not successful
       } else {
+        /// TODO Warn if not successful
         throw UnimplementedError();
       }
     }

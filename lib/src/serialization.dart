@@ -18,6 +18,11 @@ abstract class SerializableField {
   dynamic getValue(SerializableMixin instance) {
     return instance.getFieldValue(name);
   }
+
+  /// Evaluates if two values are equal
+  bool areEqual(dynamic a, dynamic b) {
+    return a == b;
+  }
 }
 
 /// Represents an integer field which may be serialized
@@ -91,6 +96,10 @@ class BoolField extends SerializableField {
 abstract class SerializableMixin {
   dynamic getFieldValue(String fieldName) {
     return reflect(this).getField(Symbol(fieldName)).reflectee;
+  }
+
+  static dynamic getFieldValueStatic(dynamic instance, String fieldName) {
+    return reflect(instance).getField(Symbol(fieldName)).reflectee;
   }
 }
 
@@ -209,6 +218,21 @@ abstract class Serializer<TSerializable extends SerializableMixin> {
       return createInstance(_validatedData);
     }
     return null;
+  }
+
+  /// Evaluates if the serialized fields are equal
+  bool areEqual(dynamic a, dynamic b) {
+    final fields = getFields();
+    for (var field in fields) {
+      final aFieldValue = SerializableMixin.getFieldValueStatic(a, field.name);
+      final bFieldValue = SerializableMixin.getFieldValueStatic(b, field.name);
+
+      if (!field.areEqual(aFieldValue, bFieldValue)) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   /// Creates an instance from validated data
