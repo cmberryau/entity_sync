@@ -51,6 +51,7 @@ class SyncResult<TSyncable extends SyncableMixin> {
 abstract class SyncController<TSyncable extends SyncableMixin> {
   /// The endpoint for syncing
   final Endpoint<TSyncable> endpoint;
+
   /// The last time a sync was performed
   DateTime lastSync;
 

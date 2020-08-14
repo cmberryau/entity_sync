@@ -25,8 +25,15 @@ abstract class Endpoint<TSyncable extends SyncableMixin> {
   Endpoint(this.serializer);
 
   /// Pushes a single entity and returns any updates
-  Future<EndpointResult<TSyncable>> push(TSyncable instance,
-      [Serializer<TSyncable> serializer]);
+  Future<EndpointResult<TSyncable>> push(instance, [serializer]) async {
+    serializer = _getSerializer(serializer);
+
+    /// Get the representation of the instance
+    serializer.instance = instance;
+    final body = serializer.toRepresentation();
+
+    return pushJson(body, serializer);
+  }
 
   /// Pushes a single entity that is already encoded in json
   Future<EndpointResult<TSyncable>> pushJson(Map<String, dynamic> data,
@@ -40,12 +47,20 @@ abstract class Endpoint<TSyncable extends SyncableMixin> {
   Future<EndpointResult<TSyncable>> pullAll([Serializer<TSyncable> serializer]);
 
   /// Pulls and returns a single entity
-  Future<EndpointResult<TSyncable>> pullAllSince(DateTime since,
-      [Serializer<TSyncable> serializer]);
+  Future<EndpointResult<TSyncable>> pullAllSince([DateTime since,
+      Serializer<TSyncable> serializer]);
+
+  Serializer<SyncableMixin> _getSerializer(Serializer<SyncableMixin> serializer) {
+    if (serializer == null) {
+      return this.serializer;
+    }
+
+    return serializer;
+  }
 }
 
 /// Represents a restful api endpoint
-class RestfulApiEndpoint<TSyncable extends SyncableMixin> extends Endpoint {
+class RestfulApiEndpoint<TSyncable extends SyncableMixin> extends Endpoint<TSyncable> {
   final String url;
   http.Client client;
 
@@ -80,17 +95,6 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin> extends Endpoint {
       print(e);
       rethrow;
     }
-  }
-
-  @override
-  Future<EndpointResult<TSyncable>> push(instance, [serializer]) async {
-    serializer = _getSerializer(serializer);
-
-    /// Get the representation of the instance
-    serializer.instance = instance;
-    final body = serializer.toRepresentation();
-
-    return pushJson(body, serializer);
   }
 
   @override
@@ -131,9 +135,9 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin> extends Endpoint {
   }
 
   @override
-  Future<EndpointResult<SyncableMixin>> pullAllSince(DateTime since,
-      [Serializer<SyncableMixin> serializer]) {
-    // TODO: implement pullAllModifiedSince
+  Future<EndpointResult<TSyncable>> pullAllSince([DateTime since,
+      Serializer<SyncableMixin> serializer]) {
+    // TODO: implement pullAllSince
     throw UnimplementedError();
   }
 
@@ -172,13 +176,5 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin> extends Endpoint {
 
   String _instanceUrl(TSyncable instance) {
     return '${url}/${instance.getKeyRepresentation()}';
-  }
-
-  Serializer<SyncableMixin> _getSerializer(Serializer<SyncableMixin> serializer) {
-    if (serializer == null) {
-      return this.serializer;
-    }
-
-    return serializer;
   }
 }

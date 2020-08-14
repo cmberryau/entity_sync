@@ -104,7 +104,6 @@ void main() {
       expect(entities, isNotNull);
       expect(entities.length, equals(0));
 
-
       await database.into(database.testMoorEntities).insert(postTestEntity);
 
       entities = await database.getTestMoorEntities();
@@ -114,8 +113,8 @@ void main() {
       /// Create the endpoint and the sync controller
       final endpoint = RestfulApiEndpoint<TestMoorEntityProxy>(url,
           TestMoorEntityProxySerializer(), client: client);
-      final syncController = MoorSyncController<TestMoorEntityProxy>(endpoint,
-          database.testMoorEntities, database);
+      final syncController = MoorSyncController<TestMoorEntityProxy, TestMoorEntity>(endpoint,
+          database.testMoorEntities, database, TestMoorEntityProxyFactory());
 
       /// Perform the sync
       final results = await syncController.sync();
