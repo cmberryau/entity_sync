@@ -18,6 +18,7 @@ Actually syncing:
 3. Instantiate a SyncController, passing in the Endpoint and Storage
 4. Call the sync method on the SyncController
 
+When you modify any of your synced entities, set shouldSync flag to true, the sync method will take care of the rest.
 
 A simple usage example:
 

@@ -20,7 +20,9 @@ abstract class ProxyMixin implements SyncableMixin, SerializableMixin {
 }
 
 abstract class SyncableMoorTableMixin {
+  /// Indicates if the entity should be synced
   BoolColumn get shouldSync => BoolColumnBuilder().clientDefault(() => true)();
+
 }
 
 /// Responsible for local storage through moor
