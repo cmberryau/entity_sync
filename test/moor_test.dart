@@ -1,4 +1,4 @@
-import 'package:entity_sync/src/moor_sync.dart';
+import 'package:entity_sync/src/moor.dart';
 import 'package:moor/ffi.dart';
 import 'package:test/test.dart';
 
