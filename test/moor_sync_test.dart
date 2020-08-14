@@ -20,7 +20,8 @@ class TestMoorEntityProxySerializer extends Serializer<TestMoorEntityProxy> {
     DateTimeField('created'),
   ];
 
-  TestMoorEntityProxySerializer({Map<String, dynamic>data, TestMoorEntityProxy instance})
+  TestMoorEntityProxySerializer({Map<String, dynamic>data,
+    TestMoorEntityProxy instance})
       : super(data: data, instance: instance);
 
   int validateId(int value) {
@@ -71,18 +72,26 @@ void main() {
       /// Set up the mock client
       final client = MockClient();
       final url = 'https://www.example.com/test-entity';
-      final getResponseBody = '[{"id": 2, "name": "TestName", "created": "2020-08-07T12:30:15.123456"}]';
-      final postResponseBody = '{"id": 1, "name": "UpdatedTestName", "created": "2020-08-07T12:30:15.123456"}';
+      final getResponseBody = '[{"id": 2, "name": "TestName", '
+          '"created": "2020-08-07T12:30:15.123456"}]';
+      final postResponseBody = '{"id": 1, "name": "UpdatedTestName", '
+          '"created": "2020-08-07T12:30:15.123456"}';
       final statusCode = 200;
 
       final now = DateTime.now();
-      final nowWithoutSubsecondPrecision = DateTime(now.year, now.month, now.day, now.hour, now.minute, now.second);
-      final postTestEntity = TestMoorEntityProxy(1, "OutdatedTestName", nowWithoutSubsecondPrecision, shouldSync: true);
-      final postTestSerializer = TestMoorEntityProxySerializer(instance: postTestEntity);
-      final postTestRepresentation = postTestSerializer.toRepresentationString();
+      final nowWithoutSubsecondPrecision = DateTime(now.year, now.month,
+          now.day, now.hour, now.minute, now.second);
+      final postTestEntity = TestMoorEntityProxy(1, "OutdatedTestName",
+          nowWithoutSubsecondPrecision, shouldSync: true);
+      final postTestSerializer = TestMoorEntityProxySerializer(
+          instance: postTestEntity);
+      final postTestRepresentation = postTestSerializer
+          .toRepresentationString();
 
-      when(client.get('${url}')).thenAnswer((a) async => http.Response(getResponseBody, statusCode));
-      when(client.post('${url}', body: postTestRepresentation)).thenAnswer((a) async => http.Response(postResponseBody, statusCode));
+      when(client.get('${url}')).thenAnswer((a) async => http.Response(
+          getResponseBody, statusCode));
+      when(client.post('${url}', body: postTestRepresentation))
+          .thenAnswer((a) async => http.Response(postResponseBody, statusCode));
 
       /// Test the mock client
       final response = await client.get('${url}');
@@ -103,8 +112,10 @@ void main() {
       expect(entities.length, equals(1));
 
       /// Create the endpoint and the sync controller
-      final endpoint = RestfulApiEndpoint<TestMoorEntityProxy>(url, TestMoorEntityProxySerializer(), client: client);
-      final syncController = MoorSyncController<TestMoorEntityProxy>(endpoint, database.testMoorEntities, database);
+      final endpoint = RestfulApiEndpoint<TestMoorEntityProxy>(url,
+          TestMoorEntityProxySerializer(), client: client);
+      final syncController = MoorSyncController<TestMoorEntityProxy>(endpoint,
+          database.testMoorEntities, database);
 
       /// Perform the sync
       final results = await syncController.sync();

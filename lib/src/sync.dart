@@ -41,7 +41,10 @@ abstract class SyncableMixin implements SerializableMixin {
 
 /// Represents the result of a sync operation
 class SyncResult<TSyncable extends SyncableMixin> {
+  final bool successful;
+  final List<EndpointResult<TSyncable>> endpointResults;
 
+  SyncResult(this.successful, this.endpointResults);
 }
 
 /// Responsible for controlling the syncing of entities

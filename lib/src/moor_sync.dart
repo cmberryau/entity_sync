@@ -36,12 +36,35 @@ class MoorSyncController<TSyncable extends SyncableMixin> extends SyncController
     /// get all entities with flag == true
     final toSyncInstances = await (database.select(table)
       ..where((t) => flagColumn.equals(true))).get();
-    
+
+    var successful = true;
+    final endpointResults = <EndpointResult<TSyncable>>[];
+
     /// push to endpoint
     for (var instance in toSyncInstances) {
+      /// push the instance as json to get around types
       final pushToEndpoint = await endpoint.pushJson(instance.toJson());
+      /// save the endpoint results for the sync result
+      endpointResults.add(pushToEndpoint);
+      successful &= pushToEndpoint.successful;
 
-      /// TODO compare and write changes from endpoint to moor table
+      /// compare and write changes from endpoint to table
+      if (pushToEndpoint.successful) {
+        if (pushToEndpoint.instances.isNotEmpty) {
+          /// TODO Warn if more than one returned
+          if (pushToEndpoint.instances.length > 1) {
+            throw UnimplementedError();
+          }
+
+          final returnedInstance = pushToEndpoint.instances[0];
+        /// TODO Warn if none returned
+        } else {
+          throw UnimplementedError();
+        }
+      /// TODO Warn if not successful
+      } else {
+        throw UnimplementedError();
+      }
     }
 
     /// pull all from endpoint since last sync
@@ -54,6 +77,6 @@ class MoorSyncController<TSyncable extends SyncableMixin> extends SyncController
       await database.into(table).insertOnConflictUpdate(entity as dynamic);
     }
 
-    return SyncResult<TSyncable>();
+    return SyncResult<TSyncable>(successful, endpointResults);
   }
 }

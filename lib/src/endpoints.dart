@@ -12,6 +12,9 @@ class EndpointResult<TSyncable extends SyncableMixin> {
   List<TSyncable> instances;
 
   EndpointResult(this.response, this.instances);
+
+  /// Was the endpoint operation successful?
+  bool get successful => response.statusCode >= 200 && response.statusCode < 300;
 }
 
 /// Represents an entity endpoint

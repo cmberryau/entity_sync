@@ -18,9 +18,11 @@ void main() {
       /// Set up the mock client
       final client = MockClient();
       final url = 'https://www.example.com/test-entity';
-      final body = '{"id": 1, "name": "TestName", "created": "2020-08-07T12:30:15.123456"}';
+      final body = '{"id": 1, "name": "TestName", '
+          '"created": "2020-08-07T12:30:15.123456"}';
       final statusCode = 200;
-      when(client.get('${url}/1')).thenAnswer((_) async => http.Response(body, statusCode));
+      when(client.get('${url}/1')).thenAnswer(
+              (_) async => http.Response(body, statusCode));
 
       /// Test the mock client
       final response = await client.get('${url}/1');
