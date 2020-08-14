@@ -58,7 +58,7 @@ class SyncController<TSyncable extends SyncableMixin> {
   SyncController(this.endpoint, this.storage);
 
   @override
-  Future<SyncResult<TSyncable>> sync() async {
+  Future<SyncResult<TSyncable>> sync([DateTime since]) async {
     /// get all instances to sync
     final toSyncInstances = await storage.getInstancesToSync();
 
@@ -97,8 +97,7 @@ class SyncController<TSyncable extends SyncableMixin> {
     }
 
     /// pull all from endpoint since last sync
-    /// TODO add last sync filter
-    final endpointPullAll = await endpoint.pullAll();
+    final endpointPullAll = await endpoint.pullAllSince(since);
     final endpointInstances = endpointPullAll.instances;
 
     /// Insert all into local db

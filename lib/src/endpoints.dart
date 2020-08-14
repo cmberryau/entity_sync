@@ -63,9 +63,13 @@ abstract class Endpoint<TSyncable extends SyncableMixin> {
 class RestfulApiEndpoint<TSyncable extends SyncableMixin> extends Endpoint<TSyncable> {
   final String url;
   http.Client client;
+  static const String ModifiedKeyDefault = 'modified';
+  String modifiedKey;
 
-  RestfulApiEndpoint(this.url, serializer, {http.Client client}) : super(serializer) {
+  RestfulApiEndpoint(this.url, serializer, {http.Client client, modifiedKey})
+      : super(serializer) {
     this.client = client ??= http.Client();
+    this.modifiedKey = modifiedKey ??= ModifiedKeyDefault;
   }
 
   @override
@@ -136,9 +140,25 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin> extends Endpoint<TSync
 
   @override
   Future<EndpointResult<TSyncable>> pullAllSince([DateTime since,
-      Serializer<SyncableMixin> serializer]) {
-    // TODO: implement pullAllSince
-    throw UnimplementedError();
+      Serializer<SyncableMixin> serializer]) async {
+    serializer = _getSerializer(serializer);
+    if (since == null) {
+      return pullAll(serializer);
+    }
+
+    try {
+      final response = await client.get(_makeSinceUrl(url, since));
+
+      if (response.statusCode == 200) {
+        final instances = _responseToInstances(serializer, response);
+        return EndpointResult<TSyncable>(response, instances);
+      }
+      return EndpointResult<TSyncable>(response, []);
+
+    } on HttpException catch (e) {
+      print(e);
+      rethrow;
+    }
   }
 
   List<TSyncable> _responseToInstances(Serializer<SyncableMixin> serializer,
@@ -176,5 +196,9 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin> extends Endpoint<TSync
 
   String _instanceUrl(TSyncable instance) {
     return '${url}/${instance.getKeyRepresentation()}';
+  }
+
+  String _makeSinceUrl(url, DateTime since) {
+    return '${url}/?modified__gt=${Uri.encodeComponent(since.toIso8601String())}';
   }
 }
