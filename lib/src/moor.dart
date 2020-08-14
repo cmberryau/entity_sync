@@ -13,16 +13,13 @@ abstract class ProxyFactory<TProxy, TEntity extends DataClass> {
 }
 
 /// Provides all the functionality to act as a proxy
-abstract class ProxyMixin implements SyncableMixin, SerializableMixin {
-  Insertable<DataClass> asInsertable() {
-    return this as Insertable<DataClass>;
-  }
+abstract class ProxyMixin<TEntity extends DataClass>
+    implements Insertable<TEntity>, SyncableMixin, SerializableMixin  {
 }
 
 abstract class SyncableMoorTableMixin {
   /// Indicates if the entity should be synced
   BoolColumn get shouldSync => BoolColumnBuilder().clientDefault(() => true)();
-
 }
 
 /// Responsible for local storage through moor
@@ -45,7 +42,7 @@ class MoorStorage<TProxy extends ProxyMixin> implements Storage<TProxy> {
 
   @override
   Future<StorageResult<TProxy>> upsertInstance(TProxy instance) async {
-    await database.into(table).insertOnConflictUpdate(instance.asInsertable());
+    await database.into(table).insertOnConflictUpdate(instance);
     return StorageResult<TProxy>(true);
   }
 

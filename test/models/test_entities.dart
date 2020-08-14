@@ -16,18 +16,22 @@ class TestMoorEntityProxyFactory extends ProxyFactory<TestMoorEntityProxy,
     TestMoorEntity> {
   @override
   TestMoorEntityProxy proxyFromInstance(TestMoorEntity instance) {
-    return TestMoorEntityProxy.fromEntity(instance);
+    return TestMoorEntityProxy.fromInstance(instance);
   }
 }
 
-class TestMoorEntityProxy extends TestMoorEntity with ProxyMixin,
-    SyncableMixin, SerializableMixin {
+class TestMoorEntityProxy extends TestMoorEntity
+    with ProxyMixin<TestMoorEntity>, SyncableMixin, SerializableMixin {
   /// The unique syncable key of the entity
   static final keyField = IntegerField('id');
   /// The flag to indicate the entity needs to be synced
   static final flagField = BoolField('shouldSync');
 
-  TestMoorEntityProxy.fromEntity(TestMoorEntity instance)
+  static ProxyMixin proxyFromInstance(DataClass instance) {
+    return TestMoorEntityProxy.fromInstance(instance);
+  }
+
+  TestMoorEntityProxy.fromInstance(TestMoorEntity instance)
       :super(id: instance.id,
              name: instance.name,
              created: instance.created,
