@@ -1,7 +1,7 @@
 import 'package:moor/moor.dart';
 
 import 'package:entity_sync/entity_sync.dart';
-import 'package:entity_sync/moor_entity_sync.dart';
+import 'package:entity_sync/moor_sync.dart';
 
 import 'database.dart';
 

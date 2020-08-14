@@ -1,4 +1,3 @@
-import 'package:entity_sync/src/moor.dart';
 import 'package:moor/ffi.dart';
 import 'package:test/test.dart';
 
@@ -6,23 +5,22 @@ import 'package:mockito/mockito.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:entity_sync/entity_sync.dart';
+import 'package:entity_sync/moor_sync.dart';
 
 import 'models/test_entities.dart';
-import 'serialization_test.dart';
-import 'endpoints_test.dart';
 import 'models/database.dart';
+import 'endpoints_test.dart';
 
 /// A serializer for TestEntity
-class TestMoorEntityProxySerializer extends Serializer<TestMoorEntityProxy> {
+class TestMoorEntitySerializer extends Serializer<TestMoorEntityProxy> {
   final fields = <SerializableField>[
     IntegerField('id'),
     StringField('name'),
     DateTimeField('created'),
   ];
 
-  TestMoorEntityProxySerializer({Map<String, dynamic>data,
-    TestMoorEntityProxy instance})
-      : super(data: data, instance: instance);
+  TestMoorEntitySerializer({Map<String, dynamic>data,
+    TestMoorEntityProxy instance}) : super(data: data, instance: instance);
 
   int validateId(int value) {
     if (value < 0) {
@@ -83,7 +81,7 @@ void main() {
           now.day, now.hour, now.minute, now.second);
       final postTestEntity = TestMoorEntityProxy(1, "OutdatedTestName",
           nowWithoutSubsecondPrecision, shouldSync: true);
-      final postTestSerializer = TestMoorEntityProxySerializer(
+      final postTestSerializer = TestMoorEntitySerializer(
           instance: postTestEntity);
       final postTestRepresentation = postTestSerializer
           .toRepresentationString();
@@ -112,7 +110,7 @@ void main() {
 
       /// Create the endpoint and the sync controller
       final endpoint = RestfulApiEndpoint<TestMoorEntityProxy>(url,
-          TestMoorEntityProxySerializer(), client: client);
+          TestMoorEntitySerializer(), client: client);
       final factory = TestMoorEntityProxyFactory();
       final storage = MoorStorage<TestMoorEntityProxy>(database.testMoorEntities, database, factory);
       final syncController = SyncController<TestMoorEntityProxy>(endpoint, storage);
