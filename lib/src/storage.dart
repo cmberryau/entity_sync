@@ -6,7 +6,11 @@ class StorageResult<TSyncable extends SyncableMixin> {
   StorageResult(this.successful);
 }
 
+/// Responsible for local storage of syncable entities
 abstract class Storage<TSyncable extends SyncableMixin> {
+  /// Gets the instances to sync
   Future<Iterable<TSyncable>> getInstancesToSync();
-  Future<StorageResult<TSyncable>> writeInstance(TSyncable instance);
+  
+  /// Upserts an instance
+  Future<StorageResult<TSyncable>> upsertInstance(TSyncable instance);
 }

@@ -113,8 +113,9 @@ void main() {
       /// Create the endpoint and the sync controller
       final endpoint = RestfulApiEndpoint<TestMoorEntityProxy>(url,
           TestMoorEntityProxySerializer(), client: client);
-      final syncController = MoorSyncController<TestMoorEntityProxy, TestMoorEntity>(endpoint,
-          database.testMoorEntities, database, TestMoorEntityProxyFactory());
+      final factory = TestMoorEntityProxyFactory();
+      final storage = MoorStorage<TestMoorEntityProxy>(database.testMoorEntities, database, factory);
+      final syncController = SyncController<TestMoorEntityProxy>(endpoint, storage);
 
       /// Perform the sync
       final results = await syncController.sync();

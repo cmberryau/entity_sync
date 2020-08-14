@@ -3,6 +3,7 @@ import 'dart:mirrors';
 import 'package:entity_sync/src/endpoints.dart';
 
 import 'serialization.dart';
+import 'storage.dart';
 
 /// Added to a class to support syncing
 /// Syncable classes also must be serializable
@@ -48,15 +49,63 @@ class SyncResult<TSyncable extends SyncableMixin> {
 }
 
 /// Responsible for controlling the syncing of entities
-abstract class SyncController<TSyncable extends SyncableMixin> {
+class SyncController<TSyncable extends SyncableMixin> {
   /// The endpoint for syncing
   final Endpoint<TSyncable> endpoint;
+  /// The storage for syncing
+  final Storage<TSyncable> storage;
 
-  /// The last time a sync was performed
-  DateTime lastSync;
+  SyncController(this.endpoint, this.storage);
 
-  SyncController(this.endpoint);
+  @override
+  Future<SyncResult<TSyncable>> sync() async {
+    /// get all instances to sync
+    final toSyncInstances = await storage.getInstancesToSync();
 
-  /// Performs a full synchronisation
-  Future<SyncResult<TSyncable>> sync();
+    var successful = true;
+    final endpointResults = <EndpointResult<TSyncable>>[];
+
+    /// push to endpoint
+    for (var instanceToPush in toSyncInstances) {
+      /// push the instance as json to get around types
+      final pushToEndpoint = await endpoint.push(instanceToPush);
+
+      /// save the endpoint results for the sync result
+      endpointResults.add(pushToEndpoint);
+      successful &= pushToEndpoint.successful;
+
+      if (pushToEndpoint.successful) {
+        if (pushToEndpoint.instances.isNotEmpty) {
+          if (pushToEndpoint.instances.length > 1) {
+            /// TODO Warn if more than one returned
+            throw UnimplementedError();
+          }
+
+          final returnedInstance = pushToEndpoint.instances[0];
+          /// Compare and write any changes to table
+          if(!endpoint.serializer.areEqual(instanceToPush, returnedInstance)) {
+            await storage.upsertInstance(returnedInstance);
+          }
+        } else {
+          /// TODO Warn if none returned
+          throw UnimplementedError();
+        }
+      } else {
+        /// TODO Warn if not successful
+        throw UnimplementedError();
+      }
+    }
+
+    /// pull all from endpoint since last sync
+    /// TODO add last sync filter
+    final endpointPullAll = await endpoint.pullAll();
+    final endpointInstances = endpointPullAll.instances;
+
+    /// Insert all into local db
+    for (var instance in endpointInstances) {
+      await storage.upsertInstance(instance);
+    }
+
+    return SyncResult<TSyncable>(successful, endpointResults);
+  }
 }
