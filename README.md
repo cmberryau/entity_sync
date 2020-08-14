@@ -3,39 +3,98 @@ An entity sync library for Dart developers.
 Created from templates made available by Stagehand under a BSD-style
 [license](https://github.com/dart-lang/stagehand/blob/master/LICENSE).
 
-## Usage
+## Usage for Moor
+
+Preparation:
+1. Add the SyncableMoorTableMixin to your Table 
+2. Create a proxy class which inherits from your generated Moor class - see ProxyMixin
+3. Create a factory class for your proxy class - see ProxyFactory
+4. Create a serializer for your proxy class - see Serializer
+
+
+Actually syncing:
+3. Instantiate an Endpoint (e.g RestfulApiEndpoint)
+4. Instantiate a Storage (e.g MoorStorage)
+5. Instantiate a SyncController, passing in the Endpoint and Storage
+6. Call the sync method on the SyncController
+
 
 A simple usage example:
 
 ```dart
+import 'package:moor/moor.dart';
+
 import 'package:entity_sync/entity_sync.dart';
+import 'package:entity_sync/moor_sync.dart';
 
-class TestEntity with SerializableMixin {
-  int id;
-  String name;
-  DateTime created;
+/// This is your moor database
+import 'database.dart';
 
-  TestEntity(this.id, this.name, this.created);
+main() {
+  /// Your database
+  final database = TestDatabase(VmDatabase.memory());
+
+  final endpoint = RestfulApiEndpoint<TestMoorEntityProxy>(url, TestMoorEntitySerializer());
+  final storage = MoorStorage<TestMoorEntityProxy>(database.testMoorEntities, database, TestMoorEntityProxyFactory());
+  final syncController = SyncController<TestMoorEntityProxy>(endpoint, storage);
+
+  syncController.sync();
 }
-class TestEntitySerializer extends Serializer {
+
+/// Add the SyncableMoorTableMixin to your table
+@DataClassName('TestMoorEntity')
+class TestMoorEntities extends Table with SyncableMoorTableMixin {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text().withLength(min: 3, max: 100)();
+  DateTimeColumn get created => dateTime()();
+}
+
+/// Create a proxy class which inherits from your generated Moor class - see ProxyMixin
+class TestMoorEntityProxy extends TestMoorEntity with ProxyMixin,
+    SyncableMixin, SerializableMixin {
+  /// The unique syncable key of the entity
+  static final keyField = IntegerField('id');
+  /// The flag to indicate the entity needs to be synced
+  static final flagField = BoolField('shouldSync');
+
+  TestMoorEntityProxy.fromEntity(TestMoorEntity instance)
+      :super(id: instance.id,
+             name: instance.name,
+             created: instance.created,
+             shouldSync: instance.shouldSync);
+
+  TestMoorEntityProxy(id, name, created, {bool shouldSync = false})
+      :super(id: id,
+             name: name,
+             created: created,
+             shouldSync: shouldSync);
+}
+
+/// Create a factory class for your proxy class - see ProxyFactory 
+class TestMoorEntityProxyFactory extends ProxyFactory<TestMoorEntityProxy,
+    TestMoorEntity> {
+  @override
+  TestMoorEntityProxy proxyFromInstance(TestMoorEntity instance) {
+    return TestMoorEntityProxy.fromEntity(instance);
+  }
+}
+
+// Create a serializer for your proxy class - see Serializer
+class TestMoorEntitySerializer extends Serializer<TestMoorEntityProxy> {
   final fields = <SerializableField>[
     IntegerField('id'),
     StringField('name'),
     DateTimeField('created'),
   ];
 
-  TestEntitySerializer({Map<String, dynamic>data, SerializableMixin instance})
-      : super(data: data, instance: instance);
-}
+  TestMoorEntitySerializer({Map<String, dynamic>data,
+    TestMoorEntityProxy instance}) : super(data: data, instance: instance);
 
-
-main() {
-  final instance = TestEntity(0, 'TestName', DateTime.now());
-  final serializer = TestEntitySerializer(instance: instance);
-
-  /// validate that the instance provided is valid
-  final valid = serializer.isValid();
-  /// get a json representation of the instance
-  final json = serializer.toRepresentation();
+  @override
+  TestMoorEntityProxy createInstance(validatedData) {
+    return TestMoorEntityProxy(validatedData['id'],
+                               validatedData['name'],
+                               validatedData['created']);
+  }
 }
 ```

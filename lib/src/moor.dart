@@ -19,8 +19,8 @@ abstract class ProxyMixin implements SyncableMixin, SerializableMixin {
   }
 }
 
-abstract class SyncableMoorTable extends Table {
-  BoolColumn get shouldSync => boolean().clientDefault(() => true)();
+abstract class SyncableMoorTableMixin {
+  BoolColumn get shouldSync => BoolColumnBuilder().clientDefault(() => true)();
 }
 
 /// Responsible for local storage through moor
@@ -52,7 +52,7 @@ class MoorStorage<TProxy extends ProxyMixin> implements Storage<TProxy> {
     final actualFlagField = reflectClass(TProxy)
         .getField(Symbol('flagField')).reflectee;
 
-    if (table is! SyncableMoorTable) {
+    if (table is! SyncableMoorTableMixin) {
       throw ArgumentError('Table argument must be SyncableMoorTable');
     }
 
