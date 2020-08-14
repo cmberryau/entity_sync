@@ -13,10 +13,10 @@ Preparation:
 
 
 Actually syncing:
-3. Instantiate an Endpoint (e.g RestfulApiEndpoint)
-4. Instantiate a Storage (e.g MoorStorage)
-5. Instantiate a SyncController, passing in the Endpoint and Storage
-6. Call the sync method on the SyncController
+1. Instantiate an Endpoint (e.g RestfulApiEndpoint)
+2. Instantiate a Storage (e.g MoorStorage)
+3. Instantiate a SyncController, passing in the Endpoint and Storage
+4. Call the sync method on the SyncController
 
 
 A simple usage example:
