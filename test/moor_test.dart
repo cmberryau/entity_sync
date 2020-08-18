@@ -52,9 +52,10 @@ class TestMoorEntitySerializer extends Serializer<TestMoorEntityProxy> {
 
   @override
   TestMoorEntityProxy createInstance(validatedData) {
-    return TestMoorEntityProxy(validatedData['id'],
-                               validatedData['name'],
-                               validatedData['created']);
+    final entity = TestMoorEntity(id: validatedData['id'],
+                                  name: validatedData['name'],
+                                  created: validatedData['created']);
+    return TestMoorEntityProxy(entity);
   }
 }
 
@@ -79,10 +80,11 @@ void main() {
       final now = DateTime.now();
       final nowWithoutSubsecondPrecision = DateTime(now.year, now.month,
           now.day, now.hour, now.minute, now.second);
-      final postTestEntity = TestMoorEntityProxy(1, "OutdatedTestName",
-          nowWithoutSubsecondPrecision, shouldSync: true);
+      final postTestEntity = TestMoorEntity(id: 1, name:"OutdatedTestName",
+          created: nowWithoutSubsecondPrecision, shouldSync: true);
+      final postTestProxy = TestMoorEntityProxy(postTestEntity);
       final postTestSerializer = TestMoorEntitySerializer(
-          instance: postTestEntity);
+          instance: postTestProxy);
       final postTestRepresentation = postTestSerializer
           .toRepresentationString();
 
@@ -112,8 +114,10 @@ void main() {
       final endpoint = RestfulApiEndpoint<TestMoorEntityProxy>(url,
           TestMoorEntitySerializer(), client: client);
       final factory = TestMoorEntityProxyFactory();
-      final storage = MoorStorage<TestMoorEntityProxy>(database.testMoorEntities, database, factory);
-      final syncController = SyncController<TestMoorEntityProxy>(endpoint, storage);
+      final storage = MoorStorage<TestMoorEntityProxy>(
+          database.testMoorEntities, database, factory);
+      final syncController = SyncController<TestMoorEntityProxy>(endpoint,
+          storage);
 
       /// Perform the sync
       final results = await syncController.sync();
