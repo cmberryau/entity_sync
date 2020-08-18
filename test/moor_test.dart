@@ -54,8 +54,9 @@ class TestMoorEntitySerializer extends Serializer<TestMoorEntityProxy> {
   TestMoorEntityProxy createInstance(validatedData) {
     final entity = TestMoorEntity(id: validatedData['id'],
                                   name: validatedData['name'],
-                                  created: validatedData['created']);
-    return TestMoorEntityProxy(entity);
+                                  created: validatedData['created'],
+                                  shouldSync: false);
+    return TestMoorEntityProxy(entity, entity.shouldSync);
   }
 }
 
@@ -82,7 +83,8 @@ void main() {
           now.day, now.hour, now.minute, now.second);
       final postTestEntity = TestMoorEntity(id: 1, name:"OutdatedTestName",
           created: nowWithoutSubsecondPrecision, shouldSync: true);
-      final postTestProxy = TestMoorEntityProxy(postTestEntity);
+      final postTestProxy = TestMoorEntityProxy(postTestEntity,
+          postTestEntity.shouldSync);
       final postTestSerializer = TestMoorEntitySerializer(
           instance: postTestProxy);
       final postTestRepresentation = postTestSerializer

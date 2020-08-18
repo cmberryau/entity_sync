@@ -36,13 +36,13 @@ class MoorStorage<TProxy extends ProxyMixin> implements Storage<TProxy> {
   /// The flag column of the table
   Column flagColumn;
   /// The proxy factory
-  final ProxyFactory factory;
+  final proxyFactory;
 
   @override
   Future<Iterable<TProxy>> getInstancesToSync() async {
     final toSyncInstances = await (database.select(table.actualTable())
       ..where((t) => flagColumn.equals(true))).get();
-    return toSyncInstances.map((e) => factory.fromInstance(e));
+    return toSyncInstances.map((e) => proxyFactory.fromInstance(e));
   }
 
   @override
@@ -51,7 +51,7 @@ class MoorStorage<TProxy extends ProxyMixin> implements Storage<TProxy> {
     return StorageResult<TProxy>(true);
   }
 
-  MoorStorage(this.table, this.database, this.factory) {
+  MoorStorage(this.table, this.database, this.proxyFactory) {
     /// Get the flag column on the table
     flagColumn = reflect(table).getField(Symbol('shouldSync')).reflectee;
   }

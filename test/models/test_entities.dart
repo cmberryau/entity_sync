@@ -19,7 +19,7 @@ class TestMoorEntityProxyFactory extends ProxyFactory<TestMoorEntityProxy,
     TestMoorEntity> {
   @override
   TestMoorEntityProxy fromInstance(TestMoorEntity instance) {
-    return TestMoorEntityProxy(instance);
+    return TestMoorEntityProxy(instance, instance.shouldSync);
   }
 }
 
@@ -28,9 +28,10 @@ class TestMoorEntityProxy extends TestMoorEntity
   /// The unique syncable key of the entity
   static final keyField = IntegerField('id');
 
-  TestMoorEntityProxy(TestMoorEntity instance): super(id: instance.id,
-                                                      name: instance.name,
-                                                      created: instance.created,
-                                                      shouldSync: true);
+  TestMoorEntityProxy(TestMoorEntity instance, bool shouldSync)
+      : super(id: instance.id,
+              name: instance.name,
+              created: instance.created,
+              shouldSync: shouldSync);
 }
 
