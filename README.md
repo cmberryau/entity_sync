@@ -1,4 +1,4 @@
-An entity sync library for Dart.
+An entity sync library for Dart developers.
 
 ## Usage for Moor
 

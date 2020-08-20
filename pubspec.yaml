@@ -1,6 +1,6 @@
 name: entity_sync
 version: '0.0.1'
-description: An entity sync library for Dart.
+description: An entity sync library for Dart developers.
 homepage: github.com/cmberryau/entity_sync
 
 environment:
