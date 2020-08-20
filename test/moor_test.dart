@@ -68,60 +68,35 @@ void main() {
       database = TestDatabase(VmDatabase.memory());
     });
 
-    test('Test simple outdated local data case', () async {
-      /// Set up the mock client
-      final client = MockClient();
-      final url = 'https://www.example.com/test-entity';
-
-      final now = DateTime.now();
-      final nowWithoutSubsecondPrecision = DateTime(now.year, now.month,
-          now.day, now.hour, now.minute, now.second);
-      final postTestEntity = TestMoorEntity(id: 1, name:"OutdatedTestName",
-          created: nowWithoutSubsecondPrecision, shouldSync: true);
-      final postTestProxy = TestMoorEntityProxy(postTestEntity,
-          postTestEntity.shouldSync);
-      final postTestSerializer = TestMoorEntitySerializer(
-          instance: postTestProxy);
-      final postTestRepresentation = postTestSerializer
-          .toRepresentationString();
-
-      final getResponseBody = '[{"id": 2, "name": "TestName", '
-          '"created": "2020-08-07T12:30:15.123456"}]';
-      final postResponseBody = '{"id": 1, "name": "UpdatedTestName", '
-          '"created": "2020-08-07T12:45:15.123456"}';
-      final statusCode = 200;
-
-      when(client.get('${url}')).thenAnswer((a) async => http.Response(
-          getResponseBody, statusCode));
-      when(client.post('${url}', body: postTestRepresentation))
-          .thenAnswer((a) async => http.Response(postResponseBody, statusCode));
-
-      /// Validate that we have zero entities in the db
-      var entities = await database.getTestMoorEntities();
-      expect(entities, isNotNull);
-      expect(entities.length, equals(0));
-
-      /// Pop in one entity
-      await database.into(database.testMoorEntities).insert(postTestEntity);
-      entities = await database.getTestMoorEntities();
-      expect(entities, isNotNull);
-      expect(entities.length, equals(1));
-
-      /// Create the endpoint, storage and sync controller
-      final endpoint = RestfulApiEndpoint<TestMoorEntityProxy>(url,
-          TestMoorEntitySerializer(), client: client);
-      final factory = TestMoorEntityProxyFactory();
-      final storage = MoorStorage<TestMoorEntityProxy>(
-          database.testMoorEntities, database, factory);
-      final syncController = SyncController<TestMoorEntityProxy>(endpoint,
-          storage);
-
-      /// Perform the sync
-      final result = await syncController.sync();
+    test('Test outdated local data case', () async {
+      /// Run the sync
+      final result = await localOutdatedDataSync(database, false);
       expect(result, isNotNull);
 
       /// Validate the synced entities
-      entities = await database.getTestMoorEntities();
+      final entities = await database.getTestMoorEntities();
+      expect(entities, isNotNull);
+      expect(entities.length, equals(2));
+
+      /// Validate that entity with id == 1 has updated name
+      expect(entities[0].id, equals(1));
+      expect(entities[0].name, equals('UpdatedTestName'));
+      /// DateTime fields lose subsecond precision in moor
+      expect(entities[0].created, equals(DateTime(2020, 8, 7, 12, 45, 15)));
+
+      /// Validate that entity with id == 2 is as expected
+      expect(entities[1].id, equals(2));
+      expect(entities[1].name, equals('TestName'));
+      expect(entities[1].created, equals(DateTime(2020, 8, 7, 12, 30, 15)));
+    });
+
+    test('Test outdated local data case with readonly endpoint', () async {
+      /// Run the sync
+      final result = await localOutdatedDataSync(database, true);
+      expect(result, isNotNull);
+
+      /// Validate the synced entities
+      final entities = await database.getTestMoorEntities();
       expect(entities, isNotNull);
       expect(entities.length, equals(2));
 
@@ -141,4 +116,58 @@ void main() {
       await database.close();
     });
   });
+}
+
+Future<SyncResult> localOutdatedDataSync(TestDatabase database, bool readOnlyEndpoint) async {
+  /// Set up the mock client
+  final url = 'https://www.example.com/test-entity';
+  final client = MockClient();
+
+  final now = DateTime.now();
+  final nowWithoutSubsecondPrecision = DateTime(now.year, now.month,
+      now.day, now.hour, now.minute, now.second);
+  final postTestEntity = TestMoorEntity(id: 1, name:'OutdatedTestName',
+      created: nowWithoutSubsecondPrecision, shouldSync: true);
+  final postTestProxy = TestMoorEntityProxy(postTestEntity,
+      postTestEntity.shouldSync);
+  final postTestSerializer = TestMoorEntitySerializer(
+      instance: postTestProxy);
+  final postTestRepresentation = postTestSerializer
+      .toRepresentationString();
+
+  final getResponseBody = '[{"id": 2, "name": "TestName", '
+      '"created": "2020-08-07T12:30:15.123456"}]';
+  final postResponseBody = '{"id": 1, "name": "UpdatedTestName", '
+      '"created": "2020-08-07T12:45:15.123456"}';
+  final statusCode = 200;
+
+  when(client.get('${url}')).thenAnswer((a) async => http.Response(
+      getResponseBody, statusCode));
+  when(client.get('${url}/1'))
+      .thenAnswer((a) async => http.Response(postResponseBody, statusCode));
+  when(client.post('${url}', body: postTestRepresentation))
+      .thenAnswer((a) async => http.Response(postResponseBody, statusCode));
+
+  /// Validate that we have zero entities in the db
+  var entities = await database.getTestMoorEntities();
+  expect(entities, isNotNull);
+  expect(entities.length, equals(0));
+
+  /// Pop in one entity
+  await database.into(database.testMoorEntities).insert(postTestEntity);
+  entities = await database.getTestMoorEntities();
+  expect(entities, isNotNull);
+  expect(entities.length, equals(1));
+
+  /// Create the endpoint, storage and sync controller
+  final endpoint = RestfulApiEndpoint<TestMoorEntityProxy>(url,
+      TestMoorEntitySerializer(), client: client, readOnly: readOnlyEndpoint);
+  final factory = TestMoorEntityProxyFactory();
+  final storage = MoorStorage<TestMoorEntityProxy>(
+      database.testMoorEntities, database, factory);
+  final syncController = SyncController<TestMoorEntityProxy>(endpoint,
+      storage);
+
+  /// Perform the sync
+  return await syncController.sync();
 }

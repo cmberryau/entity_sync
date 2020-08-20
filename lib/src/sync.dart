@@ -10,12 +10,12 @@ import 'storage.dart';
 abstract class SyncableMixin implements SerializableMixin {
   /// Gets the key field of the entity
   SerializableField getKeyField() {
-    return reflect(this).getField(Symbol('keyField')).reflectee;
+    return reflectClass(runtimeType).getField(Symbol('keyField')).reflectee;
   }
 
   /// Gets the flag field of the entity
   BoolField getFlagField() {
-    return reflect(this).getField(Symbol('flagField')).reflectee;
+    return reflectClass(runtimeType).getField(Symbol('flagField')).reflectee;
   }
 
   /// Gets the key value of the entity
@@ -42,10 +42,9 @@ abstract class SyncableMixin implements SerializableMixin {
 
 /// Represents the result of a sync operation
 class SyncResult<TSyncable extends SyncableMixin> {
-  final bool successful;
   final List<EndpointResult<TSyncable>> endpointResults;
 
-  SyncResult(this.successful, this.endpointResults);
+  SyncResult(this.endpointResults);
 }
 
 /// Responsible for controlling the syncing of entities
@@ -62,26 +61,39 @@ class SyncController<TSyncable extends SyncableMixin> {
     /// get all instances to sync
     final toSyncInstances = await storage.getInstancesToSync();
 
-    var successful = true;
-    final endpointResults = <EndpointResult<TSyncable>>[];
+    /// push all instances to sync to endpoint
+    final endpointResults = await push(toSyncInstances);
+
+    /// pull all from endpoint since last sync
+    final endpointPullAll = await endpoint.pullAllSince(since);
+
+    /// Insert all into local db
+    for (var instance in endpointPullAll.instances) {
+      await storage.upsertInstance(instance);
+    }
+
+    return SyncResult<TSyncable>(endpointResults);
+  }
+
+  Future<List<EndpointResult<TSyncable>>> push(Iterable<TSyncable> instances) async {
+    final results = <EndpointResult<TSyncable>>[];
 
     /// push to endpoint
-    for (var instanceToPush in toSyncInstances) {
-      /// push the instance as json to get around types
-      final pushToEndpoint = await endpoint.push(instanceToPush);
+    for (var instanceToPush in instances) {
+      final endpointResult = endpoint.readOnly ? await endpoint
+          .pull(instanceToPush) : await endpoint.push(instanceToPush);
 
       /// save the endpoint results for the sync result
-      endpointResults.add(pushToEndpoint);
-      successful &= pushToEndpoint.successful;
+      results.add(endpointResult);
 
-      if (pushToEndpoint.successful) {
-        if (pushToEndpoint.instances.isNotEmpty) {
-          if (pushToEndpoint.instances.length > 1) {
+      if (endpointResult.successful) {
+        if (endpointResult.instances.isNotEmpty) {
+          if (endpointResult.instances.length > 1) {
             /// TODO Warn if more than one returned
             throw UnimplementedError();
           }
 
-          final returnedInstance = pushToEndpoint.instances[0];
+          final returnedInstance = endpointResult.instances[0];
           /// Compare and write any changes to table
           if(!endpoint.serializer.areEqual(instanceToPush, returnedInstance)) {
             await storage.upsertInstance(returnedInstance);
@@ -96,15 +108,6 @@ class SyncController<TSyncable extends SyncableMixin> {
       }
     }
 
-    /// pull all from endpoint since last sync
-    final endpointPullAll = await endpoint.pullAllSince(since);
-    final endpointInstances = endpointPullAll.instances;
-
-    /// Insert all into local db
-    for (var instance in endpointInstances) {
-      await storage.upsertInstance(instance);
-    }
-
-    return SyncResult<TSyncable>(successful, endpointResults);
+    return results;
   }
 }

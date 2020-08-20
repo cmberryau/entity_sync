@@ -21,8 +21,9 @@ class EndpointResult<TSyncable extends SyncableMixin> {
 /// Responsible for pulling & pushing entities
 abstract class Endpoint<TSyncable extends SyncableMixin> {
   final Serializer<TSyncable> serializer;
+  final bool readOnly;
 
-  Endpoint(this.serializer);
+  Endpoint(this.serializer, {this.readOnly = false});
 
   /// Pushes a single entity and returns any updates
   Future<EndpointResult<TSyncable>> push(instance, [serializer]) async {
@@ -66,8 +67,8 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin> extends Endpoint<TSync
   static const String ModifiedKeyDefault = 'modified';
   String modifiedKey;
 
-  RestfulApiEndpoint(this.url, serializer, {http.Client client, modifiedKey})
-      : super(serializer) {
+  RestfulApiEndpoint(this.url, serializer, {http.Client client, modifiedKey,
+    readOnly = false}) : super(serializer, readOnly: readOnly) {
     this.client = client ??= http.Client();
     this.modifiedKey = modifiedKey ??= ModifiedKeyDefault;
   }
