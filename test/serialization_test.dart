@@ -2,7 +2,6 @@ import 'package:test/test.dart';
 
 import 'package:entity_sync/entity_sync.dart';
 
-
 /// An entity which is serializable via SerializableMixin
 class TestEntity with SerializableMixin, SyncableMixin {
   int id;
@@ -11,9 +10,10 @@ class TestEntity with SerializableMixin, SyncableMixin {
   bool shouldSync;
 
   /// The unique syncable key of the entity
-  final keyField = IntegerField('id');
+  static final keyField = IntegerField('id');
+
   /// The flag to indicate the entity needs to be synced
-  final flagField = BoolField('shouldSync');
+  static final flagField = BoolField('shouldSync');
 
   TestEntity(this.id, this.name, this.created);
 }
@@ -26,7 +26,7 @@ class TestEntitySerializer extends Serializer<TestEntity> {
     DateTimeField('created'),
   ];
 
-  TestEntitySerializer({Map<String, dynamic>data, TestEntity instance})
+  TestEntitySerializer({Map<String, dynamic> data, TestEntity instance})
       : super(data: data, instance: instance);
 
   int validateId(int value) {
@@ -67,9 +67,7 @@ class TestEntitySerializer extends Serializer<TestEntity> {
 
 void main() {
   group('Test Serializer', () {
-    setUp(() {
-
-    });
+    setUp(() {});
 
     test('Test TestEntitySerializer.isValid method with valid entity', () {
       final entity = TestEntity(0, 'TestName', DateTime.now());
