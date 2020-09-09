@@ -12,5 +12,5 @@ abstract class Storage<TSyncable extends SyncableMixin> {
   Future<Iterable<TSyncable>> getInstancesToSync();
   
   /// Upserts an instance
-  Future<StorageResult<TSyncable>> upsertInstance(TSyncable instance);
+  Future<StorageResult<TSyncable>> upsertInstance(TSyncable instance, [TSyncable instanceToPush]);
 }

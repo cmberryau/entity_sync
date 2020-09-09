@@ -11,17 +11,20 @@ import 'models/test_entities.dart';
 import 'models/database.dart';
 import 'endpoints_test.dart';
 
+part 'moor_test.g.dart';
+
 /// A serializer for TestEntity
-class TestMoorEntitySerializer extends Serializer<TestMoorEntityProxy> {
-  final fields = <SerializableField>[
-    IntegerField('id'),
-    StringField('name'),
-    DateTimeField('created'),
-  ];
+@IsSerializer(TestMoorEntityProxy, fields: [
+  IntegerField('id'),
+  StringField('name'),
+  DateTimeField('created'),
+])
+class TestMoorEntitySerializer extends $_TestMoorEntitySerializer {
+  TestMoorEntitySerializer(
+      {Map<String, dynamic> data, TestMoorEntityProxy instance})
+      : super(data: data, instance: instance);
 
-  TestMoorEntitySerializer({Map<String, dynamic>data,
-    TestMoorEntityProxy instance}) : super(data: data, instance: instance);
-
+  @override
   int validateId(int value) {
     if (value < 0) {
       throw ValidationException('id must be positive value');
@@ -30,6 +33,7 @@ class TestMoorEntitySerializer extends Serializer<TestMoorEntityProxy> {
     return value;
   }
 
+  @override
   String validateName(String value) {
     if (value == null) {
       throw ValidationException('name must not be null');
@@ -42,6 +46,7 @@ class TestMoorEntitySerializer extends Serializer<TestMoorEntityProxy> {
     return value;
   }
 
+  @override
   DateTime validateCreated(DateTime value) {
     if (value == null) {
       throw ValidationException('created must not be null');
@@ -52,10 +57,11 @@ class TestMoorEntitySerializer extends Serializer<TestMoorEntityProxy> {
 
   @override
   TestMoorEntityProxy createInstance(validatedData) {
-    final entity = TestMoorEntity(id: validatedData['id'],
-                                  name: validatedData['name'],
-                                  created: validatedData['created'],
-                                  shouldSync: false);
+    final entity = TestMoorEntity(
+        id: validatedData['id'],
+        name: validatedData['name'],
+        created: validatedData['created'],
+        shouldSync: false);
     return TestMoorEntityProxy(entity, entity.shouldSync);
   }
 }
@@ -81,6 +87,7 @@ void main() {
       /// Validate that entity with id == 1 has updated name
       expect(entities[0].id, equals(1));
       expect(entities[0].name, equals('UpdatedTestName'));
+
       /// DateTime fields lose subsecond precision in moor
       expect(entities[0].created, equals(DateTime(2020, 8, 7, 12, 45, 15)));
 
@@ -103,6 +110,7 @@ void main() {
       /// Validate that entity with id == 1 has updated name
       expect(entities[0].id, equals(1));
       expect(entities[0].name, equals('UpdatedTestName'));
+
       /// DateTime fields lose subsecond precision in moor
       expect(entities[0].created, equals(DateTime(2020, 8, 7, 12, 45, 15)));
 
@@ -111,29 +119,31 @@ void main() {
       expect(entities[1].name, equals('TestName'));
       expect(entities[1].created, equals(DateTime(2020, 8, 7, 12, 30, 15)));
     });
-    
+
     tearDown(() async {
       await database.close();
     });
   });
 }
 
-Future<SyncResult> localOutdatedDataSync(TestDatabase database, bool readOnlyEndpoint) async {
+Future<SyncResult> localOutdatedDataSync(
+    TestDatabase database, bool readOnlyEndpoint) async {
   /// Set up the mock client
   final url = 'https://www.example.com/test-entity';
   final client = MockClient();
 
   final now = DateTime.now();
-  final nowWithoutSubsecondPrecision = DateTime(now.year, now.month,
-      now.day, now.hour, now.minute, now.second);
-  final postTestEntity = TestMoorEntity(id: 1, name:'OutdatedTestName',
-      created: nowWithoutSubsecondPrecision, shouldSync: true);
-  final postTestProxy = TestMoorEntityProxy(postTestEntity,
-      postTestEntity.shouldSync);
-  final postTestSerializer = TestMoorEntitySerializer(
-      instance: postTestProxy);
-  final postTestRepresentation = postTestSerializer
-      .toRepresentationString();
+  final nowWithoutSubsecondPrecision =
+      DateTime(now.year, now.month, now.day, now.hour, now.minute, now.second);
+  final postTestEntity = TestMoorEntity(
+      id: 1,
+      name: 'OutdatedTestName',
+      created: nowWithoutSubsecondPrecision,
+      shouldSync: true);
+  final postTestProxy =
+      TestMoorEntityProxy(postTestEntity, postTestEntity.shouldSync);
+  final postTestSerializer = TestMoorEntitySerializer(instance: postTestProxy);
+  final postTestRepresentation = postTestSerializer.toRepresentationString();
 
   final getResponseBody = '[{"id": 2, "name": "TestName", '
       '"created": "2020-08-07T12:30:15.123456"}]';
@@ -141,8 +151,8 @@ Future<SyncResult> localOutdatedDataSync(TestDatabase database, bool readOnlyEnd
       '"created": "2020-08-07T12:45:15.123456"}';
   final statusCode = 200;
 
-  when(client.get('${url}')).thenAnswer((a) async => http.Response(
-      getResponseBody, statusCode));
+  when(client.get('${url}'))
+      .thenAnswer((a) async => http.Response(getResponseBody, statusCode));
   when(client.get('${url}/1'))
       .thenAnswer((a) async => http.Response(postResponseBody, statusCode));
   when(client.post('${url}', body: postTestRepresentation))
@@ -160,13 +170,13 @@ Future<SyncResult> localOutdatedDataSync(TestDatabase database, bool readOnlyEnd
   expect(entities.length, equals(1));
 
   /// Create the endpoint, storage and sync controller
-  final endpoint = RestfulApiEndpoint<TestMoorEntityProxy>(url,
-      TestMoorEntitySerializer(), client: client, readOnly: readOnlyEndpoint);
+  final endpoint = RestfulApiEndpoint<TestMoorEntityProxy>(
+      url, TestMoorEntitySerializer(),
+      client: client, readOnly: readOnlyEndpoint);
   final factory = TestMoorEntityProxyFactory();
   final storage = MoorStorage<TestMoorEntityProxy>(
       database.testMoorEntities, database, factory);
-  final syncController = SyncController<TestMoorEntityProxy>(endpoint,
-      storage);
+  final syncController = SyncController<TestMoorEntityProxy>(endpoint, storage);
 
   /// Perform the sync
   return await syncController.sync();

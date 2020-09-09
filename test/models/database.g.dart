@@ -8,35 +8,38 @@ part of 'database.dart';
 
 // ignore_for_file: unnecessary_brace_in_string_interps, unnecessary_this
 class TestMoorEntity extends DataClass implements Insertable<TestMoorEntity> {
+  final bool shouldSync;
   final int id;
   final String name;
   final DateTime created;
-  final bool shouldSync;
   TestMoorEntity(
-      {@required this.id,
+      {@required this.shouldSync,
+      @required this.id,
       @required this.name,
-      @required this.created,
-      @required this.shouldSync});
+      @required this.created});
   factory TestMoorEntity.fromData(
       Map<String, dynamic> data, GeneratedDatabase db,
       {String prefix}) {
     final effectivePrefix = prefix ?? '';
+    final boolType = db.typeSystem.forDartType<bool>();
     final intType = db.typeSystem.forDartType<int>();
     final stringType = db.typeSystem.forDartType<String>();
     final dateTimeType = db.typeSystem.forDartType<DateTime>();
-    final boolType = db.typeSystem.forDartType<bool>();
     return TestMoorEntity(
+      shouldSync: boolType
+          .mapFromDatabaseResponse(data['${effectivePrefix}should_sync']),
       id: intType.mapFromDatabaseResponse(data['${effectivePrefix}id']),
       name: stringType.mapFromDatabaseResponse(data['${effectivePrefix}name']),
       created: dateTimeType
           .mapFromDatabaseResponse(data['${effectivePrefix}created']),
-      shouldSync: boolType
-          .mapFromDatabaseResponse(data['${effectivePrefix}should_sync']),
     );
   }
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
+    if (!nullToAbsent || shouldSync != null) {
+      map['should_sync'] = Variable<bool>(shouldSync);
+    }
     if (!nullToAbsent || id != null) {
       map['id'] = Variable<int>(id);
     }
@@ -46,22 +49,19 @@ class TestMoorEntity extends DataClass implements Insertable<TestMoorEntity> {
     if (!nullToAbsent || created != null) {
       map['created'] = Variable<DateTime>(created);
     }
-    if (!nullToAbsent || shouldSync != null) {
-      map['should_sync'] = Variable<bool>(shouldSync);
-    }
     return map;
   }
 
   TestMoorEntitiesCompanion toCompanion(bool nullToAbsent) {
     return TestMoorEntitiesCompanion(
+      shouldSync: shouldSync == null && nullToAbsent
+          ? const Value.absent()
+          : Value(shouldSync),
       id: id == null && nullToAbsent ? const Value.absent() : Value(id),
       name: name == null && nullToAbsent ? const Value.absent() : Value(name),
       created: created == null && nullToAbsent
           ? const Value.absent()
           : Value(created),
-      shouldSync: shouldSync == null && nullToAbsent
-          ? const Value.absent()
-          : Value(shouldSync),
     );
   }
 
@@ -69,103 +69,106 @@ class TestMoorEntity extends DataClass implements Insertable<TestMoorEntity> {
       {ValueSerializer serializer}) {
     serializer ??= moorRuntimeOptions.defaultSerializer;
     return TestMoorEntity(
+      shouldSync: serializer.fromJson<bool>(json['shouldSync']),
       id: serializer.fromJson<int>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       created: serializer.fromJson<DateTime>(json['created']),
-      shouldSync: serializer.fromJson<bool>(json['shouldSync']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer serializer}) {
     serializer ??= moorRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
+      'shouldSync': serializer.toJson<bool>(shouldSync),
       'id': serializer.toJson<int>(id),
       'name': serializer.toJson<String>(name),
       'created': serializer.toJson<DateTime>(created),
-      'shouldSync': serializer.toJson<bool>(shouldSync),
     };
   }
 
   TestMoorEntity copyWith(
-          {int id, String name, DateTime created, bool shouldSync}) =>
+          {bool shouldSync, int id, String name, DateTime created}) =>
       TestMoorEntity(
+        shouldSync: shouldSync ?? this.shouldSync,
         id: id ?? this.id,
         name: name ?? this.name,
         created: created ?? this.created,
-        shouldSync: shouldSync ?? this.shouldSync,
       );
   @override
   String toString() {
     return (StringBuffer('TestMoorEntity(')
+          ..write('shouldSync: $shouldSync, ')
           ..write('id: $id, ')
           ..write('name: $name, ')
-          ..write('created: $created, ')
-          ..write('shouldSync: $shouldSync')
+          ..write('created: $created')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => $mrjf($mrjc(id.hashCode,
-      $mrjc(name.hashCode, $mrjc(created.hashCode, shouldSync.hashCode))));
+  int get hashCode => $mrjf($mrjc(shouldSync.hashCode,
+      $mrjc(id.hashCode, $mrjc(name.hashCode, created.hashCode))));
   @override
   bool operator ==(dynamic other) =>
       identical(this, other) ||
       (other is TestMoorEntity &&
+          other.shouldSync == this.shouldSync &&
           other.id == this.id &&
           other.name == this.name &&
-          other.created == this.created &&
-          other.shouldSync == this.shouldSync);
+          other.created == this.created);
 }
 
 class TestMoorEntitiesCompanion extends UpdateCompanion<TestMoorEntity> {
+  final Value<bool> shouldSync;
   final Value<int> id;
   final Value<String> name;
   final Value<DateTime> created;
-  final Value<bool> shouldSync;
   const TestMoorEntitiesCompanion({
+    this.shouldSync = const Value.absent(),
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.created = const Value.absent(),
-    this.shouldSync = const Value.absent(),
   });
   TestMoorEntitiesCompanion.insert({
+    this.shouldSync = const Value.absent(),
     this.id = const Value.absent(),
     @required String name,
     @required DateTime created,
-    this.shouldSync = const Value.absent(),
   })  : name = Value(name),
         created = Value(created);
   static Insertable<TestMoorEntity> custom({
+    Expression<bool> shouldSync,
     Expression<int> id,
     Expression<String> name,
     Expression<DateTime> created,
-    Expression<bool> shouldSync,
   }) {
     return RawValuesInsertable({
+      if (shouldSync != null) 'should_sync': shouldSync,
       if (id != null) 'id': id,
       if (name != null) 'name': name,
       if (created != null) 'created': created,
-      if (shouldSync != null) 'should_sync': shouldSync,
     });
   }
 
   TestMoorEntitiesCompanion copyWith(
-      {Value<int> id,
+      {Value<bool> shouldSync,
+      Value<int> id,
       Value<String> name,
-      Value<DateTime> created,
-      Value<bool> shouldSync}) {
+      Value<DateTime> created}) {
     return TestMoorEntitiesCompanion(
+      shouldSync: shouldSync ?? this.shouldSync,
       id: id ?? this.id,
       name: name ?? this.name,
       created: created ?? this.created,
-      shouldSync: shouldSync ?? this.shouldSync,
     );
   }
 
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
+    if (shouldSync.present) {
+      map['should_sync'] = Variable<bool>(shouldSync.value);
+    }
     if (id.present) {
       map['id'] = Variable<int>(id.value);
     }
@@ -175,19 +178,16 @@ class TestMoorEntitiesCompanion extends UpdateCompanion<TestMoorEntity> {
     if (created.present) {
       map['created'] = Variable<DateTime>(created.value);
     }
-    if (shouldSync.present) {
-      map['should_sync'] = Variable<bool>(shouldSync.value);
-    }
     return map;
   }
 
   @override
   String toString() {
     return (StringBuffer('TestMoorEntitiesCompanion(')
+          ..write('shouldSync: $shouldSync, ')
           ..write('id: $id, ')
           ..write('name: $name, ')
-          ..write('created: $created, ')
-          ..write('shouldSync: $shouldSync')
+          ..write('created: $created')
           ..write(')'))
         .toString();
   }
@@ -198,6 +198,18 @@ class $TestMoorEntitiesTable extends TestMoorEntities
   final GeneratedDatabase _db;
   final String _alias;
   $TestMoorEntitiesTable(this._db, [this._alias]);
+  final VerificationMeta _shouldSyncMeta = const VerificationMeta('shouldSync');
+  GeneratedBoolColumn _shouldSync;
+  @override
+  GeneratedBoolColumn get shouldSync => _shouldSync ??= _constructShouldSync();
+  GeneratedBoolColumn _constructShouldSync() {
+    return GeneratedBoolColumn(
+      'should_sync',
+      $tableName,
+      false,
+    )..clientDefault = () => true;
+  }
+
   final VerificationMeta _idMeta = const VerificationMeta('id');
   GeneratedIntColumn _id;
   @override
@@ -228,20 +240,8 @@ class $TestMoorEntitiesTable extends TestMoorEntities
     );
   }
 
-  final VerificationMeta _shouldSyncMeta = const VerificationMeta('shouldSync');
-  GeneratedBoolColumn _shouldSync;
   @override
-  GeneratedBoolColumn get shouldSync => _shouldSync ??= _constructShouldSync();
-  GeneratedBoolColumn _constructShouldSync() {
-    return GeneratedBoolColumn(
-      'should_sync',
-      $tableName,
-      false,
-    )..clientDefault = () => true;
-  }
-
-  @override
-  List<GeneratedColumn> get $columns => [id, name, created, shouldSync];
+  List<GeneratedColumn> get $columns => [shouldSync, id, name, created];
   @override
   $TestMoorEntitiesTable get asDslTable => this;
   @override
@@ -253,6 +253,12 @@ class $TestMoorEntitiesTable extends TestMoorEntities
       {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
+    if (data.containsKey('should_sync')) {
+      context.handle(
+          _shouldSyncMeta,
+          shouldSync.isAcceptableOrUnknown(
+              data['should_sync'], _shouldSyncMeta));
+    }
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id'], _idMeta));
     }
@@ -267,12 +273,6 @@ class $TestMoorEntitiesTable extends TestMoorEntities
           created.isAcceptableOrUnknown(data['created'], _createdMeta));
     } else if (isInserting) {
       context.missing(_createdMeta);
-    }
-    if (data.containsKey('should_sync')) {
-      context.handle(
-          _shouldSyncMeta,
-          shouldSync.isAcceptableOrUnknown(
-              data['should_sync'], _shouldSyncMeta));
     }
     return context;
   }

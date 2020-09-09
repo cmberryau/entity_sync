@@ -1,12 +1,11 @@
-import 'dart:mirrors';
 import 'dart:convert';
 
 /// Represents a field which may be serialized
 abstract class SerializableField {
   /// The name of the field
-  String name;
+  final String name;
 
-  SerializableField(this.name);
+  const SerializableField(this.name);
 
   /// Evaluates if the passed value is valid
   dynamic isValid(dynamic value);
@@ -27,7 +26,7 @@ abstract class SerializableField {
 
 /// Represents an integer field which may be serialized
 class IntegerField extends SerializableField {
-  IntegerField(String name) : super(name);
+  const IntegerField(String name) : super(name);
 
   @override
   dynamic isValid(value) {
@@ -42,7 +41,7 @@ class IntegerField extends SerializableField {
 
 /// Represents an string field which may be serialized
 class StringField extends SerializableField {
-  StringField(String name) : super(name);
+  const StringField(String name) : super(name);
 
   @override
   dynamic isValid(value) {
@@ -57,7 +56,7 @@ class StringField extends SerializableField {
 
 /// Represents an datetime field which may be serialized
 class DateTimeField extends SerializableField {
-  DateTimeField(String name) : super(name);
+  const DateTimeField(String name) : super(name);
 
   @override
   dynamic isValid(value) {
@@ -74,13 +73,35 @@ class DateTimeField extends SerializableField {
 
   @override
   dynamic toRepresentation(value) {
-    return (value as DateTime).toIso8601String();
+    return (value as DateTime).toUtc().toIso8601String();
+  }
+}
+
+class DateField extends SerializableField {
+  const DateField(String name) : super(name);
+
+  @override
+  dynamic isValid(value) {
+    if (value.runtimeType == String) {
+      value = DateTime.parse(value);
+    } else if (value.runtimeType == int) {
+      value = DateTime.fromMillisecondsSinceEpoch(value);
+    } else if (value.runtimeType != DateTime) {
+      throw ValidationException('Must be formatted String or DateTime');
+    }
+
+    return value;
+  }
+
+  @override
+  dynamic toRepresentation(value) {
+    return (value as DateTime).toIso8601String().split("T")[0];
   }
 }
 
 /// Represents a boolean field which may be serialized
 class BoolField extends SerializableField {
-  BoolField(String name) : super(name);
+  const BoolField(String name) : super(name);
 
   @override
   dynamic isValid(value) {
@@ -90,17 +111,16 @@ class BoolField extends SerializableField {
   @override
   dynamic toRepresentation(value) {
     return json.encode(value);
-  }}
+  }
+}
 
 /// Added to a class to support serialization
 abstract class SerializableMixin {
   dynamic getFieldValue(String fieldName) {
-    return reflect(this).getField(Symbol(fieldName)).reflectee;
+    return toMap()[fieldName];
   }
 
-  static dynamic getFieldValueStatic(dynamic instance, String fieldName) {
-    return reflect(instance).getField(Symbol(fieldName)).reflectee;
-  }
+  Map toMap();
 }
 
 /// An exception which represents a failed validation
@@ -111,13 +131,14 @@ class ValidationException implements Exception {
 
 /// Performs serialization
 abstract class Serializer<TSerializable extends SerializableMixin> {
+  List<SerializableField> fields = [];
   TSerializable instance;
   Map<String, dynamic> data;
   Map<String, dynamic> _validatedData;
   final exceptions = <ValidationException>[];
 
   Serializer({this.data, this.instance}) {
-    if(getFields() == null) {
+    if (getFields() == null) {
       throw AbstractClassInstantiationError((Serializer).toString());
     }
 
@@ -127,7 +148,7 @@ abstract class Serializer<TSerializable extends SerializableMixin> {
 
   /// Gets all fields for serialization
   List<SerializableField> getFields() {
-    return reflect(this).getField(Symbol('fields')).reflectee;
+    return fields;
   }
 
   /// Determines if the serializer is valid
@@ -151,7 +172,7 @@ abstract class Serializer<TSerializable extends SerializableMixin> {
       /// Validate the field and collect any exceptions
       try {
         _validatedData[field.name] = validateField(field, value);
-      } on ValidationException catch(e) {
+      } on ValidationException catch (e) {
         exceptions.add(e);
       }
     }
@@ -170,46 +191,34 @@ abstract class Serializer<TSerializable extends SerializableMixin> {
 
   /// Use reflection to find any additional validation methods
   dynamic isValidConcrete(String fieldName, dynamic value) {
-    /// Get a mirror for the concrete instance and class
-    final instanceMirror = reflect(this);
-    final classMirror = instanceMirror.type;
-
     /// The validation method naming expectation is 'validateFieldName'
-    final methodName = 'validate${fieldName[0].toUpperCase()}${fieldName.substring(1)}';
-    final methodSymbol = Symbol(methodName);
-
-    /// Find out if the concrete class has a validation method for the field
-    if (classMirror.instanceMembers.containsKey(methodSymbol)) {
-      /// Call the validation method
-      final methodMirror = classMirror.instanceMembers[methodSymbol];
-      return instanceMirror.invoke(methodMirror.simpleName, [value]).reflectee;
-    }
-
-    return value;
+    final methodName =
+        'validate${fieldName[0].toUpperCase()}${fieldName.substring(1)}';
+    return toMap()[methodName](value);
   }
 
   /// Returns the serializable representation
-  dynamic toRepresentation() {
+  dynamic toRepresentation({bool skipValidation = false}) {
     final fields = getFields();
     final representationMap = <String, dynamic>{};
 
     /// Validate the data first
-    if (!isValid()) {
+    if (!skipValidation && !isValid()) {
       return null;
     }
 
     for (final field in fields) {
       /// Fill the representation map with the validated field value representation
-      representationMap[field.name] = field
-          .toRepresentation(_validatedData[field.name]);
+      representationMap[field.name] =
+          field.toRepresentation(_validatedData[field.name]);
     }
 
     return representationMap;
   }
 
   /// Returns the serializable representation string
-  dynamic toRepresentationString() {
-    return json.encode(toRepresentation());
+  dynamic toRepresentationString({bool skipValidation = false}) {
+    return json.encode(toRepresentation(skipValidation: skipValidation));
   }
 
   /// Returns an instance from the serializer
@@ -221,11 +230,15 @@ abstract class Serializer<TSerializable extends SerializableMixin> {
   }
 
   /// Evaluates if the serialized fields are equal
-  bool areEqual(dynamic a, dynamic b) {
+  bool areEqual(TSerializable a, TSerializable b) {
     final fields = getFields();
+
+    final aAttrs = a.toMap();
+    final bAttrs = b.toMap();
+
     for (var field in fields) {
-      final aFieldValue = SerializableMixin.getFieldValueStatic(a, field.name);
-      final bFieldValue = SerializableMixin.getFieldValueStatic(b, field.name);
+      final aFieldValue = aAttrs[field.name];
+      final bFieldValue = bAttrs[field.name];
 
       if (!field.areEqual(aFieldValue, bFieldValue)) {
         return false;
@@ -237,4 +250,6 @@ abstract class Serializer<TSerializable extends SerializableMixin> {
 
   /// Creates an instance from validated data
   TSerializable createInstance(Map<String, dynamic> validatedData);
+
+  Map toMap();
 }
