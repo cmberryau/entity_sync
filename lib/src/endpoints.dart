@@ -14,7 +14,8 @@ class EndpointResult<TSyncable extends SyncableMixin> {
   EndpointResult(this.response, this.instances);
 
   /// Was the endpoint operation successful?
-  bool get successful => response.statusCode >= 200 && response.statusCode < 300;
+  bool get successful =>
+      response.statusCode >= 200 && response.statusCode < 300;
 }
 
 /// Represents an entity endpoint
@@ -48,9 +49,11 @@ abstract class Endpoint<TSyncable extends SyncableMixin> {
   Future<EndpointResult<TSyncable>> pullAll([Serializer<TSyncable> serializer]);
 
   /// Pulls and returns a single entity
-  Future<EndpointResult<TSyncable>> pullAllSince([DateTime since, Serializer<TSyncable> serializer]);
+  Future<EndpointResult<TSyncable>> pullAllSince(
+      [DateTime since, Serializer<TSyncable> serializer]);
 
-  Serializer<SyncableMixin> _getSerializer(Serializer<SyncableMixin> serializer) {
+  Serializer<SyncableMixin> _getSerializer(
+      Serializer<SyncableMixin> serializer) {
     if (serializer == null) {
       return this.serializer;
     }

@@ -5,7 +5,10 @@ abstract class SerializableField {
   /// The name of the field
   final String name;
 
-  const SerializableField(this.name);
+  /// The prefix of the field
+  final String prefix;
+
+  const SerializableField(this.name, {this.prefix});
 
   /// Evaluates if the passed value is valid
   dynamic isValid(dynamic value);
@@ -26,7 +29,8 @@ abstract class SerializableField {
 
 /// Represents an integer field which may be serialized
 class IntegerField extends SerializableField {
-  const IntegerField(String name) : super(name);
+  const IntegerField(String name, {String prefix})
+      : super(name, prefix: prefix);
 
   @override
   dynamic isValid(value) {
@@ -41,7 +45,7 @@ class IntegerField extends SerializableField {
 
 /// Represents an string field which may be serialized
 class StringField extends SerializableField {
-  const StringField(String name) : super(name);
+  const StringField(String name, {String prefix}) : super(name, prefix: prefix);
 
   @override
   dynamic isValid(value) {
@@ -56,7 +60,8 @@ class StringField extends SerializableField {
 
 /// Represents an datetime field which may be serialized
 class DateTimeField extends SerializableField {
-  const DateTimeField(String name) : super(name);
+  const DateTimeField(String name, {String prefix})
+      : super(name, prefix: prefix);
 
   @override
   dynamic isValid(value) {
@@ -78,7 +83,7 @@ class DateTimeField extends SerializableField {
 }
 
 class DateField extends SerializableField {
-  const DateField(String name) : super(name);
+  const DateField(String name, {String prefix}) : super(name, prefix: prefix);
 
   @override
   dynamic isValid(value) {
@@ -101,7 +106,7 @@ class DateField extends SerializableField {
 
 /// Represents a boolean field which may be serialized
 class BoolField extends SerializableField {
-  const BoolField(String name) : super(name);
+  const BoolField(String name, {String prefix}) : super(name, prefix: prefix);
 
   @override
   dynamic isValid(value) {
@@ -136,6 +141,9 @@ abstract class Serializer<TSerializable extends SerializableMixin> {
   Map<String, dynamic> data;
   Map<String, dynamic> _validatedData;
   final exceptions = <ValidationException>[];
+
+  /// The prefix of the serializer
+  String get prefix;
 
   Serializer({this.data, this.instance}) {
     if (getFields() == null) {
@@ -184,6 +192,22 @@ abstract class Serializer<TSerializable extends SerializableMixin> {
   dynamic validateField(SerializableField field, dynamic value) {
     /// Do basic field validation
     value = field.isValid(value);
+
+    // prepend the prefix to value
+    if (field.prefix != null && value is String) {
+      final completePrefix = '$prefix${field.prefix}';
+
+      // if the field is already has the prefix, remove it, else prepend to it
+      if (value.startsWith(prefix)) {
+        value = value.replaceFirst(completePrefix, '');
+
+        if (value.endsWith('/')) {
+          value = value.substring(0, value.length - 1);
+        }
+      } else {
+        value = '$completePrefix$value/';
+      }
+    }
 
     /// Do any additional concrete validation
     return isValidConcrete(field.name, value);
