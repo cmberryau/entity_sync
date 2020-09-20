@@ -89,6 +89,7 @@ class DateField extends SerializableField {
   dynamic isValid(value) {
     if (value.runtimeType == String) {
       value = DateTime.parse(value);
+      value = DateTime(value.year, value.month, value.day, 12, 00, 00);
     } else if (value.runtimeType == int) {
       value = DateTime.fromMillisecondsSinceEpoch(value);
     } else if (value.runtimeType != DateTime) {
