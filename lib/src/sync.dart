@@ -112,8 +112,6 @@ class SyncController<TSyncable extends SyncableMixin> {
           throw UnimplementedError();
         }
       } else {
-        print(endpointResult.response.body);
-
         /// TODO Warn if not successful
         throw UnimplementedError();
       }

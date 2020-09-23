@@ -1,8 +1,9 @@
+import 'dart:async';
+
 import 'package:entity_sync/entity_sync.dart';
+import 'package:entity_sync/src/sync.dart';
 import 'package:moor/moor.dart';
 import 'package:moor/src/dsl/dsl.dart';
-
-import 'package:entity_sync/src/sync.dart';
 
 /// Responsible for creating proxies
 abstract class ProxyFactory<TProxy extends ProxyMixin<TEntity>,
@@ -56,10 +57,27 @@ class MoorStorage<TProxy extends ProxyMixin> implements Storage<TProxy> {
       if (oldInstance != null) {
         instance =
             (instance as dynamic).copyWith(id: (oldInstance as dynamic).id);
+      } else {
+        final instanceUuid = instance.toMap()[instance.keyField.name];
+        if (instanceUuid != null) {
+          oldInstance = await (database.select(table.actualTable())
+                ..where((dynamic t) => t.uuid.equals(instanceUuid)))
+              .getSingle();
+
+          if (oldInstance != null) {
+            instance =
+                (instance as dynamic).copyWith(id: (oldInstance as dynamic).id);
+          }
+        }
       }
 
       await database.into(table.actualTable()).insert(instance,
-          onConflict: DoUpdate((_) => instance.toCompanion(false)));
+          onConflict: DoUpdate((tbl) {
+        return instance.toCompanion(false).copyWith(
+            id: instance.id == null
+                ? Value<String>.absent()
+                : Value<String>(instance.id));
+      }), mode: InsertMode.insertOrReplace);
     } catch (err) {
       print(err);
     }
