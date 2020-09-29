@@ -1,6 +1,7 @@
-import 'dart:io';
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:entity_sync/src/paginators.dart';
 import 'package:http/http.dart' as http;
 
 import 'serialization.dart';
@@ -23,8 +24,9 @@ class EndpointResult<TSyncable extends SyncableMixin> {
 abstract class Endpoint<TSyncable extends SyncableMixin> {
   final Serializer<TSyncable> serializer;
   final bool readOnly;
+  final Paginator paginator;
 
-  Endpoint(this.serializer, {this.readOnly = false});
+  Endpoint(this.serializer, {this.readOnly = false, this.paginator});
 
   /// Pushes a single entity and returns any updates
   Future<EndpointResult<TSyncable>> push(instance, [serializer]) async {
@@ -74,9 +76,10 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin>
   RestfulApiEndpoint(this.url, serializer,
       {http.Client client,
       modifiedKey,
+      paginator,
       readOnly = false,
       this.headers = const {}})
-      : super(serializer, readOnly: readOnly) {
+      : super(serializer, readOnly: readOnly, paginator: paginator) {
     this.client = client ??= http.Client();
     this.modifiedKey = modifiedKey ??= ModifiedKeyDefault;
   }
