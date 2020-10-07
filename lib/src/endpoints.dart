@@ -48,11 +48,14 @@ abstract class Endpoint<TSyncable extends SyncableMixin> {
       [Serializer<TSyncable> serializer]);
 
   /// Pulls and returns a single entity
-  Future<EndpointResult<TSyncable>> pullAll([Serializer<TSyncable> serializer]);
+  Future<EndpointResult<TSyncable>> pullAll([
+    Serializer<TSyncable> serializer,
+    Paginator paginator,
+  ]);
 
   /// Pulls and returns a single entity
   Future<EndpointResult<TSyncable>> pullAllSince(
-      [DateTime since, Serializer<TSyncable> serializer]);
+      [DateTime since, Serializer<TSyncable> serializer, Paginator paginator]);
 
   Serializer<SyncableMixin> _getSerializer(
       Serializer<SyncableMixin> serializer) {
@@ -133,11 +136,12 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin>
   }
 
   @override
-  Future<EndpointResult<TSyncable>> pullAll([serializer]) async {
+  Future<EndpointResult<TSyncable>> pullAll([serializer, paginator]) async {
     serializer = _getSerializer(serializer);
 
     try {
-      final response = await client.get(url, headers: headers);
+      final finalUrl = '${url}${paginator == null ? "" : paginator.params()}';
+      final response = await client.get(finalUrl, headers: headers);
 
       if (response.statusCode == 200) {
         final instances = _responseToInstances(serializer, response);
@@ -152,16 +156,17 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin>
 
   @override
   Future<EndpointResult<TSyncable>> pullAllSince(
-      [DateTime since, Serializer<SyncableMixin> serializer]) async {
+      [DateTime since, Serializer<SyncableMixin> serializer, paginator]) async {
     serializer = _getSerializer(serializer);
     if (since == null) {
       return pullAll(serializer);
     }
 
     try {
+      final finalUrl =
+          '${url}${paginator == null ? "" : "?${(await paginator.params())}"}';
       final response =
-          await client.get(_makeSinceUrl(url, since), headers: headers);
-
+          await client.get(_makeSinceUrl(finalUrl, since), headers: headers);
       if (response.statusCode == 200) {
         final instances = _responseToInstances(serializer, response);
         return EndpointResult<TSyncable>(response, instances);
@@ -178,7 +183,6 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin>
     /// Swap out the serializer to use the incoming data
     serializer.instance = null;
     final instancesData = json.decode(response.body);
-
     final instances = <TSyncable>[];
     // TODO: This is a temprorarily patch. Need to have a custom mapping.
     for (var instanceData in instancesData['results']) {

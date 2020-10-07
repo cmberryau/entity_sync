@@ -1,5 +1,6 @@
 import 'package:entity_sync/src/endpoints.dart';
 
+import 'paginators.dart';
 import 'serialization.dart';
 import 'storage.dart';
 
@@ -12,9 +13,17 @@ abstract class SyncableMixin implements SerializableMixin {
   /// The flag to indicate the entity needs to be synced
   SerializableField flagField;
 
+  /// The unique remote syncable key of the entity
+  SerializableField remoteKeyField = StringField('uuid');
+
   /// Gets the key field of the entity
   SerializableField getKeyField() {
     return keyField;
+  }
+
+  /// Gets the remote key field of the entity
+  SerializableField getRemoteKeyField() {
+    return remoteKeyField;
   }
 
   /// Gets the flag field of the entity
@@ -62,8 +71,8 @@ class SyncController<TSyncable extends SyncableMixin> {
 
   SyncController(this.endpoint, this.storage);
 
-  @override
-  Future<SyncResult<TSyncable>> sync([DateTime since]) async {
+  Future<SyncResult<TSyncable>> sync(
+      [DateTime since, Paginator paginator]) async {
     /// get all instances to sync
     final toSyncInstances = await storage.getInstancesToSync();
 
@@ -71,14 +80,21 @@ class SyncController<TSyncable extends SyncableMixin> {
     final endpointResults = await push(toSyncInstances);
 
     /// pull all from endpoint since last sync
-    final endpointPullAll = await endpoint.pullAllSince(since);
+    final endpointPullAll = await endpoint.pullAllSince(since, null, paginator);
 
     /// Insert all into local db
-    for (var instance in endpointPullAll.instances) {
+    for (final instance in endpointPullAll.instances) {
       await storage.upsertInstance(instance);
     }
 
     return SyncResult<TSyncable>(endpointResults, endpointPullAll);
+  }
+
+  Future<SyncResult<TSyncable>> paginate(Paginator paginator,
+      [DateTime since]) async {
+    final endpointPullAll = await endpoint.pullAll();
+
+    return SyncResult<TSyncable>(null, endpointPullAll);
   }
 
   Future<List<EndpointResult<TSyncable>>> push(
