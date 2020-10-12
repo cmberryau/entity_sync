@@ -5,6 +5,8 @@ import 'package:entity_sync/moor_sync.dart';
 
 import 'database.dart';
 
+part 'test_entities.g.dart';
+
 @DataClassName('TestMoorEntity')
 class TestMoorEntities extends Table with SyncableTableMixin {
   IntColumn get id => integer().autoIncrement()();
@@ -15,23 +17,25 @@ class TestMoorEntities extends Table with SyncableTableMixin {
   Table actualTable() => this;
 }
 
-class TestMoorEntityProxyFactory extends ProxyFactory<TestMoorEntityProxy,
-    TestMoorEntity> {
+class TestMoorEntityProxyFactory
+    extends ProxyFactory<TestMoorEntityProxy, TestMoorEntity> {
   @override
   TestMoorEntityProxy fromInstance(TestMoorEntity instance) {
     return TestMoorEntityProxy(instance, instance.shouldSync);
   }
 }
 
-class TestMoorEntityProxy extends TestMoorEntity
-    with ProxyMixin<TestMoorEntity>, SyncableMixin, SerializableMixin {
+@UseSerialization(TestMoorEntity)
+class TestMoorEntityProxy extends $_TestMoorEntityProxy
+    with ProxyMixin<TestMoorEntity>, SyncableMixin {
   /// The unique syncable key of the entity
-  static final keyField = IntegerField('id');
+  @override
+  final keyField = IntegerField('id');
 
   TestMoorEntityProxy(TestMoorEntity instance, bool shouldSync)
-      : super(id: instance.id,
-              name: instance.name,
-              created: instance.created,
-              shouldSync: shouldSync);
+      : super(
+            id: instance.id,
+            name: instance.name,
+            created: instance.created,
+            shouldSync: shouldSync);
 }
-

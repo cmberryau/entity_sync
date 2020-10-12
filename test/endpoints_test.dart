@@ -33,8 +33,8 @@ void main() {
 
       /// Create the endpoint and an 'outdated' instance
       final serializer = TestEntitySerializer();
-      final endpoint = RestfulApiEndpoint<TestEntity>(url, serializer, client: client);
-      final instance = TestEntity(1, 'OutdatedName', DateTime.now());
+      final endpoint = RestfulApiEndpoint<TestEntityProxy>(url, serializer, client: client);
+      final instance = TestEntityProxy(1, 'OutdatedName', DateTime.now());
 
       /// Pull the entity using the endpoint
       final result = await endpoint.pull(instance, serializer);
@@ -47,10 +47,10 @@ void main() {
       expect(result.response.statusCode, equals(200));
 
       expect(result.instances, isNotNull);
-      expect(result.instances, isA<List<TestEntity>>());
+      expect(result.instances, isA<List<TestEntityProxy>>());
       expect(result.instances.length, equals(1));
       expect(result.instances[0], isNotNull);
-      expect(result.instances[0], isA<TestEntity>());
+      expect(result.instances[0], isA<TestEntityProxy>());
       expect(result.instances[0].id, equals(1));
       expect(result.instances[0].name, equals('TestName'));
       expect(result.instances[0].created, DateTime.parse("2020-08-07T12:30:15.123456"));
@@ -74,7 +74,7 @@ void main() {
 
       /// Create the endpoint and an 'outdated' instance
       final serializer = TestEntitySerializer();
-      final endpoint = RestfulApiEndpoint<TestEntity>(url, serializer, client: client);
+      final endpoint = RestfulApiEndpoint<TestEntityProxy>(url, serializer, client: client);
 
       /// Pull all entities using the endpoint
       final result = await endpoint.pullAll(serializer);
@@ -87,17 +87,17 @@ void main() {
       expect(result.response.statusCode, equals(200));
 
       expect(result.instances, isNotNull);
-      expect(result.instances, isA<List<TestEntity>>());
+      expect(result.instances, isA<List<TestEntityProxy>>());
       expect(result.instances.length, equals(2));
 
       expect(result.instances[0], isNotNull);
-      expect(result.instances[0], isA<TestEntity>());
+      expect(result.instances[0], isA<TestEntityProxy>());
       expect(result.instances[0].id, equals(1));
       expect(result.instances[0].name, equals('TestNameOne'));
       expect(result.instances[0].created, DateTime.parse("2020-08-07T12:30:15.123456"));
 
       expect(result.instances[1], isNotNull);
-      expect(result.instances[1], isA<TestEntity>());
+      expect(result.instances[1], isA<TestEntityProxy>());
       expect(result.instances[1].id, equals(2));
       expect(result.instances[1].name, equals('TestNameTwo'));
       expect(result.instances[1].created, DateTime.parse("2020-08-10T12:30:15.123456"));
@@ -112,8 +112,8 @@ void main() {
 
       /// Create the endpoint and an 'outdated' instance
       final serializer = TestEntitySerializer();
-      final endpoint = RestfulApiEndpoint<TestEntity>(url, serializer, client: client);
-      final instance = TestEntity(1, 'OutdatedName', DateTime.now());
+      final endpoint = RestfulApiEndpoint<TestEntityProxy>(url, serializer, client: client);
+      final instance = TestEntityProxy(1, 'OutdatedName', DateTime.now());
       final mockTestSerializer = TestEntitySerializer(instance:instance);
 
       when(client.post('${url}', body:mockTestSerializer.toRepresentationString()))
@@ -129,10 +129,10 @@ void main() {
       expect(result.response.statusCode, equals(200));
 
       expect(result.instances, isNotNull);
-      expect(result.instances, isA<List<TestEntity>>());
+      expect(result.instances, isA<List<TestEntityProxy>>());
       expect(result.instances.length, equals(1));
       expect(result.instances[0], isNotNull);
-      expect(result.instances[0], isA<TestEntity>());
+      expect(result.instances[0], isA<TestEntityProxy>());
       expect(result.instances[0].id, equals(1));
       expect(result.instances[0].name, equals('TestName'));
       expect(result.instances[0].created, DateTime.parse("2020-08-07T12:30:15.123456"));
@@ -156,7 +156,7 @@ void main() {
 
       /// Create the endpoint and an 'outdated' instance
       final serializer = TestEntitySerializer();
-      final endpoint = RestfulApiEndpoint<TestEntity>(url, serializer, client: client);
+      final endpoint = RestfulApiEndpoint<TestEntityProxy>(url, serializer, client: client);
 
       /// Pull all entities using the endpoint
       final since = DateTime.utc(2020, 01, 02, 04, 30, 45, 123, 456);
@@ -170,17 +170,17 @@ void main() {
       expect(result.response.statusCode, equals(200));
 
       expect(result.instances, isNotNull);
-      expect(result.instances, isA<List<TestEntity>>());
+      expect(result.instances, isA<List<TestEntityProxy>>());
       expect(result.instances.length, equals(2));
 
       expect(result.instances[0], isNotNull);
-      expect(result.instances[0], isA<TestEntity>());
+      expect(result.instances[0], isA<TestEntityProxy>());
       expect(result.instances[0].id, equals(1));
       expect(result.instances[0].name, equals('TestNameOne'));
       expect(result.instances[0].created, DateTime.parse("2020-08-07T12:30:15.123456"));
 
       expect(result.instances[1], isNotNull);
-      expect(result.instances[1], isA<TestEntity>());
+      expect(result.instances[1], isA<TestEntityProxy>());
       expect(result.instances[1].id, equals(2));
       expect(result.instances[1].name, equals('TestNameTwo'));
       expect(result.instances[1].created, DateTime.parse("2020-08-10T12:30:15.123456"));

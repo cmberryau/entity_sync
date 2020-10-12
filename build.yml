@@ -1,0 +1,7 @@
+targets:
+  $default:
+    builders:
+      entity_sync_generator|use_serialization_builder:
+        enabled: false
+      entity_sync_generator|is_serializer_builder:
+        enabled: false
