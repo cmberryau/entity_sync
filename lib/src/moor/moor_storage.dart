@@ -47,12 +47,16 @@ class MoorStorage<TProxy extends ProxyMixin> implements Storage<TProxy> {
               .write(instance);
         }
         return StorageResult<TProxy>(true);
-      } else if (oldInstance != null) {
+      }
+      // if this is the result of a push operation
+      else if (oldInstance != null) {
         final mapData = instance.toMap();
         final localKey = instance.keyField.name;
         mapData[localKey] = oldInstance.toMap()[localKey];
         instance = instance.copyFromMap(mapData);
       } else {
+        // find an existing instance in the database then assign the existing id
+        // to the new instance
         if (instanceRemoteId != null) {
           final result = await database.customSelect(
               '''SELECT * FROM ${(table.actualTable() as dynamic).actualTableName} 
