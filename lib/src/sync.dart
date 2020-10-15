@@ -36,6 +36,9 @@ abstract class SyncableMixin implements SerializableMixin {
     return toMap()[keyField.name];
   }
 
+  /// Sets the key value of the entity
+  void setKeyValue(dynamic value);
+
   /// Gets the flag value of the entity
   bool getFlagValue(BoolField flagField) {
     return toMap()[flagField.name];
@@ -47,6 +50,17 @@ abstract class SyncableMixin implements SerializableMixin {
     final keyValue = getKeyValue(keyField);
 
     return keyField.toRepresentation(keyValue);
+  }
+
+  /// Evaluates syncable entity is equal to another
+  bool isDataEqualTo<TSyncable extends SyncableMixin>(TSyncable other) {
+    final aMap = toMap();
+    final bMap = other.toMap();
+
+    aMap.remove(getKeyField().name);
+    bMap.remove(other.getKeyField().name);
+
+    return aMap == bMap;
   }
 
   @override
@@ -119,9 +133,14 @@ class SyncController<TSyncable extends SyncableMixin> {
 
           final returnedInstance = endpointResult.instances[0];
 
-          /// Compare and write any changes to table
-          if (!endpoint.serializer.areEqual(instanceToPush, returnedInstance)) {
-            await storage.upsertInstance(returnedInstance, instanceToPush);
+          /// Compare data equality, ignoring local keys
+          if (!instanceToPush.isDataEqualTo(returnedInstance)) {
+            returnedInstance.setKeyValue(
+                instanceToPush.getKeyValue(
+                    instanceToPush.getKeyField()
+                )
+            );
+            await storage.upsertInstance(returnedInstance);
           }
         } else {
           /// TODO Warn if none returned
