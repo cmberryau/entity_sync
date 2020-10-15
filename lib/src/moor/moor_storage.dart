@@ -24,8 +24,13 @@ class MoorStorage<TProxy extends ProxyMixin> implements Storage<TProxy> {
   }
 
   @override
-  Future<StorageResult<TProxy>> upsertInstance(TProxy instance) async {
-    await database.into(table.actualTable()).insertOnConflictUpdate(instance);
+  Future<StorageResult<TProxy>> upsertInstance(TProxy instance, [dynamic key]) async {
+    if (key != null) {
+      await (database.update(table.actualTable())..where((t) => table.localKeyColumn().equals(key))).write(instance);
+    } else {
+      await database.into(table.actualTable()).insertOnConflictUpdate(instance);
+    }
+
     return StorageResult<TProxy>(true);
   }
 
