@@ -1,6 +1,5 @@
-import 'package:test/test.dart';
-
 import 'package:entity_sync/entity_sync.dart';
+import 'package:test/test.dart';
 
 part 'serialization_test.g.dart';
 
@@ -10,31 +9,25 @@ class TestEntity {
   final DateTime created;
   final bool shouldSync;
 
-  TestEntity(this.id, this.name, this.created, {this.shouldSync});
+  TestEntity({this.id, this.name, this.created, this.shouldSync});
 }
 
-/// An entity which is serializable via SerializableMixin
-@UseSerialization(TestEntity)
-class TestEntityProxy extends $_TestEntityProxy with SyncableMixin {
-  @override
-  SerializableField keyField = IntegerField('id');
+@UseEntitySync(
+  TestEntity,
+  fields: [
+    IntegerField('id'),
+    StringField('name'),
+    DateTimeField('created'),
+  ],
+  keyField: IntegerField('id'),
+  flagField: BoolField('shouldSync'),
+  remoteKeyField: null,
+)
+class TestEntityEntitySync extends $_TestEntityEntitySync {}
 
-  @override
-  SerializableField flagField = BoolField('shouldSync');
-
-  TestEntityProxy(int id, String name, DateTime created,
-      {bool shouldSync = false})
-      : super(id, name, created, shouldSync: shouldSync);
-}
-
-/// A serializer for TestEntity
-@IsSerializer(TestEntityProxy, fields: [
-  IntegerField('id'),
-  StringField('name'),
-  DateTimeField('created'),
-])
-class TestEntitySerializer extends $_TestEntitySerializer {
-  TestEntitySerializer({Map<String, dynamic> data, TestEntityProxy instance})
+class CustomTestEntitySerializer extends TestEntitySerializer {
+  CustomTestEntitySerializer(
+      {Map<String, dynamic> data, TestEntityProxy instance})
       : super(data: data, instance: instance);
 
   @override
@@ -67,12 +60,6 @@ class TestEntitySerializer extends $_TestEntitySerializer {
 
     return value;
   }
-
-  @override
-  TestEntityProxy createInstance(validatedData) {
-    return TestEntityProxy(
-        validatedData['id'], validatedData['name'], validatedData['created']);
-  }
 }
 
 void main() {
@@ -80,37 +67,40 @@ void main() {
     setUp(() {});
 
     test('Test TestEntitySerializer.isValid method with valid entity', () {
-      final entity = TestEntityProxy(0, 'TestName', DateTime.now());
-      final serializer = TestEntitySerializer(instance: entity);
+      final entity =
+          TestEntityProxy(id: 0, name: 'TestName', created: DateTime.now());
+      final serializer = CustomTestEntitySerializer(instance: entity);
 
       expect(serializer.isValid(), isTrue);
     });
 
     test('Test TestEntitySerializer.isValid method with invalid entity', () {
-      var entity = TestEntityProxy(0, null, DateTime.now());
-      var serializer = TestEntitySerializer(instance: entity);
+      var entity = TestEntityProxy(id: 0, name: null, created: DateTime.now());
+      var serializer = CustomTestEntitySerializer(instance: entity);
 
       expect(serializer.isValid(), isFalse);
 
-      entity = TestEntityProxy(0, '', DateTime.now());
-      serializer = TestEntitySerializer(instance: entity);
+      entity = TestEntityProxy(id: 0, name: '', created: DateTime.now());
+      serializer = CustomTestEntitySerializer(instance: entity);
 
       expect(serializer.isValid(), isFalse);
 
-      entity = TestEntityProxy(-1, 'TestName', DateTime.now());
-      serializer = TestEntitySerializer(instance: entity);
+      entity =
+          TestEntityProxy(id: -1, name: 'TestName', created: DateTime.now());
+      serializer = CustomTestEntitySerializer(instance: entity);
 
       expect(serializer.isValid(), isFalse);
 
-      entity = TestEntityProxy(0, 'TestName', null);
-      serializer = TestEntitySerializer(instance: entity);
+      entity = TestEntityProxy(id: 0, name: 'TestName', created: null);
+      serializer = CustomTestEntitySerializer(instance: entity);
 
       expect(serializer.isValid(), isFalse);
     });
 
     test('Test TestEntitySerializer.toJson method with valid entity', () {
-      final entity = TestEntityProxy(0, 'TestName', DateTime.now());
-      final serializer = TestEntitySerializer(instance: entity);
+      final entity =
+          TestEntityProxy(id: 0, name: 'TestName', created: DateTime.now());
+      final serializer = CustomTestEntitySerializer(instance: entity);
 
       final repr = serializer.toRepresentationString();
 

@@ -1,7 +1,8 @@
 import 'package:moor/moor.dart';
+
 import 'test_entities.dart';
 
-part 'database.g.dart';
+part 'database.moor.dart';
 
 @UseMoor(tables: [TestMoorEntities])
 class TestDatabase extends _$TestDatabase {
