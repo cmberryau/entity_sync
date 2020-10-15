@@ -32,11 +32,9 @@ class MoorStorage<TProxy extends ProxyMixin> implements Storage<TProxy> {
       // the case where the model is read only
       if (instance.keyField == null) {
         // check if the instance is already exist
-        final result = await database.customSelect(
-            '''SELECT * FROM ${(table.actualTable() as dynamic).actualTableName} 
-               WHERE ${instance.remoteKeyField.name} = "$instanceRemoteId"
-               LIMIT 1;
-            ''').getSingle();
+        final result = await (database.select(table.actualTable())
+              ..where((_) => table.remoteKeyColumn().equals(instanceRemoteId)))
+            .getSingle();
 
         if (result == null) {
           await database.into(table.actualTable()).insert(instance);
@@ -58,18 +56,13 @@ class MoorStorage<TProxy extends ProxyMixin> implements Storage<TProxy> {
         // find an existing instance in the database then assign the existing id
         // to the new instance
         if (instanceRemoteId != null) {
-          final result = await database.customSelect(
-              '''SELECT * FROM ${(table.actualTable() as dynamic).actualTableName} 
-               WHERE ${instance.remoteKeyField.name} = "$instanceRemoteId"
-               LIMIT 1;
-            ''').getSingle();
+          final result = await (database.select(table.actualTable())
+                ..where(
+                    (_) => table.remoteKeyColumn().equals(instanceRemoteId)))
+              .getSingle();
 
           if (result != null) {
-            final oldInstanceKeyValue = result.data[instance.keyField.name
-                .replaceAllMapped(
-                    RegExp(r'(?<=[a-z])[A-Z]'), (Match m) => ('_' + m.group(0)))
-                .toLowerCase()];
-
+            final oldInstanceKeyValue = result.toJson()[instance.keyField.name];
             final mapData = instance.toMap();
             mapData[instance.keyField.name] = oldInstanceKeyValue;
             instance = instance.copyFromMap(mapData as Map<String, dynamic>);
