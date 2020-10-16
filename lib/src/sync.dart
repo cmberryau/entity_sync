@@ -64,10 +64,36 @@ abstract class SyncableMixin implements SerializableMixin {
     final aMap = toMap();
     final bMap = other.toMap();
 
-    aMap.remove(getKeyField().name);
-    bMap.remove(other.getKeyField().name);
+    // remove the hashcodes
+    aMap.remove('hashCode');
+    bMap.remove('hashCode');
 
-    return aMap == bMap;
+    final aKeyField = getKeyField();
+    final bKeyField = other.getKeyField();
+
+    // remove the key fields
+    if (aKeyField != null) {
+      aMap.remove(aKeyField.name);
+    }
+
+    if (bKeyField != null){
+      bMap.remove(bKeyField.name);
+    }
+
+    final aFlagField = getFlagField();
+    final bFlagField = other.getFlagField();
+
+    // remove the flag fields
+    if (aFlagField != null) {
+      aMap.remove(aFlagField.name);
+    }
+
+    if (bFlagField != null) {
+      bMap.remove(bFlagField.name);
+    }
+
+    final equal = aMap == bMap;
+    return equal;
   }
 
   @override
