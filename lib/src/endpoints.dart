@@ -124,7 +124,6 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin>
     try {
       final response =
           await client.get(_instanceUrl(instance), headers: headers);
-
       if (response.statusCode == 200) {
         instance = _responseToInstance(serializer, response);
       }
@@ -182,10 +181,13 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin>
       Serializer<SyncableMixin> serializer, http.Response response) {
     /// Swap out the serializer to use the incoming data
     serializer.instance = null;
-    final instancesData = json.decode(response.body);
+    dynamic instancesData = json.decode(response.body);
     final instances = <TSyncable>[];
     // TODO: This is a temprorarily patch. Need to have a custom mapping.
-    for (var instanceData in instancesData['results']) {
+    if (!(instancesData is List)) {
+      instancesData = instancesData['results'];
+    }
+    for (var instanceData in instancesData) {
       serializer.data = instanceData;
 
       /// If the serializer is valid

@@ -1,16 +1,15 @@
 import 'package:entity_sync/entity_sync.dart';
 
-class UseSerialization {
+class UseEntitySync {
   final Type baseClass;
-
-  const UseSerialization(this.baseClass) : assert(baseClass != null);
-}
-
-class IsSerializer {
-  final Type proxyClass;
   final List<SerializableField> fields;
+  final SerializableField keyField;
+  final SerializableField flagField;
+  final SerializableField remoteKeyField;
 
-  const IsSerializer(this.proxyClass, {this.fields = const []})
-      : assert(proxyClass != null),
-        assert(fields != null);
+  const UseEntitySync(this.baseClass,
+      {this.fields = const [],
+      this.keyField,
+      this.flagField,
+      this.remoteKeyField});
 }

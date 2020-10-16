@@ -168,11 +168,9 @@ abstract class Serializer<TSerializable extends SerializableMixin> {
   Map<String, dynamic> data;
   Map<String, dynamic> _validatedData;
   final exceptions = <ValidationException>[];
+  final prefix;
 
-  /// The prefix of the serializer
-  String get prefix;
-
-  Serializer({this.data, this.instance}) {
+  Serializer({this.data, this.instance, this.prefix = ''}) {
     if (getFields() == null) {
       throw AbstractClassInstantiationError((Serializer).toString());
     }
