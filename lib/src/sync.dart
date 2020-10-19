@@ -36,6 +36,16 @@ abstract class SyncableMixin implements SerializableMixin {
     return toMap()[keyField.name];
   }
 
+  // Gets the local key value
+  dynamic getLocalKey() {
+    return getKeyValue(keyField);
+  }
+
+  // Gets the remote key value
+  dynamic getRemoteKey() {
+    return getKeyValue(remoteKeyField);
+  }
+
   /// Gets the flag value of the entity
   bool getFlagValue(BoolField flagField) {
     return toMap()[flagField.name];
@@ -47,6 +57,43 @@ abstract class SyncableMixin implements SerializableMixin {
     final keyValue = getKeyValue(keyField);
 
     return keyField.toRepresentation(keyValue);
+  }
+
+  /// Evaluates syncable entity is equal to another
+  bool isDataEqualTo<TSyncable extends SyncableMixin>(TSyncable other) {
+    final aMap = toMap();
+    final bMap = other.toMap();
+
+    // remove the hashcodes
+    aMap.remove('hashCode');
+    bMap.remove('hashCode');
+
+    final aKeyField = getKeyField();
+    final bKeyField = other.getKeyField();
+
+    // remove the key fields
+    if (aKeyField != null) {
+      aMap.remove(aKeyField.name);
+    }
+
+    if (bKeyField != null){
+      bMap.remove(bKeyField.name);
+    }
+
+    final aFlagField = getFlagField();
+    final bFlagField = other.getFlagField();
+
+    // remove the flag fields
+    if (aFlagField != null) {
+      aMap.remove(aFlagField.name);
+    }
+
+    if (bFlagField != null) {
+      bMap.remove(bFlagField.name);
+    }
+
+    final equal = aMap == bMap;
+    return equal;
   }
 
   @override
@@ -84,7 +131,23 @@ class SyncController<TSyncable extends SyncableMixin> {
 
     /// Insert all into local db
     for (final instance in endpointPullAll.instances) {
-      await storage.upsertInstance(instance);
+      /// Check if local storage has the instance
+      final localInstance = await storage.get(
+          remoteKey: instance.getRemoteKey()
+      );
+
+      /// New instance, insert it
+      if (localInstance == null) {
+        await storage.insert(
+            instance,
+        );
+      } else if (!localInstance.isDataEqualTo(instance)){
+        /// Existing instance, update it if it differs
+        await storage.update(
+            instance,
+            remoteKey: instance.getRemoteKey()
+        );
+      }
     }
 
     return SyncResult<TSyncable>(endpointResults, endpointPullAll);
@@ -119,9 +182,13 @@ class SyncController<TSyncable extends SyncableMixin> {
 
           final returnedInstance = endpointResult.instances[0];
 
-          /// Compare and write any changes to table
-          if (!endpoint.serializer.areEqual(instanceToPush, returnedInstance)) {
-            await storage.upsertInstance(returnedInstance, instanceToPush);
+          /// Compare data equality, ignoring local keys
+          if (!instanceToPush.isDataEqualTo(returnedInstance)) {
+            /// We have a local key because we pushed
+            await storage.update(
+                returnedInstance,
+                localKey: instanceToPush.getLocalKey()
+            );
           }
         } else {
           /// TODO Warn if none returned
