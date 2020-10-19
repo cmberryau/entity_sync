@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:entity_sync/src/paginators.dart';
 import 'package:http/http.dart' as http;
+import 'package:http/http.dart';
+import 'package:http/io_client.dart';
 
 import 'serialization.dart';
 import 'sync.dart';
@@ -220,4 +222,86 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin>
   String _makeSinceUrl(url, DateTime since) {
     return '${url}?modified__gt=${Uri.encodeComponent(since.toIso8601String())}';
   }
+}
+
+class EntitySyncHttpClient extends http.BaseClient {
+  http.Client _client;
+  Interceptor interceptor;
+
+  EntitySyncHttpClient({this.interceptor, http.Client client}) {
+    interceptor ??= Interceptor();
+    _client = client ?? IOClient(HttpClient());
+  }
+
+  @override
+  Future<Response> head(url, {Map<String, String> headers}) async {
+    final response = await super.head(url, headers: headers);
+    return await interceptor.onResponse(response);
+  }
+
+  @override
+  Future<Response> get(url, {Map<String, String> headers}) async {
+    final response = await super.get(url, headers: headers);
+    return await interceptor.onResponse(response);
+  }
+
+  @override
+  Future<Response> post(url,
+      {Map<String, String> headers, body, Encoding encoding}) async {
+    final response =
+        await super.post(url, headers: headers, body: body, encoding: encoding);
+    return await interceptor.onResponse(response);
+  }
+
+  @override
+  Future<Response> put(url,
+      {Map<String, String> headers, body, Encoding encoding}) async {
+    final response =
+        await super.put(url, headers: headers, body: body, encoding: encoding);
+    return await interceptor.onResponse(response);
+  }
+
+  @override
+  Future<Response> patch(url,
+      {Map<String, String> headers, body, Encoding encoding}) async {
+    final response = await super
+        .patch(url, headers: headers, body: body, encoding: encoding);
+    return await interceptor.onResponse(response);
+  }
+
+  @override
+  Future<Response> delete(url, {Map<String, String> headers}) async {
+    final response = await super.delete(url, headers: headers);
+    return await interceptor.onResponse(response);
+  }
+
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) async {
+    try {
+      final response = await _client.send(await interceptor.onRequest(request));
+
+      return response;
+    } catch (err) {
+      await interceptor.onError(err);
+
+      rethrow;
+    }
+  }
+
+  @override
+  void close() {
+    _client.close();
+  }
+}
+
+class Interceptor {
+  Future<Request> onRequest(Request request) async {
+    return request;
+  }
+
+  Future<Response> onResponse(Response response) async {
+    return response;
+  }
+
+  Future onError(Error error) async {}
 }
