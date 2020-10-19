@@ -80,7 +80,9 @@ void main() {
           client: client, headers: null);
 
       /// Pull all entities using the endpoint
-      final result = await endpoint.pullAll(serializer);
+      final result = await endpoint.pullAll(
+          serializer: serializer
+      );
 
       /// Test the results of pulling the entity
       expect(result, isNotNull);
@@ -174,7 +176,7 @@ void main() {
 
       /// Pull all entities using the endpoint
       final since = DateTime.utc(2020, 01, 02, 04, 30, 45, 123, 456);
-      final result = await endpoint.pullAllSince(since);
+      final result = await endpoint.pullAll(since: since);
 
       /// Test the results of pulling the entity
       expect(result, isNotNull);

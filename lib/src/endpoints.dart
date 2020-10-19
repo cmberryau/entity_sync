@@ -48,16 +48,11 @@ abstract class Endpoint<TSyncable extends SyncableMixin> {
   Future<EndpointResult<TSyncable>> pull(TSyncable instance,
       [Serializer<TSyncable> serializer]);
 
-  /// Pulls and returns a single entity
-  Future<EndpointResult<TSyncable>> pullAll([
+  /// Pulls and returns multiple entities
+  Future<EndpointResult<TSyncable>> pullAll({
     Serializer<TSyncable> serializer,
-  ]);
-
-  /// Pulls and returns a single entity
-  Future<EndpointResult<TSyncable>> pullAllSince([
     DateTime since,
-    Serializer<TSyncable> serializer
-  ]);
+  });
 
   Serializer<SyncableMixin> _getSerializer(
       Serializer<SyncableMixin> serializer) {
@@ -138,81 +133,51 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin>
   }
 
   @override
-  Future<EndpointResult<TSyncable>> pullAll([serializer]) async {
+  Future<EndpointResult<TSyncable>> pullAll({
+    Serializer<SyncableMixin> serializer,
+    DateTime since}) async {
     serializer = _getSerializer(serializer);
 
+    // if we have a paginator, use it
     if (paginator != null) {
-      // if we have a paginator, clone it
+      // clone the paginator for local use
       final localPaginator = paginator.clone();
-
       // get the initial set of instances
       var result = await _pullAll(serializer, localPaginator);
-
+      // cache the initial response
       var response = result.response;
       var instances = result.instances;
 
       while(result.instances.isNotEmpty) {
         // move to the next page
         localPaginator.next();
-
         // get the next set of instances
-        result = await _pullAll(serializer, localPaginator);
-
+        result = await _pullAll(serializer, localPaginator, since);
+        // response should remain the same
         if (result.response != response) {
           throw UnimplementedError();
         }
-
         // extend the instances list
         instances = instances + result.instances;
       }
 
       return EndpointResult<TSyncable>(response, instances);
     } else {
-      try {
-        final finalUrl = '${url}${paginator == null ? "" : paginator.params()}';
-        final response = await client.get(finalUrl, headers: headers);
-
-        if (response.statusCode == 200) {
-          final instances = _responseToInstances(serializer, response);
-          return EndpointResult<TSyncable>(response, instances);
-        }
-        return EndpointResult<TSyncable>(response, []);
-      } on HttpException catch (e) {
-        print(e);
-        rethrow;
-      }
+      // otherwise, just do a normal pull
+      return _pullAll(serializer, null, since);
     }
   }
 
-  Future<EndpointResult> _pullAll(Serializer serializer, Paginator localPaginator) async {
+  Future<EndpointResult<TSyncable>> _pullAll(Serializer serializer,
+      [Paginator paginator, DateTime since]) async {
     try {
-      final finalUrl = '${url}${localPaginator.params()}';
-      final response = await client.get(finalUrl, headers: headers);
+      final finalUrl = '${url}${paginator == null ? '' : paginator.params()}';
 
-      if (response.statusCode == 200) {
-        final instances = _responseToInstances(serializer, response);
-        return EndpointResult<TSyncable>(response, instances);
-      }
-      return EndpointResult<TSyncable>(response, []);
-    } on HttpException catch (e) {
-      print(e);
-      rethrow;
-    }
-  }
+      final response = await client.get(
+          _makeSinceUrl(finalUrl, since),
+          headers: headers
+      );
 
-  @override
-  Future<EndpointResult<TSyncable>> pullAllSince(
-      [DateTime since, Serializer<SyncableMixin> serializer]) async {
-    serializer = _getSerializer(serializer);
-    if (since == null) {
-      return pullAll(serializer);
-    }
-
-    try {
-      final finalUrl =
-          '${url}${paginator == null ? "" : "?${(await paginator.params())}"}';
-      final response =
-          await client.get(_makeSinceUrl(finalUrl, since), headers: headers);
       if (response.statusCode == 200) {
         final instances = _responseToInstances(serializer, response);
         return EndpointResult<TSyncable>(response, instances);
@@ -265,6 +230,9 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin>
   }
 
   String _makeSinceUrl(url, DateTime since) {
+    if (since == null) {
+      return url;
+    }
     return '${url}?modified__gt=${Uri.encodeComponent(since.toIso8601String())}';
   }
 }
