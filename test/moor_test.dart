@@ -9,43 +9,6 @@ import 'endpoints_test.dart';
 import 'models/database.dart';
 import 'models/test_entities.dart';
 
-class CustomTestMoorEntitySerializer extends TestMoorEntitySerializer {
-  CustomTestMoorEntitySerializer(
-      {Map<String, dynamic> data, TestMoorEntityProxy instance})
-      : super(data: data, instance: instance);
-
-  @override
-  int validateId(int value) {
-    if (value < 0) {
-      throw ValidationException('id must be positive value');
-    }
-
-    return value;
-  }
-
-  @override
-  String validateName(String value) {
-    if (value == null) {
-      throw ValidationException('name must not be null');
-    }
-
-    if (value.isEmpty) {
-      throw ValidationException('name must not be empty');
-    }
-
-    return value;
-  }
-
-  @override
-  DateTime validateCreated(DateTime value) {
-    if (value == null) {
-      throw ValidationException('created must not be null');
-    }
-
-    return value;
-  }
-}
-
 void main() {
   TestDatabase database;
 
