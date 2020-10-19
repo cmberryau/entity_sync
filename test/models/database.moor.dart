@@ -9,11 +9,13 @@ part of 'database.dart';
 // ignore_for_file: unnecessary_brace_in_string_interps, unnecessary_this
 class TestMoorEntity extends DataClass implements Insertable<TestMoorEntity> {
   final bool shouldSync;
+  final String uuid;
   final int id;
   final String name;
   final DateTime created;
   TestMoorEntity(
       {@required this.shouldSync,
+      this.uuid,
       @required this.id,
       @required this.name,
       @required this.created});
@@ -22,12 +24,13 @@ class TestMoorEntity extends DataClass implements Insertable<TestMoorEntity> {
       {String prefix}) {
     final effectivePrefix = prefix ?? '';
     final boolType = db.typeSystem.forDartType<bool>();
-    final intType = db.typeSystem.forDartType<int>();
     final stringType = db.typeSystem.forDartType<String>();
+    final intType = db.typeSystem.forDartType<int>();
     final dateTimeType = db.typeSystem.forDartType<DateTime>();
     return TestMoorEntity(
       shouldSync: boolType
           .mapFromDatabaseResponse(data['${effectivePrefix}should_sync']),
+      uuid: stringType.mapFromDatabaseResponse(data['${effectivePrefix}uuid']),
       id: intType.mapFromDatabaseResponse(data['${effectivePrefix}id']),
       name: stringType.mapFromDatabaseResponse(data['${effectivePrefix}name']),
       created: dateTimeType
@@ -39,6 +42,9 @@ class TestMoorEntity extends DataClass implements Insertable<TestMoorEntity> {
     final map = <String, Expression>{};
     if (!nullToAbsent || shouldSync != null) {
       map['should_sync'] = Variable<bool>(shouldSync);
+    }
+    if (!nullToAbsent || uuid != null) {
+      map['uuid'] = Variable<String>(uuid);
     }
     if (!nullToAbsent || id != null) {
       map['id'] = Variable<int>(id);
@@ -57,6 +63,7 @@ class TestMoorEntity extends DataClass implements Insertable<TestMoorEntity> {
       shouldSync: shouldSync == null && nullToAbsent
           ? const Value.absent()
           : Value(shouldSync),
+      uuid: uuid == null && nullToAbsent ? const Value.absent() : Value(uuid),
       id: id == null && nullToAbsent ? const Value.absent() : Value(id),
       name: name == null && nullToAbsent ? const Value.absent() : Value(name),
       created: created == null && nullToAbsent
@@ -70,6 +77,7 @@ class TestMoorEntity extends DataClass implements Insertable<TestMoorEntity> {
     serializer ??= moorRuntimeOptions.defaultSerializer;
     return TestMoorEntity(
       shouldSync: serializer.fromJson<bool>(json['shouldSync']),
+      uuid: serializer.fromJson<String>(json['uuid']),
       id: serializer.fromJson<int>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       created: serializer.fromJson<DateTime>(json['created']),
@@ -80,6 +88,7 @@ class TestMoorEntity extends DataClass implements Insertable<TestMoorEntity> {
     serializer ??= moorRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'shouldSync': serializer.toJson<bool>(shouldSync),
+      'uuid': serializer.toJson<String>(uuid),
       'id': serializer.toJson<int>(id),
       'name': serializer.toJson<String>(name),
       'created': serializer.toJson<DateTime>(created),
@@ -87,9 +96,14 @@ class TestMoorEntity extends DataClass implements Insertable<TestMoorEntity> {
   }
 
   TestMoorEntity copyWith(
-          {bool shouldSync, int id, String name, DateTime created}) =>
+          {bool shouldSync,
+          String uuid,
+          int id,
+          String name,
+          DateTime created}) =>
       TestMoorEntity(
         shouldSync: shouldSync ?? this.shouldSync,
+        uuid: uuid ?? this.uuid,
         id: id ?? this.id,
         name: name ?? this.name,
         created: created ?? this.created,
@@ -98,6 +112,7 @@ class TestMoorEntity extends DataClass implements Insertable<TestMoorEntity> {
   String toString() {
     return (StringBuffer('TestMoorEntity(')
           ..write('shouldSync: $shouldSync, ')
+          ..write('uuid: $uuid, ')
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('created: $created')
@@ -106,13 +121,16 @@ class TestMoorEntity extends DataClass implements Insertable<TestMoorEntity> {
   }
 
   @override
-  int get hashCode => $mrjf($mrjc(shouldSync.hashCode,
-      $mrjc(id.hashCode, $mrjc(name.hashCode, created.hashCode))));
+  int get hashCode => $mrjf($mrjc(
+      shouldSync.hashCode,
+      $mrjc(uuid.hashCode,
+          $mrjc(id.hashCode, $mrjc(name.hashCode, created.hashCode)))));
   @override
   bool operator ==(dynamic other) =>
       identical(this, other) ||
       (other is TestMoorEntity &&
           other.shouldSync == this.shouldSync &&
+          other.uuid == this.uuid &&
           other.id == this.id &&
           other.name == this.name &&
           other.created == this.created);
@@ -120,17 +138,20 @@ class TestMoorEntity extends DataClass implements Insertable<TestMoorEntity> {
 
 class TestMoorEntitiesCompanion extends UpdateCompanion<TestMoorEntity> {
   final Value<bool> shouldSync;
+  final Value<String> uuid;
   final Value<int> id;
   final Value<String> name;
   final Value<DateTime> created;
   const TestMoorEntitiesCompanion({
     this.shouldSync = const Value.absent(),
+    this.uuid = const Value.absent(),
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.created = const Value.absent(),
   });
   TestMoorEntitiesCompanion.insert({
     this.shouldSync = const Value.absent(),
+    this.uuid = const Value.absent(),
     this.id = const Value.absent(),
     @required String name,
     @required DateTime created,
@@ -138,12 +159,14 @@ class TestMoorEntitiesCompanion extends UpdateCompanion<TestMoorEntity> {
         created = Value(created);
   static Insertable<TestMoorEntity> custom({
     Expression<bool> shouldSync,
+    Expression<String> uuid,
     Expression<int> id,
     Expression<String> name,
     Expression<DateTime> created,
   }) {
     return RawValuesInsertable({
       if (shouldSync != null) 'should_sync': shouldSync,
+      if (uuid != null) 'uuid': uuid,
       if (id != null) 'id': id,
       if (name != null) 'name': name,
       if (created != null) 'created': created,
@@ -152,11 +175,13 @@ class TestMoorEntitiesCompanion extends UpdateCompanion<TestMoorEntity> {
 
   TestMoorEntitiesCompanion copyWith(
       {Value<bool> shouldSync,
+      Value<String> uuid,
       Value<int> id,
       Value<String> name,
       Value<DateTime> created}) {
     return TestMoorEntitiesCompanion(
       shouldSync: shouldSync ?? this.shouldSync,
+      uuid: uuid ?? this.uuid,
       id: id ?? this.id,
       name: name ?? this.name,
       created: created ?? this.created,
@@ -168,6 +193,9 @@ class TestMoorEntitiesCompanion extends UpdateCompanion<TestMoorEntity> {
     final map = <String, Expression>{};
     if (shouldSync.present) {
       map['should_sync'] = Variable<bool>(shouldSync.value);
+    }
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
     }
     if (id.present) {
       map['id'] = Variable<int>(id.value);
@@ -185,6 +213,7 @@ class TestMoorEntitiesCompanion extends UpdateCompanion<TestMoorEntity> {
   String toString() {
     return (StringBuffer('TestMoorEntitiesCompanion(')
           ..write('shouldSync: $shouldSync, ')
+          ..write('uuid: $uuid, ')
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('created: $created')
@@ -208,6 +237,15 @@ class $TestMoorEntitiesTable extends TestMoorEntities
       $tableName,
       false,
     )..clientDefault = () => true;
+  }
+
+  final VerificationMeta _uuidMeta = const VerificationMeta('uuid');
+  GeneratedTextColumn _uuid;
+  @override
+  GeneratedTextColumn get uuid => _uuid ??= _constructUuid();
+  GeneratedTextColumn _constructUuid() {
+    return GeneratedTextColumn('uuid', $tableName, true,
+        minTextLength: 36, maxTextLength: 36);
   }
 
   final VerificationMeta _idMeta = const VerificationMeta('id');
@@ -241,7 +279,7 @@ class $TestMoorEntitiesTable extends TestMoorEntities
   }
 
   @override
-  List<GeneratedColumn> get $columns => [shouldSync, id, name, created];
+  List<GeneratedColumn> get $columns => [shouldSync, uuid, id, name, created];
   @override
   $TestMoorEntitiesTable get asDslTable => this;
   @override
@@ -258,6 +296,10 @@ class $TestMoorEntitiesTable extends TestMoorEntities
           _shouldSyncMeta,
           shouldSync.isAcceptableOrUnknown(
               data['should_sync'], _shouldSyncMeta));
+    }
+    if (data.containsKey('uuid')) {
+      context.handle(
+          _uuidMeta, uuid.isAcceptableOrUnknown(data['uuid'], _uuidMeta));
     }
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id'], _idMeta));

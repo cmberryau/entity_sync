@@ -9,43 +9,6 @@ import 'endpoints_test.dart';
 import 'models/database.dart';
 import 'models/test_entities.dart';
 
-class CustomTestMoorEntitySerializer extends TestMoorEntitySerializer {
-  CustomTestMoorEntitySerializer(
-      {Map<String, dynamic> data, TestMoorEntityProxy instance})
-      : super(data: data, instance: instance);
-
-  @override
-  int validateId(int value) {
-    if (value < 0) {
-      throw ValidationException('id must be positive value');
-    }
-
-    return value;
-  }
-
-  @override
-  String validateName(String value) {
-    if (value == null) {
-      throw ValidationException('name must not be null');
-    }
-
-    if (value.isEmpty) {
-      throw ValidationException('name must not be empty');
-    }
-
-    return value;
-  }
-
-  @override
-  DateTime validateCreated(DateTime value) {
-    if (value == null) {
-      throw ValidationException('created must not be null');
-    }
-
-    return value;
-  }
-}
-
 void main() {
   TestDatabase database;
 
@@ -65,6 +28,7 @@ void main() {
       expect(entities.length, equals(2));
 
       /// Validate that entity with id == 1 has updated name
+      expect(entities[0].uuid, equals('00000000-0000-0000-0000-000000000001'));
       expect(entities[0].id, equals(1));
       expect(entities[0].name, equals('UpdatedTestName'));
 
@@ -72,6 +36,7 @@ void main() {
       expect(entities[0].created, equals(DateTime(2020, 8, 7, 12, 45, 15)));
 
       /// Validate that entity with id == 2 is as expected
+      expect(entities[1].uuid, equals('00000000-0000-0000-0000-000000000002'));
       expect(entities[1].id, equals(2));
       expect(entities[1].name, equals('TestName'));
       expect(entities[1].created, equals(DateTime(2020, 8, 7, 12, 30, 15)));
@@ -128,10 +93,18 @@ Future<SyncResult> localOutdatedDataSync(
   final postTestSerializer = TestMoorEntitySerializer(instance: postTestProxy);
   final postTestRepresentation = postTestSerializer.toRepresentationString();
 
-  final getResponseBody = '[{"id": 2, "name": "TestName", '
-      '"created": "2020-08-07T12:30:15.123456"}]';
-  final postResponseBody = '{"id": 1, "name": "UpdatedTestName", '
-      '"created": "2020-08-07T12:45:15.123456"}';
+  final getResponseBody = '[{'
+        '"uuid": "00000000-0000-0000-0000-000000000002", '
+        '"id": 2, '
+        '"name": "TestName", '
+        '"created": "2020-08-07T12:30:15.123456"'
+      '}]';
+  final postResponseBody = '{'
+        '"uuid": "00000000-0000-0000-0000-000000000001", '
+        '"id": 1, '
+        '"name": "UpdatedTestName", '
+        '"created": "2020-08-07T12:45:15.123456"'
+      '}';
   final statusCode = 200;
 
   when(client.get('${url}'))
