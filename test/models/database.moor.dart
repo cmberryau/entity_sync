@@ -15,7 +15,7 @@ class TestMoorEntity extends DataClass implements Insertable<TestMoorEntity> {
   final DateTime created;
   TestMoorEntity(
       {@required this.shouldSync,
-      @required this.remote_uuid,
+      this.remote_uuid,
       @required this.id,
       @required this.name,
       @required this.created});
@@ -154,12 +154,11 @@ class TestMoorEntitiesCompanion extends UpdateCompanion<TestMoorEntity> {
   });
   TestMoorEntitiesCompanion.insert({
     this.shouldSync = const Value.absent(),
-    @required String remote_uuid,
+    this.remote_uuid = const Value.absent(),
     this.id = const Value.absent(),
     @required String name,
     @required DateTime created,
-  })  : remote_uuid = Value(remote_uuid),
-        name = Value(name),
+  })  : name = Value(name),
         created = Value(created);
   static Insertable<TestMoorEntity> custom({
     Expression<bool> shouldSync,
@@ -250,7 +249,7 @@ class $TestMoorEntitiesTable extends TestMoorEntities
   GeneratedTextColumn get remote_uuid =>
       _remote_uuid ??= _constructRemoteUuid();
   GeneratedTextColumn _constructRemoteUuid() {
-    return GeneratedTextColumn('remote_uuid', $tableName, false,
+    return GeneratedTextColumn('remote_uuid', $tableName, true,
         minTextLength: 36, maxTextLength: 36);
   }
 
@@ -309,8 +308,6 @@ class $TestMoorEntitiesTable extends TestMoorEntities
           _remote_uuidMeta,
           remote_uuid.isAcceptableOrUnknown(
               data['remote_uuid'], _remote_uuidMeta));
-    } else if (isInserting) {
-      context.missing(_remote_uuidMeta);
     }
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id'], _idMeta));
