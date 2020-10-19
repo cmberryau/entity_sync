@@ -127,7 +127,7 @@ class SyncController<TSyncable extends SyncableMixin> {
     final endpointResults = await push(toSyncInstances);
 
     /// pull all from endpoint since last sync
-    final endpointPullAll = await endpoint.pullAllSince(since, null, paginator);
+    final endpointPullAll = await endpoint.pullAllSince(since, null);
 
     /// Insert all into local db
     for (final instance in endpointPullAll.instances) {

@@ -26,9 +26,8 @@ class EndpointResult<TSyncable extends SyncableMixin> {
 abstract class Endpoint<TSyncable extends SyncableMixin> {
   final Serializer<TSyncable> serializer;
   final bool readOnly;
-  final Paginator paginator;
 
-  Endpoint(this.serializer, {this.readOnly = false, this.paginator});
+  Endpoint(this.serializer, {this.readOnly = false});
 
   /// Pushes a single entity and returns any updates
   Future<EndpointResult<TSyncable>> push(instance, [serializer]) async {
@@ -52,12 +51,13 @@ abstract class Endpoint<TSyncable extends SyncableMixin> {
   /// Pulls and returns a single entity
   Future<EndpointResult<TSyncable>> pullAll([
     Serializer<TSyncable> serializer,
-    Paginator paginator,
   ]);
 
   /// Pulls and returns a single entity
-  Future<EndpointResult<TSyncable>> pullAllSince(
-      [DateTime since, Serializer<TSyncable> serializer, Paginator paginator]);
+  Future<EndpointResult<TSyncable>> pullAllSince([
+    DateTime since,
+    Serializer<TSyncable> serializer
+  ]);
 
   Serializer<SyncableMixin> _getSerializer(
       Serializer<SyncableMixin> serializer) {
@@ -77,14 +77,15 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin>
   http.Client client;
   static const String ModifiedKeyDefault = 'modified';
   String modifiedKey;
+  final Paginator paginator;
 
   RestfulApiEndpoint(this.url, serializer,
       {http.Client client,
       modifiedKey,
-      paginator,
+      this.paginator,
       readOnly = false,
       this.headers = const {}})
-      : super(serializer, readOnly: readOnly, paginator: paginator) {
+      : super(serializer, readOnly: readOnly) {
     this.client = client ??= http.Client();
     this.modifiedKey = modifiedKey ??= ModifiedKeyDefault;
   }
@@ -137,11 +138,55 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin>
   }
 
   @override
-  Future<EndpointResult<TSyncable>> pullAll([serializer, paginator]) async {
+  Future<EndpointResult<TSyncable>> pullAll([serializer]) async {
     serializer = _getSerializer(serializer);
 
+    if (paginator != null) {
+      // if we have a paginator, clone it
+      final localPaginator = paginator.clone();
+
+      // get the initial set of instances
+      var result = await _pullAll(serializer, localPaginator);
+
+      var response = result.response;
+      var instances = result.instances;
+
+      while(result.instances.isNotEmpty) {
+        // move to the next page
+        localPaginator.next();
+
+        // get the next set of instances
+        result = await _pullAll(serializer, localPaginator);
+
+        if (result.response != response) {
+          throw UnimplementedError();
+        }
+
+        // extend the instances list
+        instances = instances + result.instances;
+      }
+
+      return EndpointResult<TSyncable>(response, instances);
+    } else {
+      try {
+        final finalUrl = '${url}${paginator == null ? "" : paginator.params()}';
+        final response = await client.get(finalUrl, headers: headers);
+
+        if (response.statusCode == 200) {
+          final instances = _responseToInstances(serializer, response);
+          return EndpointResult<TSyncable>(response, instances);
+        }
+        return EndpointResult<TSyncable>(response, []);
+      } on HttpException catch (e) {
+        print(e);
+        rethrow;
+      }
+    }
+  }
+
+  Future<EndpointResult> _pullAll(Serializer serializer, Paginator localPaginator) async {
     try {
-      final finalUrl = '${url}${paginator == null ? "" : paginator.params()}';
+      final finalUrl = '${url}${localPaginator.params()}';
       final response = await client.get(finalUrl, headers: headers);
 
       if (response.statusCode == 200) {
@@ -157,7 +202,7 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin>
 
   @override
   Future<EndpointResult<TSyncable>> pullAllSince(
-      [DateTime since, Serializer<SyncableMixin> serializer, paginator]) async {
+      [DateTime since, Serializer<SyncableMixin> serializer]) async {
     serializer = _getSerializer(serializer);
     if (since == null) {
       return pullAll(serializer);

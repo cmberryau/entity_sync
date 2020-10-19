@@ -1,8 +1,6 @@
 import 'package:entity_sync/entity_sync.dart';
-import 'package:entity_sync/src/paginators.dart';
 import 'package:moor/moor.dart';
 
-part 'moor_paginators.dart';
 part 'moor_storage.dart';
 
 /// Responsible for creating proxies

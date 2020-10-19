@@ -49,11 +49,7 @@ class MoorStorage<TProxy extends ProxyMixin> implements Storage<TProxy> {
   Future<StorageResult<TProxy>> update(TProxy instance, {dynamic remoteKey, dynamic localKey}) async {
     final localInstance = await get(remoteKey: remoteKey, localKey: localKey);
 
-    if (table.localKeyColumn() == null) {
-      // if the table doesn't have unique local id then update it by remote id
-      await (database.update(table.actualTable())..where((t) => table.remoteKeyColumn().equals(localInstance.getRemoteKey()))).write(instance);
-    }
-    else if (localInstance != null) {
+    if (localInstance != null) {
       await (database.update(table.actualTable())..where((t) => table.localKeyColumn().equals(localInstance.getLocalKey()))).write(instance);
     }
     else {
