@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:entity_sync/src/paginators.dart';
 import 'package:http/http.dart' as http;
+import 'package:http/http.dart';
 import 'package:http/io_client.dart';
 
 import 'serialization.dart';
@@ -74,11 +75,10 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin>
   final String url;
   final Map<String, String> headers;
   http.Client client;
-  final Request request;
   static const String ModifiedKeyDefault = 'modified';
   String modifiedKey;
 
-  RestfulApiEndpoint(this.url, this.request, serializer,
+  RestfulApiEndpoint(this.url, serializer,
       {http.Client client,
       modifiedKey,
       paginator,
@@ -224,41 +224,84 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin>
   }
 }
 
-class Request {
-  final Map<String, String> _headers = {};
-  String url;
-
-  String getHeadersValue(String key) {
-    return _headers[key];
-  }
-
-  void addHeader(String key, String value) {
-    _headers[key] = value;
-  }
-}
-
 class EntitySyncHttpClient extends http.BaseClient {
   http.Client _client;
+  Interceptor interceptor;
+
+  EntitySyncHttpClient({this.interceptor, http.Client client}) {
+    interceptor ??= Interceptor();
+    _client = client ?? IOClient(HttpClient());
+  }
+
+  @override
+  Future<Response> head(url, {Map<String, String> headers}) async {
+    final response = await super.head(url, headers: headers);
+    return await interceptor.onResponse(response);
+  }
+
+  @override
+  Future<Response> get(url, {Map<String, String> headers}) async {
+    final response = await super.get(url, headers: headers);
+    return await interceptor.onResponse(response);
+  }
+
+  @override
+  Future<Response> post(url,
+      {Map<String, String> headers, body, Encoding encoding}) async {
+    final response =
+        await super.post(url, headers: headers, body: body, encoding: encoding);
+    return await interceptor.onResponse(response);
+  }
+
+  @override
+  Future<Response> put(url,
+      {Map<String, String> headers, body, Encoding encoding}) async {
+    final response =
+        await super.put(url, headers: headers, body: body, encoding: encoding);
+    return await interceptor.onResponse(response);
+  }
+
+  @override
+  Future<Response> patch(url,
+      {Map<String, String> headers, body, Encoding encoding}) async {
+    final response = await super
+        .patch(url, headers: headers, body: body, encoding: encoding);
+    return await interceptor.onResponse(response);
+  }
+
+  @override
+  Future<Response> delete(url, {Map<String, String> headers}) async {
+    final response = await super.delete(url, headers: headers);
+    return await interceptor.onResponse(response);
+  }
 
   @override
   Future<http.StreamedResponse> send(http.BaseRequest request) async {
-    // TODO: Intercept request here
-    if (_client == null) {
-      var ioClient = HttpClient();
-      _client = IOClient(ioClient);
+    try {
+      final response = await _client.send(await interceptor.onRequest(request));
+
+      return response;
+    } catch (err) {
+      await interceptor.onError(err);
+
+      rethrow;
     }
-    final response = await _client.send(request);
+  }
 
-    // TODO: Intercept response here
-
-    return response;
+  @override
+  void close() {
+    _client.close();
   }
 }
 
 class Interceptor {
-  Request onRequest(Request request) {
+  Future<Request> onRequest(Request request) async {
     return request;
   }
 
-  void onError(HttpException error) {}
+  Future<Response> onResponse(Response response) async {
+    return response;
+  }
+
+  Future onError(Error error) async {}
 }
