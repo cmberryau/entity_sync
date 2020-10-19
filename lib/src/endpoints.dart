@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:entity_sync/src/paginators.dart';
 import 'package:http/http.dart' as http;
+import 'package:http/io_client.dart';
 
 import 'serialization.dart';
 import 'sync.dart';
@@ -73,10 +74,11 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin>
   final String url;
   final Map<String, String> headers;
   http.Client client;
+  final Request request;
   static const String ModifiedKeyDefault = 'modified';
   String modifiedKey;
 
-  RestfulApiEndpoint(this.url, serializer,
+  RestfulApiEndpoint(this.url, this.request, serializer,
       {http.Client client,
       modifiedKey,
       paginator,
@@ -220,4 +222,43 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin>
   String _makeSinceUrl(url, DateTime since) {
     return '${url}?modified__gt=${Uri.encodeComponent(since.toIso8601String())}';
   }
+}
+
+class Request {
+  final Map<String, String> _headers = {};
+  String url;
+
+  String getHeadersValue(String key) {
+    return _headers[key];
+  }
+
+  void addHeader(String key, String value) {
+    _headers[key] = value;
+  }
+}
+
+class EntitySyncHttpClient extends http.BaseClient {
+  http.Client _client;
+
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) async {
+    // TODO: Intercept request here
+    if (_client == null) {
+      var ioClient = HttpClient();
+      _client = IOClient(ioClient);
+    }
+    final response = await _client.send(request);
+
+    // TODO: Intercept response here
+
+    return response;
+  }
+}
+
+class Interceptor {
+  Request onRequest(Request request) {
+    return request;
+  }
+
+  void onError(HttpException error) {}
 }
