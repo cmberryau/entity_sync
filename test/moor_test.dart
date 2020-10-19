@@ -28,6 +28,7 @@ void main() {
       expect(entities.length, equals(2));
 
       /// Validate that entity with id == 1 has updated name
+      expect(entities[0].uuid, equals('e5341106-e4f0-4248-bdef-b9da47d064ab'));
       expect(entities[0].id, equals(1));
       expect(entities[0].name, equals('UpdatedTestName'));
 
@@ -35,6 +36,7 @@ void main() {
       expect(entities[0].created, equals(DateTime(2020, 8, 7, 12, 45, 15)));
 
       /// Validate that entity with id == 2 is as expected
+      expect(entities[1].uuid, equals('1628e719-59c1-4c18-b66d-1bc201fbab3e'));
       expect(entities[1].id, equals(2));
       expect(entities[1].name, equals('TestName'));
       expect(entities[1].created, equals(DateTime(2020, 8, 7, 12, 30, 15)));
@@ -91,10 +93,18 @@ Future<SyncResult> localOutdatedDataSync(
   final postTestSerializer = TestMoorEntitySerializer(instance: postTestProxy);
   final postTestRepresentation = postTestSerializer.toRepresentationString();
 
-  final getResponseBody = '[{"id": 2, "name": "TestName", '
-      '"created": "2020-08-07T12:30:15.123456"}]';
-  final postResponseBody = '{"id": 1, "name": "UpdatedTestName", '
-      '"created": "2020-08-07T12:45:15.123456"}';
+  final getResponseBody = '[{'
+        '"uuid": "1628e719-59c1-4c18-b66d-1bc201fbab3e", '
+        '"id": 2, '
+        '"name": "TestName", '
+        '"created": "2020-08-07T12:30:15.123456"'
+      '}]';
+  final postResponseBody = '{'
+        '"uuid": "e5341106-e4f0-4248-bdef-b9da47d064ab", '
+        '"id": 1, '
+        '"name": "UpdatedTestName", '
+        '"created": "2020-08-07T12:45:15.123456"'
+      '}';
   final statusCode = 200;
 
   when(client.get('${url}'))

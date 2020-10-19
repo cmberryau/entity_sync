@@ -10,13 +10,13 @@ class TestMoorEntityProxy extends TestMoorEntity
     with ProxyMixin<TestMoorEntity>, SyncableMixin, SerializableMixin {
   TestMoorEntityProxy({
     bool shouldSync,
-    String remote_uuid,
+    String uuid,
     int id,
     String name,
     DateTime created,
   }) : super(
           shouldSync: shouldSync,
-          remote_uuid: remote_uuid,
+          uuid: uuid,
           id: id,
           name: name,
           created: created,
@@ -25,7 +25,7 @@ class TestMoorEntityProxy extends TestMoorEntity
   Map<String, dynamic> toMap() {
     return {
       'shouldSync': shouldSync,
-      'remote_uuid': remote_uuid,
+      'uuid': uuid,
       'id': id,
       'name': name,
       'created': created,
@@ -37,7 +37,7 @@ class TestMoorEntityProxy extends TestMoorEntity
   TestMoorEntityProxy copyFromMap(Map<String, dynamic> data) {
     return TestMoorEntityProxy(
       shouldSync: data['shouldSync'],
-      remote_uuid: data['remote_uuid'],
+      uuid: data['uuid'],
       id: data['id'],
       name: data['name'],
       created: data['created'],
@@ -50,7 +50,7 @@ class TestMoorEntityProxy extends TestMoorEntity
   TestMoorEntityProxy.fromEntity(TestMoorEntity instance)
       : super(
           shouldSync: instance.shouldSync,
-          remote_uuid: instance.remote_uuid,
+          uuid: instance.uuid,
           id: instance.id,
           name: instance.name,
           created: instance.created,
@@ -66,12 +66,12 @@ class TestMoorEntitySerializer extends Serializer<TestMoorEntityProxy> {
 
   @override
   final fields = [
-    StringField('remote_uuid', source: 'remote_uuid'),
+    StringField('uuid', source: 'uuid'),
     IntegerField('id', source: 'id'),
     StringField('name', source: 'name'),
     DateTimeField('created', source: 'created'),
   ];
-  String validateRemote_uuid(String value) {
+  String validateUuid(String value) {
     return value;
   }
 
@@ -90,7 +90,7 @@ class TestMoorEntitySerializer extends Serializer<TestMoorEntityProxy> {
   @override
   Map toMap() {
     return {
-      'validateRemote_uuid': validateRemote_uuid,
+      'validateUuid': validateUuid,
       'validateId': validateId,
       'validateName': validateName,
       'validateCreated': validateCreated,
@@ -100,7 +100,7 @@ class TestMoorEntitySerializer extends Serializer<TestMoorEntityProxy> {
   @override
   TestMoorEntityProxy createInstance(Map<String, dynamic> data) {
     return TestMoorEntityProxy(
-      remote_uuid: data['remote_uuid'],
+      uuid: data['uuid'],
       id: data['id'],
       name: data['name'],
       created: data['created'],
