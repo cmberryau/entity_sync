@@ -144,23 +144,25 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin>
       // get the initial set of instances
       var result = await _pullAll(serializer, localPaginator);
       // cache the initial response
-      var response = result.response;
+      var statusCode = result.response.statusCode;
       var instances = result.instances;
 
-      while(result.instances.isNotEmpty) {
+      while(result.instances.isNotEmpty &&
+            result.instances.length == paginator.pageSize) {
         // move to the next page
         localPaginator.next();
         // get the next set of instances
         result = await _pullAll(serializer, localPaginator, since);
         // response should remain the same
-        if (result.response != response) {
+        if (result.response.statusCode != statusCode) {
           throw UnimplementedError();
         }
+
         // extend the instances list
         instances = instances + result.instances;
       }
 
-      return EndpointResult<TSyncable>(response, instances);
+      return EndpointResult<TSyncable>(result.response, instances);
     } else {
       // otherwise, just do a normal pull
       return _pullAll(serializer, null, since);
@@ -170,10 +172,22 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin>
   Future<EndpointResult<TSyncable>> _pullAll(Serializer serializer,
       [Paginator paginator, DateTime since]) async {
     try {
-      final finalUrl = '${url}${paginator == null ? '' : paginator.params()}';
+      // form the url
+      var finalUrl = '${url}';
+      if (since != null) {
+        finalUrl = '${finalUrl}?${_sinceSnippet(since)}';
+
+        if (paginator != null) {
+          finalUrl = '${finalUrl}&${paginator.params()}';
+        }
+      } else {
+        if (paginator != null) {
+          finalUrl = '${finalUrl}?${paginator.params()}';
+        }
+      }
 
       final response = await client.get(
-          _makeSinceUrl(finalUrl, since),
+          finalUrl,
           headers: headers
       );
 
@@ -228,11 +242,8 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin>
     return '${url}${instance.getKeyRepresentation()}';
   }
 
-  String _makeSinceUrl(url, DateTime since) {
-    if (since == null) {
-      return url;
-    }
-    return '${url}?modified__gt=${Uri.encodeComponent(since.toIso8601String())}';
+  String _sinceSnippet(DateTime since) {
+    return 'modified__gt=${Uri.encodeComponent(since.toIso8601String())}';
   }
 }
 

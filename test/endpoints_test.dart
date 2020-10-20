@@ -210,19 +210,30 @@ void main() {
     test('Test RestfulApiEndpoint.pullAll with RestfulApiEndpointPaginator', () async {
       /// Set up the mock client
       final client = MockClient();
-      final url = 'https://www.example.com/test-entity/?offset=0&limit=10';
+      final url = 'https://www.example.com/test-entity/';
       final body =
           '[{"id": 1, "name": "TestNameOne", "created": "2020-08-07T12:30:15.123456"},'
           '{"id": 2, "name": "TestNameTwo", "created": "2020-08-10T12:30:15.123456"}]';
       final statusCode = 200;
-      when(client.get('${url}'))
+      final expectedGetUrl = '${url}?offset=0&limit=10';
+      when(client.get(expectedGetUrl))
           .thenAnswer((_) async => http.Response(body, statusCode));
 
+      final expectedEmptyGetUrl = '${url}?offset=10&limit=10';
+      when(client.get(expectedEmptyGetUrl))
+          .thenAnswer((_) async => http.Response('[]', statusCode));
+
       /// Test the mock client
-      final response = await client.get('${url}');
+      var response = await client.get(expectedGetUrl);
       expect(response, isNotNull);
       expect(response, isA<http.Response>());
       expect(response.body, equals(body));
+      expect(response.statusCode, equals(statusCode));
+
+      response = await client.get(expectedEmptyGetUrl);
+      expect(response, isNotNull);
+      expect(response, isA<http.Response>());
+      expect(response.body, equals('[]'));
       expect(response.statusCode, equals(statusCode));
 
       /// Create the endpoint and an 'outdated' instance

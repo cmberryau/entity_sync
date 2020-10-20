@@ -1,25 +1,34 @@
 abstract class Paginator {
-  // Returns the URL parameters
-  Future<String> params();
+  // The page size of the paginator
+  int get pageSize;
 
+  // Returns the URL parameters
+  String params();
   // Moves the paginator to the next page
   void next();
   // Moves the paginator to the previous page
   void prev();
   // Resets the paginator
   void reset();
+
   // Clones the paginator
   Paginator clone();
 }
 
 class RestfulApiEndpointPaginator extends Paginator{
-  int pageSize;
+  int _pageSize;
   int page = 0;
+
+  @override
+  int get pageSize {
+    return _pageSize;
+  }
 
   RestfulApiEndpointPaginator(this.pageSize);
 
-  Future<String> params() async {
-    return 'offset=$page&limit=$pageSize';
+  @override
+  String params() {
+    return 'offset=${page * pageSize}&limit=$pageSize';
   }
 
   void next() {
