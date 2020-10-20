@@ -1,11 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:entity_sync/src/paginators.dart';
 import 'package:http/http.dart' as http;
-import 'package:http/http.dart';
 import 'package:http/io_client.dart';
 
+import 'paginators.dart';
 import 'serialization.dart';
 import 'sync.dart';
 
@@ -247,19 +246,19 @@ class EntitySyncHttpClient extends http.BaseClient {
   }
 
   @override
-  Future<Response> head(url, {Map<String, String> headers}) async {
+  Future<http.Response> head(url, {Map<String, String> headers}) async {
     final response = await super.head(url, headers: headers);
     return await interceptor.onResponse(response);
   }
 
   @override
-  Future<Response> get(url, {Map<String, String> headers}) async {
+  Future<http.Response> get(url, {Map<String, String> headers}) async {
     final response = await super.get(url, headers: headers);
     return await interceptor.onResponse(response);
   }
 
   @override
-  Future<Response> post(url,
+  Future<http.Response> post(url,
       {Map<String, String> headers, body, Encoding encoding}) async {
     final response =
         await super.post(url, headers: headers, body: body, encoding: encoding);
@@ -267,7 +266,7 @@ class EntitySyncHttpClient extends http.BaseClient {
   }
 
   @override
-  Future<Response> put(url,
+  Future<http.Response> put(url,
       {Map<String, String> headers, body, Encoding encoding}) async {
     final response =
         await super.put(url, headers: headers, body: body, encoding: encoding);
@@ -275,7 +274,7 @@ class EntitySyncHttpClient extends http.BaseClient {
   }
 
   @override
-  Future<Response> patch(url,
+  Future<http.Response> patch(url,
       {Map<String, String> headers, body, Encoding encoding}) async {
     final response = await super
         .patch(url, headers: headers, body: body, encoding: encoding);
@@ -283,7 +282,7 @@ class EntitySyncHttpClient extends http.BaseClient {
   }
 
   @override
-  Future<Response> delete(url, {Map<String, String> headers}) async {
+  Future<http.Response> delete(url, {Map<String, String> headers}) async {
     final response = await super.delete(url, headers: headers);
     return await interceptor.onResponse(response);
   }
@@ -308,11 +307,11 @@ class EntitySyncHttpClient extends http.BaseClient {
 }
 
 class Interceptor {
-  Future<Request> onRequest(Request request) async {
+  Future<http.Request> onRequest(http.Request request) async {
     return request;
   }
 
-  Future<Response> onResponse(Response response) async {
+  Future<http.Response> onResponse(http.Response response) async {
     return response;
   }
 
