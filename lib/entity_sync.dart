@@ -5,3 +5,4 @@ export 'src/serialization.dart';
 export 'src/storage.dart';
 export 'src/sync.dart';
 export 'src/annotations.dart';
+export 'src/paginators.dart';

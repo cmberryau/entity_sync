@@ -4,7 +4,6 @@ import 'package:http/http.dart' as http;
 import 'package:mockito/mockito.dart';
 
 import 'package:entity_sync/entity_sync.dart';
-import 'package:entity_sync/src/paginators.dart';
 
 import 'serialization_test.dart';
 

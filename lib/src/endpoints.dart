@@ -4,9 +4,9 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
 
-import 'paginators.dart';
-import 'serialization.dart';
-import 'sync.dart';
+import 'package:entity_sync/src/paginators.dart';
+import 'package:entity_sync/src/serialization.dart';
+import 'package:entity_sync/src/sync.dart';
 
 /// Represents the result of an operation with an endpoint
 class EndpointResult<TSyncable extends SyncableMixin> {
