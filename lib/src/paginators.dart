@@ -16,7 +16,7 @@ abstract class Paginator {
 }
 
 class RestfulApiEndpointPaginator extends Paginator{
-  int _pageSize;
+  final int _pageSize;
   int page = 0;
 
   @override
