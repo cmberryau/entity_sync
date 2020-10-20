@@ -148,7 +148,7 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin>
       var instances = result.instances;
 
       while(result.instances.isNotEmpty &&
-            result.instances.length == paginator.pageSize) {
+            result.instances.length == localPaginator.pageSize) {
         // move to the next page
         localPaginator.next();
         // get the next set of instances
