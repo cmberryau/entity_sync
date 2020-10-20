@@ -211,25 +211,55 @@ void main() {
       /// Set up the mock client
       final client = MockClient();
       final url = 'https://www.example.com/test-entity/';
-      final body =
-          '[{"id": 1, "name": "TestNameOne", "created": "2020-08-07T12:30:15.123456"},'
-          '{"id": 2, "name": "TestNameTwo", "created": "2020-08-10T12:30:15.123456"}]';
       final statusCode = 200;
-      final expectedGetUrl = '${url}?offset=0&limit=10';
-      when(client.get(expectedGetUrl))
-          .thenAnswer((_) async => http.Response(body, statusCode));
+      final expectedFirstBody =
+          '['
+            '{"id": 1, "name": "TestNameOne", "created": "2020-08-07T12:30:15.123456"},'
+            '{"id": 2, "name": "TestNameTwo", "created": "2020-08-10T12:30:15.123456"},'
+            '{"id": 3, "name": "TestNameThree", "created": "2020-08-10T12:30:15.123456"},'
+            '{"id": 4, "name": "TestNameFour", "created": "2020-08-10T12:30:15.123456"},'
+            '{"id": 5, "name": "TestNameFive", "created": "2020-08-10T12:30:15.123456"},'
+            '{"id": 6, "name": "TestNameSix", "created": "2020-08-10T12:30:15.123456"},'
+            '{"id": 7, "name": "TestNameSeven", "created": "2020-08-10T12:30:15.123456"},'
+            '{"id": 8, "name": "TestNameEight", "created": "2020-08-10T12:30:15.123456"},'
+            '{"id": 9, "name": "TestNameNine", "created": "2020-08-10T12:30:15.123456"},'
+            '{"id": 10, "name": "TestNameTen", "created": "2020-08-10T12:30:15.123456"}'
+          ']';
 
-      final expectedEmptyGetUrl = '${url}?offset=10&limit=10';
+      final expectedFirstGetUrl = '${url}?offset=0&limit=10';
+      when(client.get(expectedFirstGetUrl))
+          .thenAnswer((_) async => http.Response(expectedFirstBody, statusCode));
+
+      /// Test the mock client
+      var response = await client.get(expectedFirstGetUrl);
+      expect(response, isNotNull);
+      expect(response, isA<http.Response>());
+      expect(response.body, equals(expectedFirstBody));
+      expect(response.statusCode, equals(statusCode));
+
+      final expectedSecondBody =
+          '['
+            '{"id": 11, "name": "TestNameEleven", "created": "2020-08-07T12:30:15.123456"},'
+            '{"id": 12, "name": "TestNameTwelve", "created": "2020-08-10T12:30:15.123456"},'
+            '{"id": 13, "name": "TestNameThirteen", "created": "2020-08-10T12:30:15.123456"}'
+          ']';
+
+      final expectedSecondGetUrl = '${url}?offset=10&limit=10';
+      when(client.get(expectedSecondGetUrl))
+          .thenAnswer((_) async => http.Response(expectedSecondBody, statusCode));
+
+      /// Test the mock client
+      response = await client.get(expectedSecondGetUrl);
+      expect(response, isNotNull);
+      expect(response, isA<http.Response>());
+      expect(response.body, equals(expectedSecondBody));
+      expect(response.statusCode, equals(statusCode));
+
+      final expectedEmptyGetUrl = '${url}?offset=20&limit=10';
       when(client.get(expectedEmptyGetUrl))
           .thenAnswer((_) async => http.Response('[]', statusCode));
 
       /// Test the mock client
-      var response = await client.get(expectedGetUrl);
-      expect(response, isNotNull);
-      expect(response, isA<http.Response>());
-      expect(response.body, equals(body));
-      expect(response.statusCode, equals(statusCode));
-
       response = await client.get(expectedEmptyGetUrl);
       expect(response, isNotNull);
       expect(response, isA<http.Response>());
@@ -256,7 +286,7 @@ void main() {
 
       expect(result.instances, isNotNull);
       expect(result.instances, isA<List<TestEntity>>());
-      expect(result.instances.length, equals(2));
+      expect(result.instances.length, equals(13));
 
       expect(result.instances[0], isNotNull);
       expect(result.instances[0], isA<TestEntity>());

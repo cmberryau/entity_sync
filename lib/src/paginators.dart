@@ -24,7 +24,7 @@ class RestfulApiEndpointPaginator extends Paginator{
     return _pageSize;
   }
 
-  RestfulApiEndpointPaginator(this.pageSize);
+  RestfulApiEndpointPaginator(this._pageSize);
 
   @override
   String params() {
