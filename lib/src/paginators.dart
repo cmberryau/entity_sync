@@ -12,7 +12,7 @@ abstract class Paginator {
   Paginator clone();
 }
 
-class RestfulApiEndpointPaginator {
+class RestfulApiEndpointPaginator extends Paginator{
   int pageSize;
   int page = 0;
 
