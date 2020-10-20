@@ -255,17 +255,6 @@ void main() {
       expect(response.body, equals(expectedSecondBody));
       expect(response.statusCode, equals(statusCode));
 
-      final expectedEmptyGetUrl = '${url}?offset=20&limit=10';
-      when(client.get(expectedEmptyGetUrl))
-          .thenAnswer((_) async => http.Response('[]', statusCode));
-
-      /// Test the mock client
-      response = await client.get(expectedEmptyGetUrl);
-      expect(response, isNotNull);
-      expect(response, isA<http.Response>());
-      expect(response.body, equals('[]'));
-      expect(response.statusCode, equals(statusCode));
-
       /// Create the endpoint and an 'outdated' instance
       final serializer = TestEntitySerializer();
       final paginator = RestfulApiEndpointPaginator(10);
