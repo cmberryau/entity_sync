@@ -25,7 +25,10 @@ abstract class SyncableTable extends Table {
   /// Indicates if the entity should be synced
   BoolColumn get shouldSync => boolean().clientDefault(() => true)();
 
+  /// The column for local key storage
   Column localKeyColumn();
+
+  /// The column for remote key storage
   Column remoteKeyColumn();
 
   /// The actual table
