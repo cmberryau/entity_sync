@@ -290,6 +290,83 @@ void main() {
       expect(result.instances[1].name, equals('TestNameTwo'));
       expect(result.instances[1].created,
           DateTime.parse("2020-08-10T12:30:15.123456"));
+
+      expect(result.instances[2], isNotNull);
+      expect(result.instances[2], isA<TestEntity>());
+      expect(result.instances[2].id, equals(3));
+      expect(result.instances[2].name, equals('TestNameThree'));
+      expect(result.instances[2].created,
+          DateTime.parse("2020-08-10T12:30:15.123456"));
+
+      expect(result.instances[3], isNotNull);
+      expect(result.instances[3], isA<TestEntity>());
+      expect(result.instances[3].id, equals(4));
+      expect(result.instances[3].name, equals('TestNameFour'));
+      expect(result.instances[3].created,
+          DateTime.parse("2020-08-10T12:30:15.123456"));
+
+      expect(result.instances[4], isNotNull);
+      expect(result.instances[4], isA<TestEntity>());
+      expect(result.instances[4].id, equals(5));
+      expect(result.instances[4].name, equals('TestNameFive'));
+      expect(result.instances[4].created,
+          DateTime.parse("2020-08-10T12:30:15.123456"));
+
+      expect(result.instances[5], isNotNull);
+      expect(result.instances[5], isA<TestEntity>());
+      expect(result.instances[5].id, equals(6));
+      expect(result.instances[5].name, equals('TestNameSix'));
+      expect(result.instances[5].created,
+          DateTime.parse("2020-08-10T12:30:15.123456"));
+
+      expect(result.instances[6], isNotNull);
+      expect(result.instances[6], isA<TestEntity>());
+      expect(result.instances[6].id, equals(7));
+      expect(result.instances[6].name, equals('TestNameSeven'));
+      expect(result.instances[6].created,
+          DateTime.parse("2020-08-10T12:30:15.123456"));
+
+      expect(result.instances[7], isNotNull);
+      expect(result.instances[7], isA<TestEntity>());
+      expect(result.instances[7].id, equals(8));
+      expect(result.instances[7].name, equals('TestNameEight'));
+      expect(result.instances[7].created,
+          DateTime.parse("2020-08-10T12:30:15.123456"));
+
+      expect(result.instances[8], isNotNull);
+      expect(result.instances[8], isA<TestEntity>());
+      expect(result.instances[8].id, equals(9));
+      expect(result.instances[8].name, equals('TestNameNine'));
+      expect(result.instances[8].created,
+          DateTime.parse("2020-08-10T12:30:15.123456"));
+
+      expect(result.instances[9], isNotNull);
+      expect(result.instances[9], isA<TestEntity>());
+      expect(result.instances[9].id, equals(10));
+      expect(result.instances[9].name, equals('TestNameTen'));
+      expect(result.instances[9].created,
+          DateTime.parse("2020-08-10T12:30:15.123456"));
+
+      expect(result.instances[10], isNotNull);
+      expect(result.instances[10], isA<TestEntity>());
+      expect(result.instances[10].id, equals(11));
+      expect(result.instances[10].name, equals('TestNameEleven'));
+      expect(result.instances[10].created,
+          DateTime.parse("2020-08-07T12:30:15.123456"));
+
+      expect(result.instances[11], isNotNull);
+      expect(result.instances[11], isA<TestEntity>());
+      expect(result.instances[11].id, equals(12));
+      expect(result.instances[11].name, equals('TestNameTwelve'));
+      expect(result.instances[11].created,
+          DateTime.parse("2020-08-10T12:30:15.123456"));
+
+      expect(result.instances[12], isNotNull);
+      expect(result.instances[12], isA<TestEntity>());
+      expect(result.instances[12].id, equals(13));
+      expect(result.instances[12].name, equals('TestNameThirteen'));
+      expect(result.instances[12].created,
+          DateTime.parse("2020-08-10T12:30:15.123456"));
     });
   });
 }
