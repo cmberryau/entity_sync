@@ -1,5 +1,6 @@
-import 'package:entity_sync/entity_sync.dart';
 import 'package:test/test.dart';
+
+import 'package:entity_sync/entity_sync.dart';
 
 class TestEntity with SerializableMixin, SyncableMixin {
   final int id;

@@ -1,9 +1,11 @@
-import 'package:entity_sync/entity_sync.dart';
-import 'package:entity_sync/moor_sync.dart';
 import 'package:http/http.dart' as http;
+import 'package:test/test.dart';
+
 import 'package:mockito/mockito.dart';
 import 'package:moor/ffi.dart';
-import 'package:test/test.dart';
+
+import 'package:entity_sync/entity_sync.dart';
+import 'package:entity_sync/moor_sync.dart';
 
 import 'endpoints_test.dart';
 import 'models/database.dart';

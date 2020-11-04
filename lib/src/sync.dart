@@ -1,8 +1,8 @@
 import 'package:entity_sync/src/endpoints.dart';
 
-import 'paginators.dart';
-import 'serialization.dart';
-import 'storage.dart';
+import 'package:entity_sync/src/paginators.dart';
+import 'package:entity_sync/src/serialization.dart';
+import 'package:entity_sync/src/storage.dart';
 
 /// Added to a class to support syncing
 /// Syncable classes also must be serializable
@@ -127,7 +127,7 @@ class SyncController<TSyncable extends SyncableMixin> {
     final endpointResults = await push(toSyncInstances);
 
     /// pull all from endpoint since last sync
-    final endpointPullAll = await endpoint.pullAllSince(since, null, paginator);
+    final endpointPullAll = await endpoint.pullAll(since: since);
 
     /// Insert all into local db
     for (final instance in endpointPullAll.instances) {

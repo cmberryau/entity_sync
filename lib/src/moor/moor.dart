@@ -1,8 +1,6 @@
 import 'package:entity_sync/entity_sync.dart';
-import 'package:entity_sync/src/paginators.dart';
 import 'package:moor/moor.dart';
 
-part 'moor_paginators.dart';
 part 'moor_storage.dart';
 
 /// Responsible for creating proxies
@@ -27,7 +25,10 @@ abstract class SyncableTable extends Table {
   /// Indicates if the entity should be synced
   BoolColumn get shouldSync => boolean().clientDefault(() => true)();
 
+  /// The column for local key storage
   Column localKeyColumn();
+
+  /// The column for remote key storage
   Column remoteKeyColumn();
 
   /// The actual table

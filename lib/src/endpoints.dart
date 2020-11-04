@@ -1,13 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:entity_sync/src/paginators.dart';
 import 'package:http/http.dart' as http;
-import 'package:http/http.dart';
-import 'package:http/io_client.dart';
 
-import 'serialization.dart';
-import 'sync.dart';
+import 'package:entity_sync/src/paginators.dart';
+import 'package:entity_sync/src/serialization.dart';
+import 'package:entity_sync/src/sync.dart';
 
 /// Represents the result of an operation with an endpoint
 class EndpointResult<TSyncable extends SyncableMixin> {
@@ -26,9 +24,8 @@ class EndpointResult<TSyncable extends SyncableMixin> {
 abstract class Endpoint<TSyncable extends SyncableMixin> {
   final Serializer<TSyncable> serializer;
   final bool readOnly;
-  final Paginator paginator;
 
-  Endpoint(this.serializer, {this.readOnly = false, this.paginator});
+  Endpoint(this.serializer, {this.readOnly = false});
 
   /// Pushes a single entity and returns any updates
   Future<EndpointResult<TSyncable>> push(instance, [serializer]) async {
@@ -49,15 +46,11 @@ abstract class Endpoint<TSyncable extends SyncableMixin> {
   Future<EndpointResult<TSyncable>> pull(TSyncable instance,
       [Serializer<TSyncable> serializer]);
 
-  /// Pulls and returns a single entity
-  Future<EndpointResult<TSyncable>> pullAll([
+  /// Pulls and returns multiple entities
+  Future<EndpointResult<TSyncable>> pullAll({
     Serializer<TSyncable> serializer,
-    Paginator paginator,
-  ]);
-
-  /// Pulls and returns a single entity
-  Future<EndpointResult<TSyncable>> pullAllSince(
-      [DateTime since, Serializer<TSyncable> serializer, Paginator paginator]);
+    DateTime since,
+  });
 
   Serializer<SyncableMixin> _getSerializer(
       Serializer<SyncableMixin> serializer) {
@@ -75,18 +68,15 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin>
   final String url;
   final Map<String, String> headers;
   http.Client client;
-  static const String ModifiedKeyDefault = 'modified';
-  String modifiedKey;
+  final Paginator paginator;
 
-  RestfulApiEndpoint(this.url, serializer,
-      {http.Client client,
-      modifiedKey,
-      paginator,
+  RestfulApiEndpoint(this.url, serializer, {
+      http.Client client,
+      this.paginator,
       readOnly = false,
-      this.headers = const {}})
-      : super(serializer, readOnly: readOnly, paginator: paginator) {
+      this.headers = const {}
+  }) : super(serializer, readOnly: readOnly) {
     this.client = client ??= http.Client();
-    this.modifiedKey = modifiedKey ??= ModifiedKeyDefault;
   }
 
   @override
@@ -137,37 +127,65 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin>
   }
 
   @override
-  Future<EndpointResult<TSyncable>> pullAll([serializer, paginator]) async {
+  Future<EndpointResult<TSyncable>> pullAll({
+    Serializer<SyncableMixin> serializer,
+    DateTime since}) async {
     serializer = _getSerializer(serializer);
 
-    try {
-      final finalUrl = '${url}${paginator == null ? "" : paginator.params()}';
-      final response = await client.get(finalUrl, headers: headers);
+    // if we have a paginator, use it
+    if (paginator != null) {
+      // clone the paginator for local use
+      final localPaginator = paginator.clone();
+      // get the initial set of instances
+      var result = await _pullAll(serializer, localPaginator);
+      // cache the initial response
+      var statusCode = result.response.statusCode;
+      var instances = result.instances;
 
-      if (response.statusCode == 200) {
-        final instances = _responseToInstances(serializer, response);
-        return EndpointResult<TSyncable>(response, instances);
+      while(result.instances.isNotEmpty &&
+            result.instances.length == localPaginator.pageSize) {
+        // move to the next page
+        localPaginator.next();
+        // get the next set of instances
+        result = await _pullAll(serializer, localPaginator, since);
+        // response should remain the same
+        if (result.response.statusCode != statusCode) {
+          throw UnimplementedError();
+        }
+
+        // extend the instances list
+        instances = instances + result.instances;
       }
-      return EndpointResult<TSyncable>(response, []);
-    } on HttpException catch (e) {
-      print(e);
-      rethrow;
+
+      return EndpointResult<TSyncable>(result.response, instances);
+    } else {
+      // otherwise, just do a normal pull
+      return _pullAll(serializer, null, since);
     }
   }
 
-  @override
-  Future<EndpointResult<TSyncable>> pullAllSince(
-      [DateTime since, Serializer<SyncableMixin> serializer, paginator]) async {
-    serializer = _getSerializer(serializer);
-    if (since == null) {
-      return pullAll(serializer);
-    }
-
+  Future<EndpointResult<TSyncable>> _pullAll(Serializer serializer,
+      [Paginator paginator, DateTime since]) async {
     try {
-      final finalUrl =
-          '${url}${paginator == null ? "" : "?${(await paginator.params())}"}';
-      final response =
-          await client.get(_makeSinceUrl(finalUrl, since), headers: headers);
+      // form the url
+      var finalUrl = '${url}';
+      if (since != null) {
+        finalUrl = '${finalUrl}?${_sinceSnippet(since)}';
+
+        if (paginator != null) {
+          finalUrl = '${finalUrl}&${paginator.params()}';
+        }
+      } else {
+        if (paginator != null) {
+          finalUrl = '${finalUrl}?${paginator.params()}';
+        }
+      }
+
+      final response = await client.get(
+          finalUrl,
+          headers: headers
+      );
+
       if (response.statusCode == 200) {
         final instances = _responseToInstances(serializer, response);
         return EndpointResult<TSyncable>(response, instances);
@@ -219,89 +237,7 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin>
     return '${url}${instance.getKeyRepresentation()}';
   }
 
-  String _makeSinceUrl(url, DateTime since) {
-    return '${url}?modified__gt=${Uri.encodeComponent(since.toIso8601String())}';
+  String _sinceSnippet(DateTime since) {
+    return 'modified__gt=${Uri.encodeComponent(since.toIso8601String())}';
   }
-}
-
-class EntitySyncHttpClient extends http.BaseClient {
-  http.Client _client;
-  Interceptor interceptor;
-
-  EntitySyncHttpClient({this.interceptor, http.Client client}) {
-    interceptor ??= Interceptor();
-    _client = client ?? IOClient(HttpClient());
-  }
-
-  @override
-  Future<Response> head(url, {Map<String, String> headers}) async {
-    final response = await super.head(url, headers: headers);
-    return await interceptor.onResponse(response);
-  }
-
-  @override
-  Future<Response> get(url, {Map<String, String> headers}) async {
-    final response = await super.get(url, headers: headers);
-    return await interceptor.onResponse(response);
-  }
-
-  @override
-  Future<Response> post(url,
-      {Map<String, String> headers, body, Encoding encoding}) async {
-    final response =
-        await super.post(url, headers: headers, body: body, encoding: encoding);
-    return await interceptor.onResponse(response);
-  }
-
-  @override
-  Future<Response> put(url,
-      {Map<String, String> headers, body, Encoding encoding}) async {
-    final response =
-        await super.put(url, headers: headers, body: body, encoding: encoding);
-    return await interceptor.onResponse(response);
-  }
-
-  @override
-  Future<Response> patch(url,
-      {Map<String, String> headers, body, Encoding encoding}) async {
-    final response = await super
-        .patch(url, headers: headers, body: body, encoding: encoding);
-    return await interceptor.onResponse(response);
-  }
-
-  @override
-  Future<Response> delete(url, {Map<String, String> headers}) async {
-    final response = await super.delete(url, headers: headers);
-    return await interceptor.onResponse(response);
-  }
-
-  @override
-  Future<http.StreamedResponse> send(http.BaseRequest request) async {
-    try {
-      final response = await _client.send(await interceptor.onRequest(request));
-
-      return response;
-    } catch (err) {
-      await interceptor.onError(err);
-
-      rethrow;
-    }
-  }
-
-  @override
-  void close() {
-    _client.close();
-  }
-}
-
-class Interceptor {
-  Future<Request> onRequest(Request request) async {
-    return request;
-  }
-
-  Future<Response> onResponse(Response response) async {
-    return response;
-  }
-
-  Future onError(Error error) async {}
 }
