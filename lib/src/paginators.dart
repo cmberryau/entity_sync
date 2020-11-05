@@ -15,7 +15,7 @@ abstract class Paginator {
   Paginator clone();
 }
 
-class RestfulApiEndpointPaginator extends Paginator{
+class RestfulApiPaginator extends Paginator{
   final int _pageSize;
   int page = 0;
 
@@ -24,7 +24,7 @@ class RestfulApiEndpointPaginator extends Paginator{
     return _pageSize;
   }
 
-  RestfulApiEndpointPaginator(this._pageSize);
+  RestfulApiPaginator(this._pageSize);
 
   @override
   String params() {
@@ -43,7 +43,7 @@ class RestfulApiEndpointPaginator extends Paginator{
     page = 0;
   }
 
-  RestfulApiEndpointPaginator clone() {
-    return RestfulApiEndpointPaginator(pageSize);
+  RestfulApiPaginator clone() {
+    return RestfulApiPaginator(pageSize);
   }
 }

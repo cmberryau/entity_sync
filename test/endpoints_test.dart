@@ -256,7 +256,7 @@ void main() {
 
       /// Create the endpoint and an 'outdated' instance
       final serializer = TestEntitySerializer();
-      final paginator = RestfulApiEndpointPaginator(10);
+      final paginator = RestfulApiPaginator(10);
       final endpoint = RestfulApiEndpoint<TestEntity>(url, serializer,
           client: client, paginator: paginator, headers: null);
 
