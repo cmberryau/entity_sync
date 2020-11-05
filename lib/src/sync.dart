@@ -1,6 +1,5 @@
 import 'package:entity_sync/src/endpoints.dart';
 
-import 'package:entity_sync/src/paginators.dart';
 import 'package:entity_sync/src/serialization.dart';
 import 'package:entity_sync/src/storage.dart';
 
@@ -118,8 +117,7 @@ class SyncController<TSyncable extends SyncableMixin> {
 
   SyncController(this.endpoint, this.storage);
 
-  Future<SyncResult<TSyncable>> sync(
-      [DateTime since, Paginator paginator]) async {
+  Future<SyncResult<TSyncable>> sync([DateTime since]) async {
     /// get all instances to sync
     final toSyncInstances = await storage.getInstancesToSync();
 
@@ -151,13 +149,6 @@ class SyncController<TSyncable extends SyncableMixin> {
     }
 
     return SyncResult<TSyncable>(endpointResults, endpointPullAll);
-  }
-
-  Future<SyncResult<TSyncable>> paginate(Paginator paginator,
-      [DateTime since]) async {
-    final endpointPullAll = await endpoint.pullAll();
-
-    return SyncResult<TSyncable>(null, endpointPullAll);
   }
 
   Future<List<EndpointResult<TSyncable>>> push(
