@@ -137,7 +137,7 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin>
       // clone the paginator for local use
       final localPaginator = paginator.clone();
       // get the initial set of instances
-      var result = await _pullAll(serializer, localPaginator);
+      var result = await _pullAll(serializer, localPaginator, since);
       // cache the initial response
       var statusCode = result.response.statusCode;
       var instances = result.instances;
