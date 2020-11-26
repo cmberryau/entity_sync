@@ -10,4 +10,6 @@ class Interceptor {
   }
 
   Future onError(Error error) async {}
+
+  Future onException(Exception exception) async {}
 }

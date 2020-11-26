@@ -63,9 +63,11 @@ class EntitySyncHttpClient extends http.BaseClient {
       final response = await _client.send(await interceptor.onRequest(request));
 
       return response;
-    } catch (err) {
-      await interceptor.onError(err);
-
+    } on Error catch (e) {
+      await interceptor.onError(e);
+      rethrow;
+    } on Exception catch (e) {
+      await interceptor.onException(e);
       rethrow;
     }
   }
