@@ -131,9 +131,15 @@ class EntitySyncHttpClient extends http.BaseClient {
   void _checkStatusCode(http.Response interceptedRes) {
     if (interceptedRes.statusCode > FAILED_HTTP_ERROR_CODE_THRESHOLD) {
       final failedMessageString = 'Response is ${interceptedRes.statusCode}';
-      throw HttpException(failedMessageString);
+      throw HttpExceptionWithResponse(failedMessageString, interceptedRes);
     }
   }
 
   String _makeUrl(String url) => baseUrl + url;
+}
+
+class HttpExceptionWithResponse extends HttpException {
+  final http.Response response;
+
+  HttpExceptionWithResponse(String message, this.response) : super(message);
 }
