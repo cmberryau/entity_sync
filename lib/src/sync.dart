@@ -1,4 +1,5 @@
 import 'package:entity_sync/src/endpoints.dart';
+import 'package:entity_sync/src/errors.dart';
 
 import 'package:entity_sync/src/serialization.dart';
 import 'package:entity_sync/src/storage.dart';
@@ -75,7 +76,7 @@ abstract class SyncableMixin implements SerializableMixin {
       aMap.remove(aKeyField.name);
     }
 
-    if (bKeyField != null){
+    if (bKeyField != null) {
       bMap.remove(bKeyField.name);
     }
 
@@ -130,21 +131,17 @@ class SyncController<TSyncable extends SyncableMixin> {
     /// Insert all into local db
     for (final instance in endpointPullAll.instances) {
       /// Check if local storage has the instance
-      final localInstance = await storage.get(
-          remoteKey: instance.getRemoteKey()
-      );
+      final localInstance =
+          await storage.get(remoteKey: instance.getRemoteKey());
 
       /// New instance, insert it
       if (localInstance == null) {
         await storage.insert(
-            instance,
+          instance,
         );
-      } else if (!localInstance.isDataEqualTo(instance)){
+      } else if (!localInstance.isDataEqualTo(instance)) {
         /// Existing instance, update it if it differs
-        await storage.update(
-            instance,
-            remoteKey: instance.getRemoteKey()
-        );
+        await storage.update(instance, remoteKey: instance.getRemoteKey());
       }
     }
 
@@ -167,8 +164,10 @@ class SyncController<TSyncable extends SyncableMixin> {
       if (endpointResult.successful) {
         if (endpointResult.instances.isNotEmpty) {
           if (endpointResult.instances.length > 1) {
-            /// TODO Warn if more than one returned
-            throw UnimplementedError();
+            throw EntitySyncError(
+              EntitySyncErrorType.PUSH,
+              'Push result of an entity should only return only one entity.',
+            );
           }
 
           final returnedInstance = endpointResult.instances[0];
@@ -176,18 +175,20 @@ class SyncController<TSyncable extends SyncableMixin> {
           /// Compare data equality, ignoring local keys
           if (!instanceToPush.isDataEqualTo(returnedInstance)) {
             /// We have a local key because we pushed
-            await storage.update(
-                returnedInstance,
-                localKey: instanceToPush.getLocalKey()
-            );
+            await storage.update(returnedInstance,
+                localKey: instanceToPush.getLocalKey());
           }
         } else {
-          /// TODO Warn if none returned
-          throw UnimplementedError();
+          throw EntitySyncError(
+            EntitySyncErrorType.PUSH,
+            'Push result is null.',
+          );
         }
       } else {
-        /// TODO Warn if not successful
-        throw UnimplementedError();
+        throw EntitySyncError(
+          EntitySyncErrorType.PUSH,
+          'Push is unsuccessful.',
+        );
       }
     }
 
