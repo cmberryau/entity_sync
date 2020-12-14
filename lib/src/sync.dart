@@ -1,6 +1,7 @@
-import 'package:entity_sync/src/endpoints.dart';
-import 'package:entity_sync/src/errors.dart';
+import 'dart:io';
 
+import 'package:entity_sync/entity_sync.dart';
+import 'package:entity_sync/src/endpoints.dart';
 import 'package:entity_sync/src/serialization.dart';
 import 'package:entity_sync/src/storage.dart';
 
@@ -149,46 +150,41 @@ class SyncController<TSyncable extends SyncableMixin> {
   }
 
   Future<List<EndpointResult<TSyncable>>> push(
-      Iterable<TSyncable> instances) async {
+    Iterable<TSyncable> instances,
+  ) async {
     final results = <EndpointResult<TSyncable>>[];
 
     /// push to endpoint
-    for (var instanceToPush in instances) {
+    for (final instanceToPush in instances) {
       final endpointResult = endpoint.readOnly
           ? await endpoint.pull(instanceToPush)
           : await endpoint.push(instanceToPush);
 
       /// save the endpoint results for the sync result
       results.add(endpointResult);
-
       if (endpointResult.successful) {
         if (endpointResult.instances.isNotEmpty) {
           if (endpointResult.instances.length > 1) {
-            throw EntitySyncError(
-              EntitySyncErrorType.PUSH,
+            endpointResult.addError(HttpException(
               'Push result of an entity should only return only one entity.',
-            );
+            ));
           }
 
           final returnedInstance = endpointResult.instances[0];
-
+          print(returnedInstance);
           /// Compare data equality, ignoring local keys
           if (!instanceToPush.isDataEqualTo(returnedInstance)) {
             /// We have a local key because we pushed
-            await storage.update(returnedInstance,
-                localKey: instanceToPush.getLocalKey());
+            await storage.update(
+              returnedInstance,
+              localKey: instanceToPush.getLocalKey(),
+            );
           }
         } else {
-          throw EntitySyncError(
-            EntitySyncErrorType.PUSH,
-            'Push result is null.',
-          );
+          endpointResult.addError(HttpException('Push result is null.'));
         }
       } else {
-        throw EntitySyncError(
-          EntitySyncErrorType.PUSH,
-          'Push is unsuccessful.',
-        );
+        endpointResult.addError(HttpException('Push is unsuccessful.'));
       }
     }
 

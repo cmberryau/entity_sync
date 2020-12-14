@@ -1,10 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:entity_sync/src/interceptors.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
-
-import 'package:entity_sync/src/interceptors.dart';
 
 const FAILED_HTTP_ERROR_CODE_THRESHOLD = 300;
 
@@ -131,7 +130,10 @@ class EntitySyncHttpClient extends http.BaseClient {
   void _checkStatusCode(http.Response interceptedRes) {
     if (interceptedRes.statusCode > FAILED_HTTP_ERROR_CODE_THRESHOLD) {
       final failedMessageString = 'Response is ${interceptedRes.statusCode}';
-      throw HttpExceptionWithResponse(failedMessageString, interceptedRes);
+
+      interceptor.onException(
+        HttpExceptionWithResponse(failedMessageString, interceptedRes),
+      );
     }
   }
 
