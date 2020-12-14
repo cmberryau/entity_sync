@@ -1,22 +1,25 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:http/http.dart' as http;
-
+import 'package:entity_sync/entity_sync.dart';
 import 'package:entity_sync/src/paginators.dart';
 import 'package:entity_sync/src/serialization.dart';
 import 'package:entity_sync/src/sync.dart';
+import 'package:http/http.dart' as http;
 
 /// Represents the result of an operation with an endpoint
 class EndpointResult<TSyncable extends SyncableMixin> {
-  http.Response response;
-  List<TSyncable> instances;
+  final http.Response response;
+  final List<TSyncable> instances;
+  final List<Exception> errors = [];
 
   EndpointResult(this.response, this.instances);
 
+  void addError(Exception exception) => errors.add(exception);
+
   /// Was the endpoint operation successful?
   bool get successful =>
-      response.statusCode >= 200 && response.statusCode < 300;
+      response.statusCode >= 200 && response.statusCode < 300 && errors.isEmpty;
 }
 
 /// Represents an entity endpoint
@@ -70,12 +73,12 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin>
   http.Client client;
   final Paginator paginator;
 
-  RestfulApiEndpoint(this.url, serializer, {
-      http.Client client,
+  RestfulApiEndpoint(this.url, serializer,
+      {http.Client client,
       this.paginator,
       readOnly = false,
-      this.headers = const {}
-  }) : super(serializer, readOnly: readOnly) {
+      this.headers = const {}})
+      : super(serializer, readOnly: readOnly) {
     this.client = client ??= http.Client();
   }
 
@@ -92,44 +95,43 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin>
       throw ArgumentError('Invalid json provided');
     }
 
-    try {
-      final representation =
-          serializer.toRepresentationString(skipValidation: skipValidation);
-      final response =
-          await client.post(url, headers: headers, body: representation);
+    final representation =
+        serializer.toRepresentationString(skipValidation: skipValidation);
+    final response =
+        await client.post(url, headers: headers, body: representation);
 
-      TSyncable instance;
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        instance = _responseToInstance(serializer, response);
-      }
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final instance = _responseToInstance(serializer, response);
+
       return EndpointResult<TSyncable>(response, [instance]);
-    } on HttpException catch (e) {
-      print(e);
-      rethrow;
     }
+
+    final result = EndpointResult<TSyncable>(response, []);
+    result.addError(HttpException('Response status code is not 200 or 201.'));
+
+    return result;
   }
 
   @override
   Future<EndpointResult<TSyncable>> pull(instance, [serializer]) async {
     serializer = _getSerializer(serializer);
 
-    try {
-      final response =
-          await client.get(_instanceUrl(instance), headers: headers);
-      if (response.statusCode == 200) {
-        instance = _responseToInstance(serializer, response);
-      }
+    final response = await client.get(_instanceUrl(instance), headers: headers);
+    if (response.statusCode == 200) {
+      instance = _responseToInstance(serializer, response);
+
       return EndpointResult<TSyncable>(response, [instance]);
-    } on HttpException catch (e) {
-      print(e);
-      rethrow;
     }
+
+    final result = EndpointResult<TSyncable>(response, []);
+    result.addError(HttpException('Response is not 200.'));
+
+    return result;
   }
 
   @override
-  Future<EndpointResult<TSyncable>> pullAll({
-    Serializer<SyncableMixin> serializer,
-    DateTime since}) async {
+  Future<EndpointResult<TSyncable>> pullAll(
+      {Serializer<SyncableMixin> serializer, DateTime since}) async {
     serializer = _getSerializer(serializer);
 
     // if we have a paginator, use it
@@ -142,15 +144,22 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin>
       var statusCode = result.response.statusCode;
       var instances = result.instances;
 
-      while(result.instances.isNotEmpty &&
-            result.instances.length == localPaginator.pageSize) {
+      while (result.instances.isNotEmpty &&
+          result.instances.length == localPaginator.pageSize) {
         // move to the next page
         localPaginator.next();
         // get the next set of instances
         result = await _pullAll(serializer, localPaginator, since);
+
         // response should remain the same
         if (result.response.statusCode != statusCode) {
-          throw UnimplementedError();
+          final endpointResult = EndpointResult<TSyncable>(
+            result.response,
+            instances,
+          );
+          endpointResult.addError(
+            HttpException('Response should remain the same when paginating.'),
+          );
         }
 
         // extend the instances list
@@ -166,35 +175,31 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin>
 
   Future<EndpointResult<TSyncable>> _pullAll(Serializer serializer,
       [Paginator paginator, DateTime since]) async {
-    try {
-      // form the url
-      var finalUrl = '${url}';
-      if (since != null) {
-        finalUrl = '${finalUrl}?${_sinceSnippet(since)}';
+    // form the url
+    var finalUrl = '${url}';
+    if (since != null) {
+      finalUrl = '${finalUrl}?${_sinceSnippet(since)}';
 
-        if (paginator != null) {
-          finalUrl = '${finalUrl}&${paginator.params()}';
-        }
-      } else {
-        if (paginator != null) {
-          finalUrl = '${finalUrl}?${paginator.params()}';
-        }
+      if (paginator != null) {
+        finalUrl = '${finalUrl}&${paginator.params()}';
       }
-
-      final response = await client.get(
-          finalUrl,
-          headers: headers
-      );
-
-      if (response.statusCode == 200) {
-        final instances = _responseToInstances(serializer, response);
-        return EndpointResult<TSyncable>(response, instances);
+    } else {
+      if (paginator != null) {
+        finalUrl = '${finalUrl}?${paginator.params()}';
       }
-      return EndpointResult<TSyncable>(response, []);
-    } on HttpException catch (e) {
-      print(e);
-      rethrow;
     }
+
+    final response = await client.get(finalUrl, headers: headers);
+
+    if (response.statusCode == 200) {
+      final instances = _responseToInstances(serializer, response);
+      return EndpointResult<TSyncable>(response, instances);
+    }
+
+    final result = EndpointResult<TSyncable>(response, []);
+    result.addError(HttpException('Response is not 200'));
+
+    return result;
   }
 
   List<TSyncable> _responseToInstances(
