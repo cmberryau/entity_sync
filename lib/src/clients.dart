@@ -3,23 +3,25 @@ import 'dart:io';
 
 import 'package:entity_sync/src/interceptors.dart';
 import 'package:http/http.dart' as http;
+import 'package:http/http.dart';
 import 'package:http/io_client.dart';
 
 const FAILED_HTTP_ERROR_CODE_THRESHOLD = 300;
 
 class EntitySyncHttpClient extends http.BaseClient {
-  http.Client _client;
+  http.Client _client = IOClient(HttpClient());
   Interceptor interceptor;
-  final String baseUrl;
 
-  EntitySyncHttpClient(this.baseUrl, {this.interceptor, http.Client client}) {
-    interceptor ??= Interceptor();
-    _client = client ?? IOClient(HttpClient());
+  EntitySyncHttpClient(
+      {this.interceptor = const Interceptor(), http.Client? client}) {
+    if (client != null) {
+      _client = client;
+    }
   }
 
   @override
-  Future<http.Response> head(url, {Map<String, String> headers}) async {
-    final response = await super.head(_makeUrl(url), headers: headers);
+  Future<Response> head(Uri url, {Map<String, String>? headers}) async {
+    final response = await super.head(url, headers: headers);
     final interceptedRes = await interceptor.onResponse(response);
 
     _checkStatusCode(interceptedRes);
@@ -28,8 +30,8 @@ class EntitySyncHttpClient extends http.BaseClient {
   }
 
   @override
-  Future<http.Response> get(url, {Map<String, String> headers}) async {
-    final response = await super.get(_makeUrl(url), headers: headers);
+  Future<Response> get(Uri url, {Map<String, String>? headers}) async {
+    final response = await super.get(url, headers: headers);
     final interceptedRes = await interceptor.onResponse(response);
 
     _checkStatusCode(interceptedRes);
@@ -38,14 +40,14 @@ class EntitySyncHttpClient extends http.BaseClient {
   }
 
   @override
-  Future<http.Response> post(
-    url, {
-    Map<String, String> headers,
-    body,
-    Encoding encoding,
+  Future<Response> post(
+    Uri url, {
+    Map<String, String>? headers,
+    Object? body,
+    Encoding? encoding,
   }) async {
     final response = await super.post(
-      _makeUrl(url),
+      url,
       headers: headers,
       body: body,
       encoding: encoding,
@@ -58,14 +60,14 @@ class EntitySyncHttpClient extends http.BaseClient {
   }
 
   @override
-  Future<http.Response> put(
-    url, {
-    Map<String, String> headers,
-    body,
-    Encoding encoding,
+  Future<Response> put(
+    Uri url, {
+    Map<String, String>? headers,
+    Object? body,
+    Encoding? encoding,
   }) async {
     final response = await super.put(
-      _makeUrl(url),
+      url,
       headers: headers,
       body: body,
       encoding: encoding,
@@ -78,14 +80,14 @@ class EntitySyncHttpClient extends http.BaseClient {
   }
 
   @override
-  Future<http.Response> patch(
-    url, {
-    Map<String, String> headers,
-    body,
-    Encoding encoding,
+  Future<Response> patch(
+    Uri url, {
+    Map<String, String>? headers,
+    Object? body,
+    Encoding? encoding,
   }) async {
     final response = await super.patch(
-      _makeUrl(url),
+      url,
       headers: headers,
       body: body,
       encoding: encoding,
@@ -98,8 +100,18 @@ class EntitySyncHttpClient extends http.BaseClient {
   }
 
   @override
-  Future<http.Response> delete(url, {Map<String, String> headers}) async {
-    final response = await super.delete(_makeUrl(url), headers: headers);
+  Future<Response> delete(
+    Uri url, {
+    Map<String, String>? headers,
+    Object? body,
+    Encoding? encoding,
+  }) async {
+    final response = await super.delete(
+      url,
+      headers: headers,
+      body: body,
+      encoding: encoding,
+    );
     final interceptedRes = await interceptor.onResponse(response);
 
     _checkStatusCode(interceptedRes);
@@ -127,7 +139,7 @@ class EntitySyncHttpClient extends http.BaseClient {
     _client.close();
   }
 
-  void _checkStatusCode(http.Response interceptedRes) {
+  void _checkStatusCode(Response interceptedRes) {
     if (interceptedRes.statusCode > FAILED_HTTP_ERROR_CODE_THRESHOLD) {
       final failedMessageString = 'Response is ${interceptedRes.statusCode}';
 
@@ -136,12 +148,10 @@ class EntitySyncHttpClient extends http.BaseClient {
       );
     }
   }
-
-  String _makeUrl(String url) => baseUrl + url;
 }
 
 class HttpExceptionWithResponse extends HttpException {
-  final http.Response response;
+  final Response response;
 
   HttpExceptionWithResponse(String message, this.response) : super(message);
 }
