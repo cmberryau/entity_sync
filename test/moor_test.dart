@@ -10,7 +10,7 @@ import 'models/database.dart';
 import 'models/test_entities.dart';
 
 void main() {
-  TestDatabase database;
+  late TestDatabase database;
 
   group('Test SyncController.sync with MoorStorage and RestfulApiEndpoint', () {
     setUp(() {
@@ -144,20 +144,21 @@ Future<SyncResult> localOutdatedDataSync(
   final failureStatusCode = 401;
   final notFoundStatusCode = 400;
 
-  when(client.get('${url}'))
+  when(client.get(Uri.parse(url)))
       .thenAnswer((a) async => http.Response(getResponseBody, statusCode));
-  when(client.get('${url}1'))
+  when(client.get(Uri.parse('${url}1')))
       .thenAnswer((a) async => http.Response(postResponseBody, statusCode));
-  when(client.get('${url}3')).thenAnswer(
+  when(client.get(Uri.parse('${url}3'))).thenAnswer(
     (a) async => http.Response(
       postFailureResponseBody,
       notFoundStatusCode,
     ),
   );
-  when(client.post('${url}', body: postTestRepresentation))
+  when(client.post(Uri.parse(url), body: postTestRepresentation))
       .thenAnswer((a) async => http.Response(postResponseBody, statusCode));
-  when(client.post('${url}', body: postFailureTestRepresentation)).thenAnswer(
-      (a) async => http.Response(postFailureResponseBody, failureStatusCode));
+  when(client.post(Uri.parse(url), body: postFailureTestRepresentation))
+      .thenAnswer((a) async =>
+          http.Response(postFailureResponseBody, failureStatusCode));
 
   /// Validate that we have zero entities in the db
   var entities = await database.getTestMoorEntities();
@@ -179,7 +180,7 @@ Future<SyncResult> localOutdatedDataSync(
   /// Create the endpoint, storage and sync controller
   final endpoint = RestfulApiEndpoint<TestMoorEntityProxy>(
       url, TestMoorEntitySerializer(),
-      client: client, readOnly: readOnlyEndpoint, headers: null);
+      client: client, readOnly: readOnlyEndpoint, headers: {});
   final factory = TestMoorEntityProxyFactory();
   final storage = MoorStorage<TestMoorEntityProxy>(
       database.testMoorEntities, database, factory);
