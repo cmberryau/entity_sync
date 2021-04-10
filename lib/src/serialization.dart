@@ -6,12 +6,16 @@ abstract class SerializableField {
   final String name;
 
   /// The prefix of the field
-  final String prefix;
+  final String? prefix;
 
   /// The source of the field
   final String source;
 
-  const SerializableField(this.name, {this.prefix, this.source});
+  const SerializableField(
+    this.name, {
+    this.prefix,
+    required this.source,
+  });
 
   /// Evaluates if the passed value is valid
   dynamic isValid(dynamic value);
@@ -32,8 +36,11 @@ abstract class SerializableField {
 
 /// Represents an integer field which may be serialized
 class IntegerField extends SerializableField {
-  const IntegerField(String name, {String prefix, String source})
-      : super(name, prefix: prefix, source: source);
+  const IntegerField(
+    String name, {
+    String? prefix,
+    required String source,
+  }) : super(name, prefix: prefix, source: source);
 
   @override
   dynamic isValid(value) {
@@ -48,8 +55,11 @@ class IntegerField extends SerializableField {
 
 /// Represents a double field which may be serialized
 class DoubleField extends SerializableField {
-  const DoubleField(String name, {String prefix, String source})
-      : super(name, prefix: prefix, source: source);
+  const DoubleField(
+    String name, {
+    String? prefix,
+    required String source,
+  }) : super(name, prefix: prefix, source: source);
 
   @override
   dynamic isValid(value) {
@@ -67,8 +77,11 @@ class DoubleField extends SerializableField {
 
 /// Represents an string field which may be serialized
 class StringField extends SerializableField {
-  const StringField(String name, {String prefix, String source})
-      : super(name, prefix: prefix, source: source);
+  const StringField(
+    String name, {
+    String? prefix,
+    required String source,
+  }) : super(name, prefix: prefix, source: source);
 
   @override
   dynamic isValid(value) {
@@ -83,8 +96,11 @@ class StringField extends SerializableField {
 
 /// Represents an datetime field which may be serialized
 class DateTimeField extends SerializableField {
-  const DateTimeField(String name, {String prefix, String source})
-      : super(name, prefix: prefix, source: source);
+  const DateTimeField(
+    String name, {
+    String? prefix,
+    required String source,
+  }) : super(name, prefix: prefix, source: source);
 
   @override
   dynamic isValid(value) {
@@ -106,7 +122,7 @@ class DateTimeField extends SerializableField {
 }
 
 class DateField extends SerializableField {
-  const DateField(String name, {String prefix, String source})
+  const DateField(String name, {String? prefix, required String source})
       : super(name, prefix: prefix, source: source);
 
   @override
@@ -125,14 +141,17 @@ class DateField extends SerializableField {
 
   @override
   dynamic toRepresentation(value) {
-    return (value as DateTime).toIso8601String().split("T")[0];
+    return (value as DateTime).toIso8601String().split('T')[0];
   }
 }
 
 /// Represents a boolean field which may be serialized
 class BoolField extends SerializableField {
-  const BoolField(String name, {String prefix, String source})
-      : super(name, prefix: prefix, source: source);
+  const BoolField(
+    String name, {
+    String? prefix,
+    required String source,
+  }) : super(name, prefix: prefix, source: source);
 
   @override
   dynamic isValid(value) {
@@ -152,32 +171,27 @@ abstract class SerializableMixin {
   }
 
   Map<String, dynamic> toMap();
+
   SerializableMixin copyFromMap(Map<String, dynamic> mapData);
 }
 
 /// An exception which represents a failed validation
 class ValidationException implements Exception {
   String cause;
+
   ValidationException(this.cause);
 }
 
 /// Performs serialization
 abstract class Serializer<TSerializable extends SerializableMixin> {
   List<SerializableField> fields = [];
-  TSerializable instance;
-  Map<String, dynamic> data;
-  Map<String, dynamic> _validatedData;
+  TSerializable? instance;
+  Map<String, dynamic>? data = {};
+  final Map<String, dynamic> _validatedData = {};
   final exceptions = <ValidationException>[];
   final prefix;
 
-  Serializer({this.data, this.instance, this.prefix = ''}) {
-    if (getFields() == null) {
-      throw AbstractClassInstantiationError((Serializer).toString());
-    }
-
-    data = {};
-    _validatedData = {};
-  }
+  Serializer({this.data, this.instance, this.prefix = ''});
 
   /// Gets all fields for serialization
   List<SerializableField> getFields() {
@@ -194,6 +208,8 @@ abstract class Serializer<TSerializable extends SerializableMixin> {
       dynamic value;
 
       /// The data could be coming from an instance or raw data
+      final instance = this.instance;
+      final data = this.data;
       if (instance != null) {
         value = instance.getFieldValue(field.source);
       } else if (data != null) {
@@ -271,7 +287,7 @@ abstract class Serializer<TSerializable extends SerializableMixin> {
   }
 
   /// Returns an instance from the serializer
-  TSerializable toInstance() {
+  TSerializable? toInstance() {
     if (isValid()) {
       return createInstance(_validatedData);
     }

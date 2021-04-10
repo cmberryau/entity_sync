@@ -31,18 +31,22 @@ class RestfulApiPaginator extends Paginator{
     return 'offset=${page * pageSize}&limit=$pageSize';
   }
 
+  @override
   void next() {
     page++;
   }
 
+  @override
   void prev() {
     page--;
   }
 
+  @override
   void reset() {
     page = 0;
   }
 
+  @override
   RestfulApiPaginator clone() {
     return RestfulApiPaginator(pageSize);
   }

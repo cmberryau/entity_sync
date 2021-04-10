@@ -12,7 +12,7 @@ abstract class Storage<TSyncable extends SyncableMixin> {
   Future<Iterable<TSyncable>> getInstancesToSync();
 
   /// Gets an instance matching the remote key, or null
-  Future<TSyncable> get({dynamic remoteKey, dynamic localKey});
+  Future<TSyncable?> get({dynamic remoteKey, dynamic localKey});
 
   /// Upserts an instance using an optional local key
   Future<StorageResult<TSyncable>> insert(TSyncable instance);
