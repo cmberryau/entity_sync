@@ -15,7 +15,7 @@ class TestMoorEntities extends SyncableTable {
   DateTimeColumn get created => dateTime()();
 
   @override
-  Table actualTable() => this;
+  SyncableTable actualTable() => this;
 
   @override
   Column localKeyColumn() => id;
@@ -33,5 +33,5 @@ class TestMoorEntities extends SyncableTable {
     ],
     remoteKeyField: StringField('remote_uuid'),
     keyField: IntegerField('id'),
-    flagField: null)
+    flagField: BoolField('shouldSync'))
 class TestMoorEntitySync extends $_TestMoorEntitySync {}

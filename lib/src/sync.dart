@@ -22,16 +22,6 @@ abstract class SyncableMixin implements SerializableMixin {
     return keyField;
   }
 
-  /// Gets the remote key field of the entity
-  SerializableField getRemoteKeyField() {
-    return remoteKeyField;
-  }
-
-  /// Gets the flag field of the entity
-  BoolField getFlagField() {
-    return flagField;
-  }
-
   /// Gets the key value of the entity
   dynamic getKeyValue(SerializableField keyField) {
     return toMap()[keyField.name];
@@ -77,17 +67,12 @@ abstract class SyncableMixin implements SerializableMixin {
 
     bMap.remove(bKeyField.name);
 
-    final aFlagField = getFlagField();
-    final bFlagField = other.getFlagField();
+    final aFlagField = flagField;
+    final bFlagField = other.flagField;
 
     // remove the flag fields
-    if (aFlagField != null) {
-      aMap.remove(aFlagField.name);
-    }
-
-    if (bFlagField != null) {
-      bMap.remove(bFlagField.name);
-    }
+    aMap.remove(aFlagField.name);
+    bMap.remove(bFlagField.name);
 
     final equal = aMap == bMap;
     return equal;
@@ -167,7 +152,6 @@ class SyncController<TSyncable extends SyncableMixin> {
           }
 
           final returnedInstance = endpointResult.instances[0];
-          print(returnedInstance);
 
           /// Compare data equality, ignoring local keys
           if (!instanceToPush.isDataEqualTo(returnedInstance)) {

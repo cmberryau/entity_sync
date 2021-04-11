@@ -1,14 +1,15 @@
-import 'package:test/test.dart';
-import 'package:http/http.dart' as http;
-
-import 'package:mockito/mockito.dart';
-
 import 'package:entity_sync/entity_sync.dart';
+import 'package:http/http.dart' as http;
+import 'package:mockito/annotations.dart';
 
+// ignore: import_of_legacy_library_into_null_safe
+import 'package:mockito/mockito.dart';
+import 'package:test/test.dart';
+
+import 'endpoints_test.mocks.dart';
 import 'serialization_test.dart';
 
-class MockClient extends Mock implements http.Client {}
-
+@GenerateMocks([http.Client])
 void main() {
   group('Test RestfulApiSyncEndpoint', () {
     setUp(() {});
@@ -21,11 +22,11 @@ void main() {
           '"created": "2020-08-07T12:30:15.123456"}';
       final statusCode = 200;
 
-      when(client.get(Uri.parse('${url}1')))
+      when(client.get(Uri.parse('${url}1'), headers: {}))
           .thenAnswer((_) async => http.Response(body, statusCode));
 
       /// Test the mock client
-      final response = await client.get(Uri.parse('${url}1'));
+      final response = await client.get(Uri.parse('${url}1'), headers: {});
       expect(response, isNotNull);
       expect(response, isA<http.Response>());
       expect(response.body, equals(body));
@@ -60,7 +61,7 @@ void main() {
       expect(result.instances[0].id, equals(1));
       expect(result.instances[0].name, equals('TestName'));
       expect(result.instances[0].created,
-          DateTime.parse("2020-08-07T12:30:15.123456"));
+          DateTime.parse('2020-08-07T12:30:15.123456'));
     });
 
     test('Test RestfulApiEndpoint.pullAll', () async {
@@ -71,11 +72,11 @@ void main() {
           '[{"id": 1, "name": "TestNameOne", "created": "2020-08-07T12:30:15.123456"},'
           '{"id": 2, "name": "TestNameTwo", "created": "2020-08-10T12:30:15.123456"}]';
       final statusCode = 200;
-      when(client.get(Uri.parse(url)))
+      when(client.get(Uri.parse(url), headers: {}))
           .thenAnswer((_) async => http.Response(body, statusCode));
 
       /// Test the mock client
-      final response = await client.get(Uri.parse(url));
+      final response = await client.get(Uri.parse(url), headers: {});
       expect(response, isNotNull);
       expect(response, isA<http.Response>());
       expect(response.body, equals(body));
@@ -109,14 +110,14 @@ void main() {
       expect(result.instances[0].id, equals(1));
       expect(result.instances[0].name, equals('TestNameOne'));
       expect(result.instances[0].created,
-          DateTime.parse("2020-08-07T12:30:15.123456"));
+          DateTime.parse('2020-08-07T12:30:15.123456'));
 
       expect(result.instances[1], isNotNull);
       expect(result.instances[1], isA<TestEntity>());
       expect(result.instances[1].id, equals(2));
       expect(result.instances[1].name, equals('TestNameTwo'));
       expect(result.instances[1].created,
-          DateTime.parse("2020-08-10T12:30:15.123456"));
+          DateTime.parse('2020-08-10T12:30:15.123456'));
     });
 
     test('Test RestfulApiEndpoint.push', () async {
@@ -135,9 +136,11 @@ void main() {
           TestEntity(id: 1, name: 'OutdatedName', created: DateTime.now());
       final mockTestSerializer = TestEntitySerializer(instance: instance);
 
-      when(client.post(Uri.parse(url),
-              body: mockTestSerializer.toRepresentationString()))
-          .thenAnswer((_) async => http.Response(body, statusCode));
+      when(client.post(
+        Uri.parse(url),
+        body: mockTestSerializer.toRepresentationString(),
+        headers: {},
+      )).thenAnswer((_) async => http.Response(body, statusCode));
 
       /// Push the entity using the endpoint
       final result = await endpoint.push(instance);
@@ -168,12 +171,15 @@ void main() {
           '{"id": 2, "name": "TestNameTwo", "created": "2020-08-10T12:30:15.123456"}]';
       final statusCode = 200;
       when(client.get(
-              Uri.parse('$url?modified__gt=2020-01-02T04%3A30%3A45.123456Z')))
-          .thenAnswer((_) async => http.Response(body, statusCode));
+        Uri.parse('$url?modified__gt=2020-01-02T04%3A30%3A45.123456Z'),
+        headers: {},
+      )).thenAnswer((_) async => http.Response(body, statusCode));
 
       /// Test the mock client
-      final response = await client
-          .get(Uri.parse('$url?modified__gt=2020-01-02T04%3A30%3A45.123456Z'));
+      final response = await client.get(
+        Uri.parse('$url?modified__gt=2020-01-02T04%3A30%3A45.123456Z'),
+        headers: {},
+      );
       expect(response, isNotNull);
       expect(response, isA<http.Response>());
       expect(response.body, equals(body));
@@ -234,11 +240,14 @@ void main() {
           ']';
 
       final expectedFirstGetUrl = '$url?offset=0&limit=10';
-      when(client.get(Uri.parse(expectedFirstGetUrl))).thenAnswer(
+      when(client.get(Uri.parse(expectedFirstGetUrl), headers: {})).thenAnswer(
           (_) async => http.Response(expectedFirstBody, statusCode));
 
       /// Test the mock client
-      var response = await client.get(Uri.parse(expectedFirstGetUrl));
+      var response = await client.get(
+        Uri.parse(expectedFirstGetUrl),
+        headers: {},
+      );
       expect(response, isNotNull);
       expect(response, isA<http.Response>());
       expect(response.body, equals(expectedFirstBody));
@@ -251,11 +260,13 @@ void main() {
           ']';
 
       final expectedSecondGetUrl = '$url?offset=10&limit=10';
-      when(client.get(Uri.parse(expectedSecondGetUrl))).thenAnswer(
-          (_) async => http.Response(expectedSecondBody, statusCode));
+      when(client.get(
+        Uri.parse(expectedSecondGetUrl),
+        headers: {},
+      )).thenAnswer((_) async => http.Response(expectedSecondBody, statusCode));
 
       /// Test the mock client
-      response = await client.get(Uri.parse(expectedSecondGetUrl));
+      response = await client.get(Uri.parse(expectedSecondGetUrl), headers: {});
       expect(response, isNotNull);
       expect(response, isA<http.Response>());
       expect(response.body, equals(expectedSecondBody));

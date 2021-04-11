@@ -6,14 +6,15 @@ part of 'test_entities.dart';
 // UseEntitySyncGenerator
 // **************************************************************************
 
+// ignore_for_file: non_constant_identifier_names
 class TestMoorEntityProxy extends TestMoorEntity
     with ProxyMixin<TestMoorEntity>, SyncableMixin, SerializableMixin {
   TestMoorEntityProxy({
-    bool shouldSync,
-    String uuid,
-    int id,
-    String name,
-    DateTime created,
+    required bool shouldSync,
+    String? uuid,
+    required int id,
+    required String name,
+    required DateTime created,
   }) : super(
           shouldSync: shouldSync,
           uuid: uuid,
@@ -29,7 +30,6 @@ class TestMoorEntityProxy extends TestMoorEntity
       'id': id,
       'name': name,
       'created': created,
-      'hashCode': hashCode,
     };
   }
 
@@ -44,9 +44,15 @@ class TestMoorEntityProxy extends TestMoorEntity
     );
   }
 
+  @override
   final keyField = IntegerField('id', source: 'id');
+
+  @override
   final remoteKeyField = StringField('remote_uuid', source: 'remote_uuid');
-  final flagField = null;
+
+  @override
+  final flagField = BoolField('shouldSync', source: 'shouldSync');
+
   TestMoorEntityProxy.fromEntity(TestMoorEntity instance)
       : super(
           shouldSync: instance.shouldSync,
@@ -57,10 +63,10 @@ class TestMoorEntityProxy extends TestMoorEntity
         );
 }
 
-class TestMoorEntitySerializer extends Serializer<TestMoorEntityProxy> {
-  TestMoorEntitySerializer(
-      {Map<String, dynamic> data,
-      TestMoorEntityProxy instance,
+class BaseTestMoorEntitySerializer extends Serializer<TestMoorEntityProxy> {
+  BaseTestMoorEntitySerializer(
+      {Map<String, dynamic>? data,
+      TestMoorEntityProxy? instance,
       String prefix = ''})
       : super(data: data, instance: instance, prefix: prefix);
 
@@ -71,19 +77,19 @@ class TestMoorEntitySerializer extends Serializer<TestMoorEntityProxy> {
     StringField('name', source: 'name'),
     DateTimeField('created', source: 'created'),
   ];
-  String validateUuid(String value) {
+  String? validateUuid(String? value) {
     return value;
   }
 
-  int validateId(int value) {
+  int? validateId(int? value) {
     return value;
   }
 
-  String validateName(String value) {
+  String? validateName(String? value) {
     return value;
   }
 
-  DateTime validateCreated(DateTime value) {
+  DateTime? validateCreated(DateTime? value) {
     return value;
   }
 

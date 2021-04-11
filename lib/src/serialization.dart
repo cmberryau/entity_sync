@@ -9,12 +9,12 @@ abstract class SerializableField {
   final String? prefix;
 
   /// The source of the field
-  final String source;
+  final String? source;
 
   const SerializableField(
     this.name, {
     this.prefix,
-    required this.source,
+    this.source,
   });
 
   /// Evaluates if the passed value is valid
@@ -25,6 +25,10 @@ abstract class SerializableField {
 
   /// Gets the value of the field for the instance
   dynamic getValue(SerializableMixin instance) {
+    final source = this.source;
+    if (source == null) {
+      return instance.getFieldValue(name);
+    }
     return instance.getFieldValue(source);
   }
 
@@ -39,7 +43,7 @@ class IntegerField extends SerializableField {
   const IntegerField(
     String name, {
     String? prefix,
-    required String source,
+    String? source,
   }) : super(name, prefix: prefix, source: source);
 
   @override
@@ -58,12 +62,14 @@ class DoubleField extends SerializableField {
   const DoubleField(
     String name, {
     String? prefix,
-    required String source,
+    String? source,
   }) : super(name, prefix: prefix, source: source);
 
   @override
   dynamic isValid(value) {
-    if (value is int) {
+    if (value == null) {
+      return null;
+    } else if (value is int) {
       return value.toDouble();
     }
     return value as double;
@@ -80,11 +86,14 @@ class StringField extends SerializableField {
   const StringField(
     String name, {
     String? prefix,
-    required String source,
+    String? source,
   }) : super(name, prefix: prefix, source: source);
 
   @override
   dynamic isValid(value) {
+    if (value == null) {
+      return null;
+    }
     return value as String;
   }
 
@@ -99,12 +108,14 @@ class DateTimeField extends SerializableField {
   const DateTimeField(
     String name, {
     String? prefix,
-    required String source,
+    String? source,
   }) : super(name, prefix: prefix, source: source);
 
   @override
   dynamic isValid(value) {
-    if (value.runtimeType == String) {
+    if (value == null) {
+      return null;
+    } else if (value.runtimeType == String) {
       value = DateTime.parse(value);
     } else if (value.runtimeType == int) {
       value = DateTime.fromMillisecondsSinceEpoch(value);
@@ -122,12 +133,17 @@ class DateTimeField extends SerializableField {
 }
 
 class DateField extends SerializableField {
-  const DateField(String name, {String? prefix, required String source})
-      : super(name, prefix: prefix, source: source);
+  const DateField(
+    String name, {
+    String? prefix,
+    String? source,
+  }) : super(name, prefix: prefix, source: source);
 
   @override
   dynamic isValid(value) {
-    if (value.runtimeType == String) {
+    if (value == null) {
+      return null;
+    } else if (value.runtimeType == String) {
       value = DateTime.parse(value);
       value = DateTime(value.year, value.month, value.day, 12, 00, 00);
     } else if (value.runtimeType == int) {
@@ -150,12 +166,16 @@ class BoolField extends SerializableField {
   const BoolField(
     String name, {
     String? prefix,
-    required String source,
+    String? source,
   }) : super(name, prefix: prefix, source: source);
 
   @override
   dynamic isValid(value) {
-    return value;
+    if (value == null) {
+      return null;
+    }
+
+    return value as bool;
   }
 
   @override
@@ -211,7 +231,12 @@ abstract class Serializer<TSerializable extends SerializableMixin> {
       final instance = this.instance;
       final data = this.data;
       if (instance != null) {
-        value = instance.getFieldValue(field.source);
+        final source = field.source;
+        if (source != null) {
+          value = instance.getFieldValue(source);
+        } else {
+          value = instance.getFieldValue(field.name);
+        }
       } else if (data != null) {
         value = data[field.name];
       } else {

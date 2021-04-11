@@ -32,5 +32,5 @@ abstract class SyncableTable extends Table {
   Column remoteKeyColumn();
 
   /// The actual table
-  TableInfo actualTable();
+  SyncableTable actualTable();
 }
