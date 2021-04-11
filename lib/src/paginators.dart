@@ -4,10 +4,13 @@ abstract class Paginator {
 
   // Returns the URL parameters
   String params();
+
   // Moves the paginator to the next page
   void next();
+
   // Moves the paginator to the previous page
   void prev();
+
   // Resets the paginator
   void reset();
 
@@ -15,7 +18,7 @@ abstract class Paginator {
   Paginator clone();
 }
 
-class RestfulApiPaginator extends Paginator{
+class RestfulApiPaginator extends Paginator {
   final int _pageSize;
   int page = 0;
 

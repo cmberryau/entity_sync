@@ -18,5 +18,6 @@ abstract class Storage<TSyncable extends SyncableMixin> {
   Future<StorageResult<TSyncable>> insert(TSyncable instance);
 
   /// Upserts an instance using an optional local key
-  Future<StorageResult<TSyncable>> update(TSyncable instance, {dynamic remoteKey, dynamic localKey});
+  Future<StorageResult<TSyncable>> update(TSyncable instance,
+      {dynamic remoteKey, dynamic localKey});
 }
