@@ -9,27 +9,17 @@ import 'package:entity_sync/src/storage.dart';
 /// Syncable classes also must be serializable
 abstract class SyncableMixin implements SerializableMixin {
   /// The unique syncable key of the entity
-  SerializableField keyField;
+  late SerializableField keyField;
 
   /// The flag to indicate the entity needs to be synced
-  SerializableField flagField;
+  late BoolField flagField;
 
   /// The unique remote syncable key of the entity
-  SerializableField remoteKeyField = StringField('uuid');
+  late SerializableField remoteKeyField = StringField('uuid', source: 'uuid');
 
   /// Gets the key field of the entity
   SerializableField getKeyField() {
     return keyField;
-  }
-
-  /// Gets the remote key field of the entity
-  SerializableField getRemoteKeyField() {
-    return remoteKeyField;
-  }
-
-  /// Gets the flag field of the entity
-  BoolField getFlagField() {
-    return flagField;
   }
 
   /// Gets the key value of the entity
@@ -73,25 +63,16 @@ abstract class SyncableMixin implements SerializableMixin {
     final bKeyField = other.getKeyField();
 
     // remove the key fields
-    if (aKeyField != null) {
-      aMap.remove(aKeyField.name);
-    }
+    aMap.remove(aKeyField.name);
 
-    if (bKeyField != null) {
-      bMap.remove(bKeyField.name);
-    }
+    bMap.remove(bKeyField.name);
 
-    final aFlagField = getFlagField();
-    final bFlagField = other.getFlagField();
+    final aFlagField = flagField;
+    final bFlagField = other.flagField;
 
     // remove the flag fields
-    if (aFlagField != null) {
-      aMap.remove(aFlagField.name);
-    }
-
-    if (bFlagField != null) {
-      bMap.remove(bFlagField.name);
-    }
+    aMap.remove(aFlagField.name);
+    bMap.remove(bFlagField.name);
 
     final equal = aMap == bMap;
     return equal;
@@ -119,7 +100,7 @@ class SyncController<TSyncable extends SyncableMixin> {
 
   SyncController(this.endpoint, this.storage);
 
-  Future<SyncResult<TSyncable>> sync([DateTime since]) async {
+  Future<SyncResult<TSyncable>> sync([DateTime? since]) async {
     /// get all instances to sync
     final toSyncInstances = await storage.getInstancesToSync();
 
@@ -171,7 +152,7 @@ class SyncController<TSyncable extends SyncableMixin> {
           }
 
           final returnedInstance = endpointResult.instances[0];
-          print(returnedInstance);
+
           /// Compare data equality, ignoring local keys
           if (!instanceToPush.isDataEqualTo(returnedInstance)) {
             /// We have a local key because we pushed

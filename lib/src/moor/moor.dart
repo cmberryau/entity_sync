@@ -4,7 +4,7 @@ import 'package:moor/moor.dart';
 part 'moor_storage.dart';
 
 /// Responsible for creating proxies
-abstract class ProxyFactory<TProxy extends ProxyMixin<TEntity>,
+abstract class ProxyFactory<TProxy extends ProxyMixin<DataClass>,
     TEntity extends DataClass> {
   /// Creates a proxy from a moor instance
   TProxy fromInstance(TEntity instance);
@@ -18,7 +18,7 @@ abstract class ProxyMixin<TEntity extends DataClass>
         SyncableMixin,
         SerializableMixin {
   @override
-  final flagField = BoolField('shouldSync');
+  final flagField = BoolField('shouldSync', source: 'shouldSync');
 }
 
 abstract class SyncableTable extends Table {
@@ -32,5 +32,5 @@ abstract class SyncableTable extends Table {
   Column remoteKeyColumn();
 
   /// The actual table
-  Table actualTable();
+  SyncableTable actualTable();
 }

@@ -1,16 +1,17 @@
 import 'package:entity_sync/entity_sync.dart';
 import 'package:entity_sync/moor_sync.dart';
 import 'package:http/http.dart' as http;
+
+// ignore: import_of_legacy_library_into_null_safe
 import 'package:mockito/mockito.dart';
 import 'package:moor/ffi.dart';
 import 'package:test/test.dart';
-
-import 'endpoints_test.dart';
+import 'endpoints_test.mocks.dart';
 import 'models/database.dart';
 import 'models/test_entities.dart';
 
 void main() {
-  TestDatabase database;
+  late TestDatabase database;
 
   group('Test SyncController.sync with MoorStorage and RestfulApiEndpoint', () {
     setUp(() {
@@ -105,7 +106,8 @@ Future<SyncResult> localOutdatedDataSync(
       name: postTestEntity.name,
       created: postTestEntity.created,
       shouldSync: postTestEntity.shouldSync);
-  final postTestSerializer = TestMoorEntitySerializer(instance: postTestProxy);
+  final postTestSerializer =
+      BaseTestMoorEntitySerializer(instance: postTestProxy);
   final postTestRepresentation = postTestSerializer.toRepresentationString();
 
   final postFailureTestEntity = TestMoorEntity(
@@ -120,7 +122,7 @@ Future<SyncResult> localOutdatedDataSync(
     created: postFailureTestEntity.created,
     shouldSync: postFailureTestEntity.shouldSync,
   );
-  final postFailureTestSerializer = TestMoorEntitySerializer(
+  final postFailureTestSerializer = BaseTestMoorEntitySerializer(
     instance: postFailureTestProxy,
   );
   final postFailureTestRepresentation =
@@ -144,20 +146,28 @@ Future<SyncResult> localOutdatedDataSync(
   final failureStatusCode = 401;
   final notFoundStatusCode = 400;
 
-  when(client.get('${url}'))
+  when(client.get(Uri.parse(url), headers: {}))
       .thenAnswer((a) async => http.Response(getResponseBody, statusCode));
-  when(client.get('${url}1'))
+  when(client.get(Uri.parse('${url}1'), headers: {}))
       .thenAnswer((a) async => http.Response(postResponseBody, statusCode));
-  when(client.get('${url}3')).thenAnswer(
+  when(client.get(Uri.parse('${url}3'), headers: {})).thenAnswer(
     (a) async => http.Response(
       postFailureResponseBody,
       notFoundStatusCode,
     ),
   );
-  when(client.post('${url}', body: postTestRepresentation))
+  when(client.post(Uri.parse(url), body: postTestRepresentation, headers: {}))
       .thenAnswer((a) async => http.Response(postResponseBody, statusCode));
-  when(client.post('${url}', body: postFailureTestRepresentation)).thenAnswer(
-      (a) async => http.Response(postFailureResponseBody, failureStatusCode));
+  when(client.post(
+    Uri.parse(url),
+    body: postFailureTestRepresentation,
+    headers: {},
+  )).thenAnswer(
+    (a) async => http.Response(
+      postFailureResponseBody,
+      failureStatusCode,
+    ),
+  );
 
   /// Validate that we have zero entities in the db
   var entities = await database.getTestMoorEntities();
@@ -178,8 +188,8 @@ Future<SyncResult> localOutdatedDataSync(
 
   /// Create the endpoint, storage and sync controller
   final endpoint = RestfulApiEndpoint<TestMoorEntityProxy>(
-      url, TestMoorEntitySerializer(),
-      client: client, readOnly: readOnlyEndpoint, headers: null);
+      url, BaseTestMoorEntitySerializer(),
+      client: client, readOnly: readOnlyEndpoint, headers: {});
   final factory = TestMoorEntityProxyFactory();
   final storage = MoorStorage<TestMoorEntityProxy>(
       database.testMoorEntities, database, factory);

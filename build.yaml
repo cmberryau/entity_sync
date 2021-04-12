@@ -7,9 +7,12 @@ targets:
         enabled: true
       entity_sync_generator|use_entity_sync_builder:
         enabled: false
+      mockito|mockBuilder:
+        enabled: true
+        generate_for: ['endpoint_test.dart']
 
   entity_sync_generator:
-    dependencies: ['entity_sync_generator']
+    dependencies: [ 'entity_sync_generator' ]
     builders:
       moor_generator:
         enabled: false

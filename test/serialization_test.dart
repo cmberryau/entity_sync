@@ -4,17 +4,24 @@ import 'package:entity_sync/entity_sync.dart';
 
 class TestEntity with SerializableMixin, SyncableMixin {
   final int id;
-  final String name;
-  final DateTime created;
+  final String? name;
+  final DateTime? created;
   final bool shouldSync;
 
   /// The unique syncable key of the entity
+  @override
   final keyField = IntegerField('id');
 
   /// The flag to indicate the entity needs to be synced
+  @override
   final flagField = BoolField('shouldSync');
 
-  TestEntity({this.id, this.name, this.created, this.shouldSync});
+  TestEntity({
+    required this.id,
+    this.name,
+    this.created,
+    this.shouldSync = false,
+  });
 
   @override
   SerializableMixin copyFromMap(Map<String, dynamic> mapData) {
@@ -38,8 +45,7 @@ class TestEntity with SerializableMixin, SyncableMixin {
 }
 
 class TestEntitySerializer extends Serializer<TestEntity> {
-  TestEntitySerializer(
-      {Map<String, dynamic> data, TestEntity instance})
+  TestEntitySerializer({Map<String, dynamic>? data, TestEntity? instance})
       : super(data: data, instance: instance);
 
   @override
@@ -49,7 +55,6 @@ class TestEntitySerializer extends Serializer<TestEntity> {
     DateTimeField('created', source: 'created'),
   ];
 
-  @override
   int validateId(int value) {
     if (value < 0) {
       throw ValidationException('id must be positive value');
@@ -58,8 +63,7 @@ class TestEntitySerializer extends Serializer<TestEntity> {
     return value;
   }
 
-  @override
-  String validateName(String value) {
+  String validateName(String? value) {
     if (value == null) {
       throw ValidationException('name must not be null');
     }
@@ -71,8 +75,7 @@ class TestEntitySerializer extends Serializer<TestEntity> {
     return value;
   }
 
-  @override
-  DateTime validateCreated(DateTime value) {
+  DateTime validateCreated(DateTime? value) {
     if (value == null) {
       throw ValidationException('created must not be null');
     }
@@ -105,7 +108,8 @@ void main() {
     setUp(() {});
 
     test('Test TestEntitySerializer.isValid method with valid entity', () {
-      final entity = TestEntity(id: 0, name: 'TestName', created: DateTime.now());
+      final entity =
+          TestEntity(id: 0, name: 'TestName', created: DateTime.now());
       final serializer = TestEntitySerializer(instance: entity);
 
       expect(serializer.isValid(), isTrue);
@@ -134,7 +138,8 @@ void main() {
     });
 
     test('Test TestEntitySerializer.toJson method with valid entity', () {
-      final entity = TestEntity(id: 0, name: 'TestName', created: DateTime.now());
+      final entity =
+          TestEntity(id: 0, name: 'TestName', created: DateTime.now());
       final serializer = TestEntitySerializer(instance: entity);
 
       final repr = serializer.toRepresentationString();
