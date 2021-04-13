@@ -122,7 +122,9 @@ class EntitySyncHttpClient extends http.BaseClient {
   @override
   Future<http.StreamedResponse> send(http.BaseRequest request) async {
     try {
-      final response = await _client.send(await interceptor.onRequest(request));
+      final response = await _client.send(await interceptor.onRequest(
+        request as http.Request,
+      ));
 
       return response;
     } on Error catch (e) {

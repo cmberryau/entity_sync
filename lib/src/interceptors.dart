@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 class Interceptor {
   const Interceptor();
 
-  Future<http.BaseRequest> onRequest(http.BaseRequest request) async {
+  Future<http.Request> onRequest(http.Request request) async {
     return request;
   }
 
