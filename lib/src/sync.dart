@@ -98,7 +98,9 @@ class SyncController<TSyncable extends SyncableMixin> {
   /// The storage for syncing
   final Storage<TSyncable> storage;
 
-  SyncController(this.endpoint, this.storage);
+  final List<SyncControllerRelation> relations;
+
+  SyncController(this.endpoint, this.storage, this.relations);
 
   Future<SyncResult<TSyncable>> sync([DateTime? since]) async {
     /// get all instances to sync
@@ -113,17 +115,37 @@ class SyncController<TSyncable extends SyncableMixin> {
     /// Insert all into local db
     for (final instance in endpointPullAll.instances) {
       /// Check if local storage has the instance
-      final localInstance =
-          await storage.get(remoteKey: instance.getRemoteKey());
+      final localInstance = await storage.get(
+        remoteKey: instance.getRemoteKey(),
+      );
+
+      var isChanged = false;
 
       /// New instance, insert it
       if (localInstance == null) {
         await storage.insert(
           instance,
         );
+
+        isChanged = true;
       } else if (!localInstance.isDataEqualTo(instance)) {
         /// Existing instance, update it if it differs
         await storage.update(instance, remoteKey: instance.getRemoteKey());
+        isChanged = true;
+      }
+
+      if (isChanged) {
+        for (final relation in relations) {
+          var uuid = await relation.relation.needToSyncInstance(instance);
+          if (uuid != null) {
+            final endpointResult = await relation.endpoint.pullOneByRemoteKey(
+              remoteKey: uuid,
+            );
+            if (endpointResult.instances.isNotEmpty) {
+              await relation.storage.insert(endpointResult.instances.first);
+            }
+          }
+        }
       }
     }
 
@@ -171,4 +193,12 @@ class SyncController<TSyncable extends SyncableMixin> {
 
     return results;
   }
+}
+
+class SyncControllerRelation {
+  final Relation relation;
+  final Endpoint endpoint;
+  final Storage storage;
+
+  SyncControllerRelation(this.relation, this.endpoint, this.storage);
 }

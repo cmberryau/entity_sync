@@ -50,6 +50,10 @@ abstract class Endpoint<TSyncable extends SyncableMixin> {
 
   /// Pulls and returns multiple entities
   Future<EndpointResult<TSyncable>> pullAll({DateTime? since});
+
+  Future<EndpointResult<TSyncable>> pullOneByRemoteKey({
+    required String remoteKey,
+  });
 }
 
 /// Represents a restful api endpoint
@@ -255,7 +259,31 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin>
     return Uri.parse('$url${instance.getKeyRepresentation()}');
   }
 
+  Uri _uriFromRemoteKey(String remoteKey) {
+    return Uri.parse('$url$remoteKey}');
+  }
+
   String _sinceSnippet(DateTime since) {
     return 'modified__gt=${Uri.encodeComponent(since.toIso8601String())}';
+  }
+
+  @override
+  Future<EndpointResult<TSyncable>> pullOneByRemoteKey({
+    required String remoteKey,
+  }) async {
+    final response = await client.get(
+      _uriFromRemoteKey(remoteKey),
+      headers: headers,
+    );
+
+    final instance = _responseToInstance(serializer, response);
+
+    final result = EndpointResult<TSyncable>(response, []);
+
+    if (instance != null) {
+      result.instances.add(instance);
+    }
+
+    return result;
   }
 }
