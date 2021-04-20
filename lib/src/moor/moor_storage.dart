@@ -36,11 +36,11 @@ class MoorStorage<TProxy extends ProxyMixin<DataClass>>
     if (remoteKey != null) {
       instance = await (database.select(table.actualTable() as TableInfo)
             ..where((t) => table.remoteKeyColumn().equals(remoteKey)))
-          .getSingle();
+          .getSingleOrNull();
     } else if (localKey != null) {
       instance = await (database.select(table.actualTable() as TableInfo)
             ..where((t) => table.localKeyColumn().equals(localKey)))
-          .getSingle();
+          .getSingleOrNull();
     }
 
     if (instance == null) {

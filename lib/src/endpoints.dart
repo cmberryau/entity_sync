@@ -260,7 +260,7 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin>
   }
 
   Uri _uriFromRemoteKey(String remoteKey) {
-    return Uri.parse('$url$remoteKey}');
+    return Uri.parse('$url$remoteKey');
   }
 
   String _sinceSnippet(DateTime since) {

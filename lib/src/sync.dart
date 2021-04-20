@@ -100,7 +100,7 @@ class SyncController<TSyncable extends SyncableMixin> {
 
   final List<SyncControllerRelation> relations;
 
-  SyncController(this.endpoint, this.storage, this.relations);
+  SyncController(this.endpoint, this.storage, {this.relations = const []});
 
   Future<SyncResult<TSyncable>> sync([DateTime? since]) async {
     /// get all instances to sync
