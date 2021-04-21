@@ -36,6 +36,11 @@ abstract class SerializableField {
   bool areEqual(dynamic a, dynamic b) {
     return a == b;
   }
+
+  @override
+  String toString() {
+    return 'SerializableField(name: $name, prefix: $prefix, source: $source)';
+  }
 }
 
 /// Represents an integer field which may be serialized
@@ -54,6 +59,11 @@ class IntegerField extends SerializableField {
   @override
   dynamic toRepresentation(value) {
     return value;
+  }
+
+  @override
+  String toString() {
+    return 'IntegerField(name: $name, prefix: $prefix, source: $source)';
   }
 }
 
@@ -79,6 +89,11 @@ class DoubleField extends SerializableField {
   dynamic toRepresentation(value) {
     return value;
   }
+
+  @override
+  String toString() {
+    return 'DoubleField(name: $name, prefix: $prefix, source: $source)';
+  }
 }
 
 /// Represents an string field which may be serialized
@@ -100,6 +115,11 @@ class StringField extends SerializableField {
   @override
   dynamic toRepresentation(value) {
     return value;
+  }
+
+  @override
+  String toString() {
+    return 'StringField(name: $name, prefix: $prefix, source: $source)';
   }
 }
 
@@ -130,6 +150,11 @@ class DateTimeField extends SerializableField {
   dynamic toRepresentation(value) {
     return (value as DateTime).toUtc().toIso8601String();
   }
+
+  @override
+  String toString() {
+    return 'DateTimeField(name: $name, prefix: $prefix, source: $source)';
+  }
 }
 
 class DateField extends SerializableField {
@@ -159,6 +184,11 @@ class DateField extends SerializableField {
   dynamic toRepresentation(value) {
     return (value as DateTime).toIso8601String().split('T')[0];
   }
+
+  @override
+  String toString() {
+    return 'DateField(name: $name, prefix: $prefix, source: $source)';
+  }
 }
 
 /// Represents a boolean field which may be serialized
@@ -182,6 +212,11 @@ class BoolField extends SerializableField {
   dynamic toRepresentation(value) {
     return json.encode(value);
   }
+
+  @override
+  String toString() {
+    return 'BoolField(name: $name, prefix: $prefix, source: $source)';
+  }
 }
 
 /// Added to a class to support serialization
@@ -200,6 +235,11 @@ class ValidationException implements Exception {
   String cause;
 
   ValidationException(this.cause);
+
+  @override
+  String toString() {
+    return 'ValidationException($cause)';
+  }
 }
 
 /// Performs serialization
@@ -342,4 +382,9 @@ abstract class Serializer<TSerializable extends SerializableMixin> {
   TSerializable createInstance(Map<String, dynamic> validatedData);
 
   Map toMap();
+
+  @override
+  String toString() {
+    return 'Serializer(data: $data, instance: $instance, prefix: $prefix)';
+  }
 }

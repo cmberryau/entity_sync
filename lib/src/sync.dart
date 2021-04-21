@@ -88,6 +88,11 @@ class SyncResult<TSyncable extends SyncableMixin> {
   final EndpointResult<TSyncable> pullResults;
 
   SyncResult(this.pushResults, this.pullResults);
+
+  @override
+  String toString() {
+    return 'SyncResult(pushResults: $pushResults, pullResults: $pullResults)';
+  }
 }
 
 /// Responsible for controlling the syncing of entities
@@ -214,4 +219,9 @@ class SyncControllerRelation {
   final Storage storage;
 
   SyncControllerRelation(this.relation, this.endpoint, this.storage);
+
+  @override
+  String toString() {
+    return 'SyncControllerRelation(relation: $relation, endpoint: $endpoint, storage: $storage';
+  }
 }

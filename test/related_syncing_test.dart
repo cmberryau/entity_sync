@@ -84,9 +84,9 @@ void main() {
         );
 
         final firstRelation = MoorRelation(
-          database,
-          'relatedEntity',
-          database.secondRelatedEntities,
+          database: database,
+          fkColumn: 'relatedEntity',
+          fkTable: database.secondRelatedEntities,
         );
         final syncController = SyncController<FirstRelatedEntityProxy>(
           endpoint,

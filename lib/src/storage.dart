@@ -6,7 +6,12 @@ import 'sync.dart';
 class StorageResult<TSyncable extends SyncableMixin> {
   bool successful;
 
-  StorageResult(this.successful);
+  StorageResult({required this.successful});
+
+  @override
+  String toString() {
+    return 'StorageResult(successful: $successful)';
+  }
 }
 
 /// Responsible for local storage of syncable entities
@@ -21,8 +26,7 @@ abstract class Storage<TSyncable extends SyncableMixin> {
   Future<StorageResult<TSyncable>> insert(TSyncable instance);
 
   /// Upserts an instance using an optional local key
-  Future<StorageResult<TSyncable>> update(
-    TSyncable instance, {
+  Future<StorageResult<TSyncable>> update(TSyncable instance, {
     dynamic remoteKey,
     dynamic localKey,
   });
@@ -45,7 +49,11 @@ class MoorRelation<TProxy extends ProxyMixin<DataClass>>
   /// The foreign key's table
   final SyncableTable fkTable;
 
-  MoorRelation(this.database, this.fkColumn, this.fkTable);
+  MoorRelation({
+    required this.database,
+    required this.fkColumn,
+    required this.fkTable,
+  });
 
   @override
   Future<String?> needToSyncInstance(TProxy instance) async {
@@ -55,9 +63,10 @@ class MoorRelation<TProxy extends ProxyMixin<DataClass>>
     // get the related instance
     final fkInstance = await (database.select(
       fkTable.actualTable() as TableInfo,
-    )..where(
+    )
+      ..where(
             (t) => fkTable.remoteKeyColumn().equals(remoteKey),
-          ))
+      ))
         .getSingleOrNull();
 
     // if the related instance is missing then return null else return its
@@ -67,5 +76,10 @@ class MoorRelation<TProxy extends ProxyMixin<DataClass>>
     }
 
     return null;
+  }
+
+  @override
+  String toString() {
+    return 'MoorRelation(database: $database, fkColumn: $fkColumn, fkTable: $fkTable)';
   }
 }

@@ -20,6 +20,11 @@ class EndpointResult<TSyncable extends SyncableMixin> {
   /// Was the endpoint operation successful?
   bool get successful =>
       response.statusCode >= 200 && response.statusCode < 300 && errors.isEmpty;
+
+  @override
+  String toString() {
+    return 'EndpointResult(response: $response, instances: $instances, errors: $errors, responseBody: ${response.body})';
+  }
 }
 
 /// Represents an entity endpoint
@@ -285,5 +290,10 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin>
     }
 
     return result;
+  }
+
+  @override
+  String toString() {
+    return 'RestfulApiEndpoint(url: $url, serializer: $serializer, client: $client, paginator: $paginator, readOnly: $readOnly, headers: $headers)';
   }
 }
