@@ -23,7 +23,7 @@ class EndpointResult<TSyncable extends SyncableMixin> {
 
   @override
   String toString() {
-    return 'EndpointResult(response: $response, instances: $instances, errors: $errors, responseBody: ${response.body})';
+    return 'EndpointResult(instances: $instances, errors: $errors, responseBody: ${response.body}, responseCode: ${response.statusCode})';
   }
 }
 
