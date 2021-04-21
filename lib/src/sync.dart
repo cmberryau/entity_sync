@@ -134,13 +134,20 @@ class SyncController<TSyncable extends SyncableMixin> {
         isChanged = true;
       }
 
+      // if the entity is changed then update all of its relation
       if (isChanged) {
         for (final relation in relations) {
-          var uuid = await relation.relation.needToSyncInstance(instance);
-          if (uuid != null) {
+          // get the uuid of the missing related instance
+          var remoteKey = await relation.relation.needToSyncInstance(instance);
+
+          // if the related instance is missing then sync it
+          if (remoteKey != null) {
+            // pull down the related instance
             final endpointResult = await relation.endpoint.pullOneByRemoteKey(
-              remoteKey: uuid,
+              remoteKey: remoteKey,
             );
+
+            // insert the related instance to the storage
             if (endpointResult.instances.isNotEmpty) {
               await relation.storage.insert(endpointResult.instances.first);
             }
@@ -195,9 +202,15 @@ class SyncController<TSyncable extends SyncableMixin> {
   }
 }
 
+/// Relation between sync controller
 class SyncControllerRelation {
+  /// The relationship to other sync controller
   final Relation relation;
+
+  /// The endpoint of the other controller
   final Endpoint endpoint;
+
+  /// The storage of other controller
   final Storage storage;
 
   SyncControllerRelation(this.relation, this.endpoint, this.storage);
