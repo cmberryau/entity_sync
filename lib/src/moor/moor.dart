@@ -34,15 +34,3 @@ abstract class SyncableTable extends Table {
   /// The actual table
   SyncableTable actualTable();
 }
-
-class RelatedEntity {
-  final Column localKeyColumn;
-  final Column remoteKeyColumn;
-  final Endpoint endpoint;
-
-  RelatedEntity({
-    required this.localKeyColumn,
-    required this.remoteKeyColumn,
-    required this.endpoint,
-  });
-}
