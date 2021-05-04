@@ -56,7 +56,7 @@ abstract class Endpoint<TSyncable extends SyncableMixin> {
   /// Pulls and returns multiple entities
   Future<EndpointResult<TSyncable>> pullAll({DateTime? since});
 
-  Future<EndpointResult<TSyncable>> pullOneByRemoteKey({
+  Future<EndpointResult<TSyncable>> pullByRemoteKey({
     required String remoteKey,
   });
 }
@@ -273,7 +273,7 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin>
   }
 
   @override
-  Future<EndpointResult<TSyncable>> pullOneByRemoteKey({
+  Future<EndpointResult<TSyncable>> pullByRemoteKey({
     required String remoteKey,
   }) async {
     final response = await client.get(

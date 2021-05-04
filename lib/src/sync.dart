@@ -148,7 +148,7 @@ class SyncController<TSyncable extends SyncableMixin> {
           // if the related instance is missing then sync it
           if (remoteKey != null) {
             // pull down the related instance
-            final endpointResult = await relation.endpoint.pullOneByRemoteKey(
+            final endpointResult = await relation.endpoint.pullByRemoteKey(
               remoteKey: remoteKey,
             );
 
