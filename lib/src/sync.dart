@@ -88,6 +88,11 @@ class SyncResult<TSyncable extends SyncableMixin> {
   final EndpointResult<TSyncable> pullResults;
 
   SyncResult(this.pushResults, this.pullResults);
+
+  @override
+  String toString() {
+    return 'SyncResult(pushResults: $pushResults, pullResults: $pullResults)';
+  }
 }
 
 /// Responsible for controlling the syncing of entities
@@ -98,7 +103,9 @@ class SyncController<TSyncable extends SyncableMixin> {
   /// The storage for syncing
   final Storage<TSyncable> storage;
 
-  SyncController(this.endpoint, this.storage);
+  final List<SyncControllerRelation> relations;
+
+  SyncController(this.endpoint, this.storage, {this.relations = const []});
 
   Future<SyncResult<TSyncable>> sync([DateTime? since]) async {
     /// get all instances to sync
@@ -113,17 +120,44 @@ class SyncController<TSyncable extends SyncableMixin> {
     /// Insert all into local db
     for (final instance in endpointPullAll.instances) {
       /// Check if local storage has the instance
-      final localInstance =
-          await storage.get(remoteKey: instance.getRemoteKey());
+      final localInstance = await storage.get(
+        remoteKey: instance.getRemoteKey(),
+      );
+
+      var isChanged = false;
 
       /// New instance, insert it
       if (localInstance == null) {
         await storage.insert(
           instance,
         );
+
+        isChanged = true;
       } else if (!localInstance.isDataEqualTo(instance)) {
         /// Existing instance, update it if it differs
         await storage.update(instance, remoteKey: instance.getRemoteKey());
+        isChanged = true;
+      }
+
+      // if the entity is changed then update all of its relation
+      if (isChanged) {
+        for (final relation in relations) {
+          // get the uuid of the missing related instance
+          var remoteKey = await relation.relation.needToSyncInstance(instance);
+
+          // if the related instance is missing then sync it
+          if (remoteKey != null) {
+            // pull down the related instance
+            final endpointResult = await relation.endpoint.pullByRemoteKey(
+              remoteKey: remoteKey,
+            );
+
+            // insert the related instance to the storage
+            if (endpointResult.instances.isNotEmpty) {
+              await relation.storage.insert(endpointResult.instances.first);
+            }
+          }
+        }
       }
     }
 
@@ -170,5 +204,24 @@ class SyncController<TSyncable extends SyncableMixin> {
     }
 
     return results;
+  }
+}
+
+/// Relation between sync controller
+class SyncControllerRelation {
+  /// The relationship to other sync controller
+  final Relation relation;
+
+  /// The endpoint of the other controller
+  final Endpoint endpoint;
+
+  /// The storage of other controller
+  final Storage storage;
+
+  SyncControllerRelation(this.relation, this.endpoint, this.storage);
+
+  @override
+  String toString() {
+    return 'SyncControllerRelation(relation: $relation, endpoint: $endpoint, storage: $storage';
   }
 }

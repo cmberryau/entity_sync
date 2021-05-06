@@ -87,7 +87,9 @@ void main() {
 }
 
 Future<SyncResult> localOutdatedDataSync(
-    TestDatabase database, bool readOnlyEndpoint) async {
+  TestDatabase database,
+  bool readOnlyEndpoint,
+) async {
   /// Set up the mock client
   final url = 'https://www.example.com/test-entity/';
   final client = MockClient();

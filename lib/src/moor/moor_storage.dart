@@ -36,11 +36,11 @@ class MoorStorage<TProxy extends ProxyMixin<DataClass>>
     if (remoteKey != null) {
       instance = await (database.select(table.actualTable() as TableInfo)
             ..where((t) => table.remoteKeyColumn().equals(remoteKey)))
-          .getSingle();
+          .getSingleOrNull();
     } else if (localKey != null) {
       instance = await (database.select(table.actualTable() as TableInfo)
             ..where((t) => table.localKeyColumn().equals(localKey)))
-          .getSingle();
+          .getSingleOrNull();
     }
 
     if (instance == null) {
@@ -54,7 +54,7 @@ class MoorStorage<TProxy extends ProxyMixin<DataClass>>
   Future<StorageResult<TProxy>> insert(TProxy instance,
       {dynamic remoteKey, dynamic localKey}) async {
     await database.into(table.actualTable() as TableInfo).insert(instance);
-    return StorageResult<TProxy>(true);
+    return StorageResult<TProxy>(successful: true);
   }
 
   @override
@@ -71,6 +71,6 @@ class MoorStorage<TProxy extends ProxyMixin<DataClass>>
       throw ArgumentError('Could not find a local instance');
     }
 
-    return StorageResult<TProxy>(true);
+    return StorageResult<TProxy>(successful: true);
   }
 }
