@@ -52,7 +52,11 @@ class IntegerField extends SerializableField {
   }) : super(name, prefix: prefix, source: source);
 
   @override
-  dynamic isValid(value) {
+  int? isValid(value) {
+    if (value == null) {
+      return null;
+    }
+
     return value as int;
   }
 
