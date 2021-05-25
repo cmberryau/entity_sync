@@ -102,7 +102,7 @@ Future<SyncResult> localOutdatedDataSync(
     name: 'OutdatedTestName',
     created: nowWithoutSubsecondPrecision,
     shouldSync: true,
-  );
+  ).toCompanion(true);
   final postTestProxy = TestMoorEntityProxy(
       id: postTestEntity.id,
       name: postTestEntity.name,
@@ -117,7 +117,7 @@ Future<SyncResult> localOutdatedDataSync(
     name: 'FailedTestName',
     created: nowWithoutSubsecondPrecision.subtract(Duration(days: 31)),
     shouldSync: true,
-  );
+  ).toCompanion(true);
   final postFailureTestProxy = TestMoorEntityProxy(
     id: postFailureTestEntity.id,
     name: postFailureTestEntity.name,
