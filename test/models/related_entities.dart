@@ -64,3 +64,53 @@ class FirstRelatedEntitySync extends $_FirstRelatedEntitySync {}
   flagField: BoolField('shouldSync'),
 )
 class SecondRelatedEntitySync extends $_SecondRelatedEntitySync {}
+//
+// class Something extends FirstRelatedEntitiesCompanion
+//     with ProxyMixin<FirstRelatedEntity>, SyncableMixin, SerializableMixin {
+//   Something({
+//     shouldSync = const Value.absent(),
+//     uuid = const Value.absent(),
+//     id = const Value.absent(),
+//     relatedEntity = const Value.absent(),
+//   }) : super(
+//           shouldSync: shouldSync,
+//           uuid: uuid,
+//           id: id,
+//           relatedEntity: relatedEntity,
+//         );
+//
+//   @override
+//   final keyField = IntegerField('id', source: 'id');
+//
+//   @override
+//   final remoteKeyField = StringField('uuid', source: 'uuid');
+//
+//   @override
+//   final flagField = BoolField('shouldSync', source: 'shouldSync');
+//
+//   @override
+//   SerializableMixin copyFromMap(Map<String, dynamic> mapData) {
+//     // TODO: implement copyFromMap
+//     throw UnimplementedError();
+//   }
+//
+//   @override
+//   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+//     // TODO: implement toJson
+//     throw UnimplementedError();
+//   }
+//
+//   @override
+//   String toJsonString({ValueSerializer? serializer}) {
+//     // TODO: implement toJsonString
+//     throw UnimplementedError();
+//   }
+//
+//   @override
+//   Map<String, dynamic> toMap() {
+//     // TODO: implement toMap
+//     throw UnimplementedError();
+//   }
+//  
+//   Something.fromEntity()
+// }

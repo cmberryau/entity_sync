@@ -13,7 +13,7 @@ abstract class ProxyFactory<TProxy extends ProxyMixin<DataClass>,
 /// Provides all the functionality to act as a proxy
 abstract class ProxyMixin<TEntity extends DataClass>
     implements
-        DataClass,
+        UpdateCompanion<TEntity>,
         Insertable<TEntity>,
         SyncableMixin,
         SerializableMixin {
