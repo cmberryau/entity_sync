@@ -24,10 +24,10 @@ class FirstRelatedEntityProxy extends FirstRelatedEntitiesCompanion
   @override
   Map<String, dynamic> toMap() {
     return {
-      'shouldSync': shouldSync,
-      'uuid': uuid,
-      'id': id,
-      'relatedEntity': relatedEntity,
+      'shouldSync': shouldSync.value,
+      'uuid': uuid.value,
+      'id': id.value,
+      'relatedEntity': relatedEntity.value,
     };
   }
 
@@ -132,9 +132,9 @@ class SecondRelatedEntityProxy extends SecondRelatedEntitiesCompanion
   @override
   Map<String, dynamic> toMap() {
     return {
-      'shouldSync': shouldSync,
-      'uuid': uuid,
-      'id': id,
+      'shouldSync': shouldSync.value,
+      'uuid': uuid.value,
+      'id': id.value,
     };
   }
 
