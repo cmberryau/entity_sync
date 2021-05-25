@@ -7,14 +7,14 @@ part of 'test_entities.dart';
 // **************************************************************************
 
 // ignore_for_file: non_constant_identifier_names
-class TestMoorEntityProxy extends TestMoorEntity
+class TestMoorEntityProxy extends TestMoorEntitiesCompanion
     with ProxyMixin<TestMoorEntity>, SyncableMixin, SerializableMixin {
   TestMoorEntityProxy({
-    required bool shouldSync,
-    String? uuid,
-    required int id,
-    required String name,
-    required DateTime created,
+    shouldSync = const Value.absent(),
+    uuid = const Value.absent(),
+    id = const Value.absent(),
+    name = const Value.absent(),
+    created = const Value.absent(),
   }) : super(
           shouldSync: shouldSync,
           uuid: uuid,
@@ -22,25 +22,26 @@ class TestMoorEntityProxy extends TestMoorEntity
           name: name,
           created: created,
         );
+
   @override
   Map<String, dynamic> toMap() {
     return {
-      'shouldSync': shouldSync,
-      'uuid': uuid,
-      'id': id,
-      'name': name,
-      'created': created,
+      'shouldSync': shouldSync.value,
+      'uuid': uuid.value,
+      'id': id.value,
+      'name': name.value,
+      'created': created.value,
     };
   }
 
   @override
   TestMoorEntityProxy copyFromMap(Map<String, dynamic> data) {
     return TestMoorEntityProxy(
-      shouldSync: data['shouldSync'],
-      uuid: data['uuid'],
-      id: data['id'],
-      name: data['name'],
-      created: data['created'],
+      shouldSync: Value<bool>(data['shouldSync']),
+      uuid: Value<String>(data['uuid']),
+      id: Value<int>(data['id']),
+      name: Value<String>(data['name']),
+      created: Value<DateTime>(data['created']),
     );
   }
 
@@ -53,14 +54,16 @@ class TestMoorEntityProxy extends TestMoorEntity
   @override
   final flagField = BoolField('shouldSync', source: 'shouldSync');
 
-  TestMoorEntityProxy.fromEntity(TestMoorEntity instance)
-      : super(
-          shouldSync: instance.shouldSync,
-          uuid: instance.uuid,
-          id: instance.id,
-          name: instance.name,
-          created: instance.created,
-        );
+  factory TestMoorEntityProxy.fromEntity(TestMoorEntity instance) {
+    final uuid = instance.uuid;
+    return TestMoorEntityProxy(
+      shouldSync: Value<bool>(instance.shouldSync),
+      uuid: uuid == null ? Value.absent() : Value<String>(uuid),
+      id: Value<int>(instance.id),
+      name: Value<String>(instance.name),
+      created: Value<DateTime>(instance.created),
+    );
+  }
 }
 
 class BaseTestMoorEntitySerializer extends Serializer<TestMoorEntityProxy> {
@@ -77,6 +80,7 @@ class BaseTestMoorEntitySerializer extends Serializer<TestMoorEntityProxy> {
     StringField('name', source: 'name'),
     DateTimeField('created', source: 'created'),
   ];
+
   String? validateUuid(String? value) {
     return value;
   }
@@ -106,11 +110,11 @@ class BaseTestMoorEntitySerializer extends Serializer<TestMoorEntityProxy> {
   @override
   TestMoorEntityProxy createInstance(Map<String, dynamic> data) {
     return TestMoorEntityProxy(
-      uuid: data['uuid'],
-      id: data['id'],
-      name: data['name'],
-      created: data['created'],
-      shouldSync: false,
+      uuid: Value<String>(data['uuid']),
+      id: Value<int>(data['id']),
+      name: Value<String>(data['name']),
+      created: Value<DateTime>(data['created']),
+      shouldSync: Value<bool>(false),
     );
   }
 }
