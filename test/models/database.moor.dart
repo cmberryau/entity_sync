@@ -144,7 +144,7 @@ class TestMoorEntitiesCompanion extends UpdateCompanion<TestMoorEntity> {
     this.id = const Value.absent(),
     required String name,
     required DateTime created,
-  })   : name = Value(name),
+  })  : name = Value(name),
         created = Value(created);
   static Insertable<TestMoorEntity> custom({
     Expression<bool>? shouldSync,
@@ -434,7 +434,7 @@ class FirstRelatedEntitiesCompanion
     required String uuid,
     this.id = const Value.absent(),
     required String relatedEntity,
-  })   : uuid = Value(uuid),
+  })  : uuid = Value(uuid),
         relatedEntity = Value(relatedEntity);
   static Insertable<FirstRelatedEntity> custom({
     Expression<bool>? shouldSync,
