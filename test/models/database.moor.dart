@@ -24,17 +24,16 @@ class TestMoorEntity extends DataClass implements Insertable<TestMoorEntity> {
       Map<String, dynamic> data, GeneratedDatabase db,
       {String? prefix}) {
     final effectivePrefix = prefix ?? '';
-    final boolType = db.typeSystem.forDartType<bool>();
-    final stringType = db.typeSystem.forDartType<String>();
-    final intType = db.typeSystem.forDartType<int>();
-    final dateTimeType = db.typeSystem.forDartType<DateTime>();
     return TestMoorEntity(
-      shouldSync: boolType
+      shouldSync: const BoolType()
           .mapFromDatabaseResponse(data['${effectivePrefix}should_sync'])!,
-      uuid: stringType.mapFromDatabaseResponse(data['${effectivePrefix}uuid']),
-      id: intType.mapFromDatabaseResponse(data['${effectivePrefix}id'])!,
-      name: stringType.mapFromDatabaseResponse(data['${effectivePrefix}name'])!,
-      created: dateTimeType
+      uuid: const StringType()
+          .mapFromDatabaseResponse(data['${effectivePrefix}uuid']),
+      id: const IntType()
+          .mapFromDatabaseResponse(data['${effectivePrefix}id'])!,
+      name: const StringType()
+          .mapFromDatabaseResponse(data['${effectivePrefix}name'])!,
+      created: const DateTimeType()
           .mapFromDatabaseResponse(data['${effectivePrefix}created'])!,
     );
   }
@@ -115,7 +114,7 @@ class TestMoorEntity extends DataClass implements Insertable<TestMoorEntity> {
       $mrjc(uuid.hashCode,
           $mrjc(id.hashCode, $mrjc(name.hashCode, created.hashCode)))));
   @override
-  bool operator ==(dynamic other) =>
+  bool operator ==(Object other) =>
       identical(this, other) ||
       (other is TestMoorEntity &&
           other.shouldSync == this.shouldSync &&
@@ -144,7 +143,7 @@ class TestMoorEntitiesCompanion extends UpdateCompanion<TestMoorEntity> {
     this.id = const Value.absent(),
     required String name,
     required DateTime created,
-  })  : name = Value(name),
+  })   : name = Value(name),
         created = Value(created);
   static Insertable<TestMoorEntity> custom({
     Expression<bool>? shouldSync,
@@ -307,8 +306,8 @@ class $TestMoorEntitiesTable extends TestMoorEntities
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
   TestMoorEntity map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : null;
-    return TestMoorEntity.fromData(data, _db, prefix: effectivePrefix);
+    return TestMoorEntity.fromData(data, _db,
+        prefix: tablePrefix != null ? '$tablePrefix.' : null);
   }
 
   @override
@@ -333,15 +332,14 @@ class FirstRelatedEntity extends DataClass
       Map<String, dynamic> data, GeneratedDatabase db,
       {String? prefix}) {
     final effectivePrefix = prefix ?? '';
-    final boolType = db.typeSystem.forDartType<bool>();
-    final stringType = db.typeSystem.forDartType<String>();
-    final intType = db.typeSystem.forDartType<int>();
     return FirstRelatedEntity(
-      shouldSync: boolType
+      shouldSync: const BoolType()
           .mapFromDatabaseResponse(data['${effectivePrefix}should_sync'])!,
-      uuid: stringType.mapFromDatabaseResponse(data['${effectivePrefix}uuid'])!,
-      id: intType.mapFromDatabaseResponse(data['${effectivePrefix}id'])!,
-      relatedEntity: stringType
+      uuid: const StringType()
+          .mapFromDatabaseResponse(data['${effectivePrefix}uuid'])!,
+      id: const IntType()
+          .mapFromDatabaseResponse(data['${effectivePrefix}id'])!,
+      relatedEntity: const StringType()
           .mapFromDatabaseResponse(data['${effectivePrefix}related_entity'])!,
     );
   }
@@ -408,7 +406,7 @@ class FirstRelatedEntity extends DataClass
   int get hashCode => $mrjf($mrjc(shouldSync.hashCode,
       $mrjc(uuid.hashCode, $mrjc(id.hashCode, relatedEntity.hashCode))));
   @override
-  bool operator ==(dynamic other) =>
+  bool operator ==(Object other) =>
       identical(this, other) ||
       (other is FirstRelatedEntity &&
           other.shouldSync == this.shouldSync &&
@@ -434,7 +432,7 @@ class FirstRelatedEntitiesCompanion
     required String uuid,
     this.id = const Value.absent(),
     required String relatedEntity,
-  })  : uuid = Value(uuid),
+  })   : uuid = Value(uuid),
         relatedEntity = Value(relatedEntity);
   static Insertable<FirstRelatedEntity> custom({
     Expression<bool>? shouldSync,
@@ -583,8 +581,8 @@ class $FirstRelatedEntitiesTable extends FirstRelatedEntities
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
   FirstRelatedEntity map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : null;
-    return FirstRelatedEntity.fromData(data, _db, prefix: effectivePrefix);
+    return FirstRelatedEntity.fromData(data, _db,
+        prefix: tablePrefix != null ? '$tablePrefix.' : null);
   }
 
   @override
@@ -605,14 +603,13 @@ class SecondRelatedEntity extends DataClass
       Map<String, dynamic> data, GeneratedDatabase db,
       {String? prefix}) {
     final effectivePrefix = prefix ?? '';
-    final boolType = db.typeSystem.forDartType<bool>();
-    final stringType = db.typeSystem.forDartType<String>();
-    final intType = db.typeSystem.forDartType<int>();
     return SecondRelatedEntity(
-      shouldSync: boolType
+      shouldSync: const BoolType()
           .mapFromDatabaseResponse(data['${effectivePrefix}should_sync'])!,
-      uuid: stringType.mapFromDatabaseResponse(data['${effectivePrefix}uuid'])!,
-      id: intType.mapFromDatabaseResponse(data['${effectivePrefix}id'])!,
+      uuid: const StringType()
+          .mapFromDatabaseResponse(data['${effectivePrefix}uuid'])!,
+      id: const IntType()
+          .mapFromDatabaseResponse(data['${effectivePrefix}id'])!,
     );
   }
   @override
@@ -671,7 +668,7 @@ class SecondRelatedEntity extends DataClass
   int get hashCode =>
       $mrjf($mrjc(shouldSync.hashCode, $mrjc(uuid.hashCode, id.hashCode)));
   @override
-  bool operator ==(dynamic other) =>
+  bool operator ==(Object other) =>
       identical(this, other) ||
       (other is SecondRelatedEntity &&
           other.shouldSync == this.shouldSync &&
@@ -812,8 +809,8 @@ class $SecondRelatedEntitiesTable extends SecondRelatedEntities
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
   SecondRelatedEntity map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : null;
-    return SecondRelatedEntity.fromData(data, _db, prefix: effectivePrefix);
+    return SecondRelatedEntity.fromData(data, _db,
+        prefix: tablePrefix != null ? '$tablePrefix.' : null);
   }
 
   @override

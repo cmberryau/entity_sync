@@ -10,11 +10,11 @@ part of 'test_entities.dart';
 class TestMoorEntityProxy extends TestMoorEntitiesCompanion
     with ProxyMixin<TestMoorEntity>, SyncableMixin, SerializableMixin {
   TestMoorEntityProxy({
-    shouldSync = const Value.absent(),
-    uuid = const Value.absent(),
-    id = const Value.absent(),
-    name = const Value.absent(),
-    created = const Value.absent(),
+    Value<bool> shouldSync = const Value.absent(),
+    Value<String?> uuid = const Value.absent(),
+    Value<int> id = const Value.absent(),
+    Value<String> name = const Value.absent(),
+    Value<DateTime> created = const Value.absent(),
   }) : super(
           shouldSync: shouldSync,
           uuid: uuid,
@@ -22,7 +22,6 @@ class TestMoorEntityProxy extends TestMoorEntitiesCompanion
           name: name,
           created: created,
         );
-
   @override
   Map<String, dynamic> toMap() {
     return {
@@ -38,7 +37,7 @@ class TestMoorEntityProxy extends TestMoorEntitiesCompanion
   TestMoorEntityProxy copyFromMap(Map<String, dynamic> data) {
     return TestMoorEntityProxy(
       shouldSync: Value<bool>(data['shouldSync']),
-      uuid: Value<String>(data['uuid']),
+      uuid: Value<String?>(data['uuid']),
       id: Value<int>(data['id']),
       name: Value<String>(data['name']),
       created: Value<DateTime>(data['created']),
@@ -47,18 +46,14 @@ class TestMoorEntityProxy extends TestMoorEntitiesCompanion
 
   @override
   final keyField = IntegerField('id', source: 'id');
-
   @override
   final remoteKeyField = StringField('remote_uuid', source: 'remote_uuid');
-
   @override
   final flagField = BoolField('shouldSync', source: 'shouldSync');
-
   factory TestMoorEntityProxy.fromEntity(TestMoorEntity instance) {
-    final uuid = instance.uuid;
     return TestMoorEntityProxy(
       shouldSync: Value<bool>(instance.shouldSync),
-      uuid: uuid == null ? Value.absent() : Value<String>(uuid),
+      uuid: Value<String?>(instance.uuid),
       id: Value<int>(instance.id),
       name: Value<String>(instance.name),
       created: Value<DateTime>(instance.created),
@@ -80,7 +75,6 @@ class BaseTestMoorEntitySerializer extends Serializer<TestMoorEntityProxy> {
     StringField('name', source: 'name'),
     DateTimeField('created', source: 'created'),
   ];
-
   String? validateUuid(String? value) {
     return value;
   }
@@ -110,7 +104,7 @@ class BaseTestMoorEntitySerializer extends Serializer<TestMoorEntityProxy> {
   @override
   TestMoorEntityProxy createInstance(Map<String, dynamic> data) {
     return TestMoorEntityProxy(
-      uuid: Value<String>(data['uuid']),
+      uuid: Value<String?>(data['uuid']),
       id: Value<int>(data['id']),
       name: Value<String>(data['name']),
       created: Value<DateTime>(data['created']),
