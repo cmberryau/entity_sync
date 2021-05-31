@@ -4,12 +4,11 @@ import 'dart:io';
 import 'package:entity_sync/src/interceptors.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
-import 'package:http/io_client.dart';
 
 const FAILED_HTTP_ERROR_CODE_THRESHOLD = 300;
 
 class EntitySyncHttpClient extends http.BaseClient {
-  http.Client _client = IOClient(HttpClient());
+  http.Client _client = http.Client();
   Interceptor interceptor;
 
   EntitySyncHttpClient(
