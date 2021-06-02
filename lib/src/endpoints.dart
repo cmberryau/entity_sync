@@ -11,9 +11,14 @@ import 'package:http/http.dart' as http;
 class EndpointResult<TSyncable extends SyncableMixin> {
   final http.Response response;
   final List<TSyncable> instances;
+  final List<TSyncable> syncedInstances;
   final List<Exception> errors = [];
 
-  EndpointResult(this.response, this.instances);
+  EndpointResult(
+    this.response,
+    this.instances, {
+    this.syncedInstances = const [],
+  });
 
   void addError(Exception exception) => errors.add(exception);
 
@@ -23,7 +28,7 @@ class EndpointResult<TSyncable extends SyncableMixin> {
 
   @override
   String toString() {
-    return 'EndpointResult(instances: $instances, errors: $errors, responseBody: ${response.body}, responseCode: ${response.statusCode})';
+    return 'EndpointResult(syncedInstances: $syncedInstances, instances: $instances, errors: $errors, responseBody: ${response.body}, responseCode: ${response.statusCode})';
   }
 }
 
@@ -41,7 +46,10 @@ abstract class Endpoint<TSyncable extends SyncableMixin> {
     serializer.instance = instance;
     final body = serializer.toRepresentation();
 
-    return pushJson(body, skipValidation: true);
+    final syncResult = await pushJson(body, skipValidation: true);
+    syncResult.syncedInstances.add(instance);
+
+    return syncResult;
   }
 
   /// Pushes a single entity that is already encoded in json
