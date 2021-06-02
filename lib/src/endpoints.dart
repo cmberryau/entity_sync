@@ -11,14 +11,13 @@ import 'package:http/http.dart' as http;
 class EndpointResult<TSyncable extends SyncableMixin> {
   final http.Response response;
   final List<TSyncable> instances;
-  final List<TSyncable> syncedInstances;
+  final List<TSyncable> syncedInstances = [];
   final List<Exception> errors = [];
 
   EndpointResult(
     this.response,
-    this.instances, {
-    this.syncedInstances = const [],
-  });
+    this.instances,
+  );
 
   void addError(Exception exception) => errors.add(exception);
 
