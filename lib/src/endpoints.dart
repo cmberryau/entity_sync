@@ -272,7 +272,7 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin>
   }
 
   Uri _uriFromRemoteKey(String remoteKey) {
-    return Uri.parse('$url$remoteKey');
+    return Uri.parse('$url$remoteKey/');
   }
 
   String _sinceSnippet(DateTime since) {
@@ -287,10 +287,14 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin>
       _uriFromRemoteKey(remoteKey),
       headers: headers,
     );
+    final result = EndpointResult<TSyncable>(response, []);
+
+    if (response.statusCode != 200) {
+      return result;
+    }
 
     final instance = _responseToInstance(serializer, response);
 
-    final result = EndpointResult<TSyncable>(response, []);
 
     if (instance != null) {
       result.instances.add(instance);
