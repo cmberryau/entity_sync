@@ -114,6 +114,11 @@ class SyncController<TSyncable extends SyncableMixin> {
     /// push all instances to sync to endpoint
     final endpointResults = await push(toSyncInstances);
 
+    final useStorageDateTime = since == null;
+    if (useStorageDateTime) {
+      since = await storage.getLastUpdated();
+    }
+
     /// pull all from endpoint since last sync
     final endpointPullAll = await endpoint.pullAll(since: since);
 
@@ -159,6 +164,10 @@ class SyncController<TSyncable extends SyncableMixin> {
           }
         }
       }
+    }
+
+    if (useStorageDateTime) {
+      await storage.setLastUpdated(since!);
     }
 
     return SyncResult<TSyncable>(endpointResults, endpointPullAll);

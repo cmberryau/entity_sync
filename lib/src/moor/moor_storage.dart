@@ -73,4 +73,30 @@ class MoorStorage<TProxy extends ProxyMixin<DataClass>>
 
     return StorageResult<TProxy>(successful: true);
   }
+
+  @override
+  Future<DateTime> getLastUpdated() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    if (prefs.containsKey(_getLastUpdateTableNameKey())) {
+      final lastUpdatedString = prefs.get(_getLastUpdateTableNameKey());
+      return DateTime.parse(lastUpdatedString);
+    }
+
+    await setLastUpdated(DateTime(1900));
+    return DateTime(1900);
+  }
+
+  @override
+  Future setLastUpdated(DateTime lastUpdated) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      _getLastUpdateTableNameKey(),
+      lastUpdated.toIso8601String(),
+    );
+  }
+
+  String _getLastUpdateTableNameKey() {
+    return table.actualTable().tableName! + '_lastUpdate';
+  }
 }

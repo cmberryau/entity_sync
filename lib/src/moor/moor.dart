@@ -1,5 +1,6 @@
 import 'package:entity_sync/entity_sync.dart';
 import 'package:moor/moor.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 part 'moor_storage.dart';
 

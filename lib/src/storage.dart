@@ -31,6 +31,12 @@ abstract class Storage<TSyncable extends SyncableMixin> {
     dynamic remoteKey,
     dynamic localKey,
   });
+
+  /// Gets the last updated time of the storage
+  Future<DateTime> getLastUpdated();
+
+  /// Sets the last updated time of the storage
+  Future setLastUpdated(DateTime lastUpdate);
 }
 
 /// The relation between syncable entities
