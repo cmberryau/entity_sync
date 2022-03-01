@@ -97,6 +97,6 @@ class MoorStorage<TProxy extends ProxyMixin<DataClass>>
   }
 
   String _getLastUpdateTableNameKey() {
-    return (table.actualTable() as TableInfo).actualTableName! + '_lastUpdate';
+    return (table.actualTable() as TableInfo).actualTableName + '_lastUpdate';
   }
 }
