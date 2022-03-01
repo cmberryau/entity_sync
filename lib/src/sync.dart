@@ -167,7 +167,7 @@ class SyncController<TSyncable extends SyncableMixin> {
     }
 
     if (useStorageDateTime) {
-      await storage.setLastUpdated(since!);
+      await storage.setLastUpdated(DateTime.now());
     }
 
     return SyncResult<TSyncable>(endpointResults, endpointPullAll);
