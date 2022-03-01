@@ -79,8 +79,8 @@ class MoorStorage<TProxy extends ProxyMixin<DataClass>>
     final prefs = await SharedPreferences.getInstance();
 
     if (prefs.containsKey(_getLastUpdateTableNameKey())) {
-      final lastUpdatedString = prefs.get(_getLastUpdateTableNameKey());
-      return DateTime.parse(lastUpdatedString);
+      final lastUpdatedString = prefs.getString(_getLastUpdateTableNameKey());
+      return DateTime.parse(lastUpdatedString!);
     }
 
     await setLastUpdated(DateTime(1900));
