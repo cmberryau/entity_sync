@@ -26,10 +26,17 @@ abstract class Storage<TSyncable extends SyncableMixin> {
   Future<StorageResult<TSyncable>> insert(TSyncable instance);
 
   /// Upserts an instance using an optional local key
-  Future<StorageResult<TSyncable>> update(TSyncable instance, {
+  Future<StorageResult<TSyncable>> update(
+    TSyncable instance, {
     dynamic remoteKey,
     dynamic localKey,
   });
+
+  /// Gets the last updated time of the storage
+  Future<DateTime> getLastUpdated();
+
+  /// Sets the last updated time of the storage
+  Future setLastUpdated(DateTime lastUpdate);
 }
 
 /// The relation between syncable entities
@@ -63,10 +70,9 @@ class MoorRelation<TProxy extends ProxyMixin<DataClass>>
     // get the related instance
     final fkInstance = await (database.select(
       fkTable.actualTable() as TableInfo,
-    )
-      ..where(
+    )..where(
             (t) => fkTable.remoteKeyColumn().equals(remoteKey),
-      ))
+          ))
         .getSingleOrNull();
 
     // if the related instance is missing then return null else return its

@@ -42,6 +42,7 @@ class SecondRelatedEntities extends SyncableTable {
 
 @UseEntitySync(
   FirstRelatedEntity,
+  FirstRelatedEntities,
   fields: [
     StringField('uuid'),
     IntegerField('id'),
@@ -55,6 +56,7 @@ class FirstRelatedEntitySync extends $_FirstRelatedEntitySync {}
 
 @UseEntitySync(
   SecondRelatedEntity,
+  SecondRelatedEntities,
   fields: [
     StringField('uuid'),
     IntegerField('id'),

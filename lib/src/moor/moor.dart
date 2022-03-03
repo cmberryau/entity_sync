@@ -1,5 +1,6 @@
 import 'package:entity_sync/entity_sync.dart';
 import 'package:moor/moor.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 part 'moor_storage.dart';
 
@@ -13,7 +14,7 @@ abstract class ProxyFactory<TProxy extends ProxyMixin<DataClass>,
 /// Provides all the functionality to act as a proxy
 abstract class ProxyMixin<TEntity extends DataClass>
     implements
-        DataClass,
+        UpdateCompanion<TEntity>,
         Insertable<TEntity>,
         SyncableMixin,
         SerializableMixin {

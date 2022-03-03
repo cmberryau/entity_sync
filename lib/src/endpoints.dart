@@ -11,9 +11,13 @@ import 'package:http/http.dart' as http;
 class EndpointResult<TSyncable extends SyncableMixin> {
   final http.Response response;
   final List<TSyncable> instances;
+  final List<TSyncable> syncedInstances = [];
   final List<Exception> errors = [];
 
-  EndpointResult(this.response, this.instances);
+  EndpointResult(
+    this.response,
+    this.instances,
+  );
 
   void addError(Exception exception) => errors.add(exception);
 
@@ -23,7 +27,7 @@ class EndpointResult<TSyncable extends SyncableMixin> {
 
   @override
   String toString() {
-    return 'EndpointResult(instances: $instances, errors: $errors, responseBody: ${response.body}, responseCode: ${response.statusCode})';
+    return 'EndpointResult(syncedInstances: $syncedInstances, instances: $instances, errors: $errors, responseBody: ${response.body}, responseCode: ${response.statusCode})';
   }
 }
 
@@ -41,7 +45,10 @@ abstract class Endpoint<TSyncable extends SyncableMixin> {
     serializer.instance = instance;
     final body = serializer.toRepresentation();
 
-    return pushJson(body, skipValidation: true);
+    final syncResult = await pushJson(body, skipValidation: true);
+    syncResult.syncedInstances.add(instance);
+
+    return syncResult;
   }
 
   /// Pushes a single entity that is already encoded in json
@@ -265,7 +272,7 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin>
   }
 
   Uri _uriFromRemoteKey(String remoteKey) {
-    return Uri.parse('$url$remoteKey');
+    return Uri.parse('$url$remoteKey/');
   }
 
   String _sinceSnippet(DateTime since) {
@@ -280,10 +287,14 @@ class RestfulApiEndpoint<TSyncable extends SyncableMixin>
       _uriFromRemoteKey(remoteKey),
       headers: headers,
     );
+    final result = EndpointResult<TSyncable>(response, []);
+
+    if (response.statusCode != 200) {
+      return result;
+    }
 
     final instance = _responseToInstance(serializer, response);
 
-    final result = EndpointResult<TSyncable>(response, []);
 
     if (instance != null) {
       result.instances.add(instance);

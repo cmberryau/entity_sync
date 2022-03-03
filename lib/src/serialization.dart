@@ -52,7 +52,19 @@ class IntegerField extends SerializableField {
   }) : super(name, prefix: prefix, source: source);
 
   @override
-  dynamic isValid(value) {
+  int? isValid(value) {
+    if (value == null) {
+      return null;
+    }
+
+    if (value is double) {
+      return value.toInt();
+    }
+
+    if (value is String) {
+      return double.parse(value).toInt();
+    }
+
     return value as int;
   }
 
@@ -76,7 +88,7 @@ class DoubleField extends SerializableField {
   }) : super(name, prefix: prefix, source: source);
 
   @override
-  dynamic isValid(value) {
+  double? isValid(value) {
     if (value == null) {
       return null;
     } else if (value is int) {
@@ -132,15 +144,13 @@ class DateTimeField extends SerializableField {
   }) : super(name, prefix: prefix, source: source);
 
   @override
-  dynamic isValid(value) {
+  DateTime? isValid(value) {
     if (value == null) {
       return null;
     } else if (value.runtimeType == String) {
       value = DateTime.parse(value);
     } else if (value.runtimeType == int) {
       value = DateTime.fromMillisecondsSinceEpoch(value);
-    } else if (value.runtimeType != DateTime) {
-      throw ValidationException('Must be formatted String or DateTime');
     }
 
     return value;
@@ -165,16 +175,12 @@ class DateField extends SerializableField {
   }) : super(name, prefix: prefix, source: source);
 
   @override
-  dynamic isValid(value) {
-    if (value == null) {
-      return null;
-    } else if (value.runtimeType == String) {
+  DateTime? isValid(value) {
+    if (value.runtimeType == String) {
       value = DateTime.parse(value);
       value = DateTime(value.year, value.month, value.day, 12, 00, 00);
     } else if (value.runtimeType == int) {
       value = DateTime.fromMillisecondsSinceEpoch(value);
-    } else if (value.runtimeType != DateTime) {
-      throw ValidationException('Must be formatted String or DateTime');
     }
 
     return value;
@@ -200,7 +206,7 @@ class BoolField extends SerializableField {
   }) : super(name, prefix: prefix, source: source);
 
   @override
-  dynamic isValid(value) {
+  bool? isValid(value) {
     if (value == null) {
       return null;
     }
