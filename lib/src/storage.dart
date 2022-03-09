@@ -31,6 +31,14 @@ abstract class Storage<TSyncable extends SyncableMixin> {
     dynamic remoteKey,
     dynamic localKey,
   });
+
+  Future<int> count();
+
+  Future<bool> isEmpty();
+
+  Future<bool> containsOnlyInstances(List<TSyncable> instances);
+
+  Future clear();
 }
 
 /// The relation between syncable entities

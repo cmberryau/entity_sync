@@ -109,10 +109,7 @@ class TestMoorEntity extends DataClass implements Insertable<TestMoorEntity> {
   }
 
   @override
-  int get hashCode => $mrjf($mrjc(
-      shouldSync.hashCode,
-      $mrjc(uuid.hashCode,
-          $mrjc(id.hashCode, $mrjc(name.hashCode, created.hashCode)))));
+  int get hashCode => Object.hash(shouldSync, uuid, id, name, created);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -143,7 +140,7 @@ class TestMoorEntitiesCompanion extends UpdateCompanion<TestMoorEntity> {
     this.id = const Value.absent(),
     required String name,
     required DateTime created,
-  })   : name = Value(name),
+  })  : name = Value(name),
         created = Value(created);
   static Insertable<TestMoorEntity> custom({
     Expression<bool>? shouldSync,
@@ -212,63 +209,52 @@ class TestMoorEntitiesCompanion extends UpdateCompanion<TestMoorEntity> {
 
 class $TestMoorEntitiesTable extends TestMoorEntities
     with TableInfo<$TestMoorEntitiesTable, TestMoorEntity> {
-  final GeneratedDatabase _db;
+  @override
+  final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $TestMoorEntitiesTable(this._db, [this._alias]);
+  $TestMoorEntitiesTable(this.attachedDatabase, [this._alias]);
   final VerificationMeta _shouldSyncMeta = const VerificationMeta('shouldSync');
   @override
-  late final GeneratedBoolColumn shouldSync = _constructShouldSync();
-  GeneratedBoolColumn _constructShouldSync() {
-    return GeneratedBoolColumn(
-      'should_sync',
-      $tableName,
-      false,
-    )..clientDefault = () => true;
-  }
-
+  late final GeneratedColumn<bool?> shouldSync = GeneratedColumn<bool?>(
+      'should_sync', aliasedName, false,
+      type: const BoolType(),
+      requiredDuringInsert: false,
+      defaultConstraints: 'CHECK (should_sync IN (0, 1))',
+      clientDefault: () => true);
   final VerificationMeta _uuidMeta = const VerificationMeta('uuid');
   @override
-  late final GeneratedTextColumn uuid = _constructUuid();
-  GeneratedTextColumn _constructUuid() {
-    return GeneratedTextColumn('uuid', $tableName, true,
-        minTextLength: 36, maxTextLength: 36);
-  }
-
+  late final GeneratedColumn<String?> uuid = GeneratedColumn<String?>(
+      'uuid', aliasedName, true,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 36, maxTextLength: 36),
+      type: const StringType(),
+      requiredDuringInsert: false);
   final VerificationMeta _idMeta = const VerificationMeta('id');
   @override
-  late final GeneratedIntColumn id = _constructId();
-  GeneratedIntColumn _constructId() {
-    return GeneratedIntColumn('id', $tableName, false,
-        hasAutoIncrement: true, declaredAsPrimaryKey: true);
-  }
-
+  late final GeneratedColumn<int?> id = GeneratedColumn<int?>(
+      'id', aliasedName, false,
+      type: const IntType(),
+      requiredDuringInsert: false,
+      defaultConstraints: 'PRIMARY KEY AUTOINCREMENT');
   final VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
-  late final GeneratedTextColumn name = _constructName();
-  GeneratedTextColumn _constructName() {
-    return GeneratedTextColumn('name', $tableName, false,
-        minTextLength: 3, maxTextLength: 100);
-  }
-
+  late final GeneratedColumn<String?> name = GeneratedColumn<String?>(
+      'name', aliasedName, false,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 3, maxTextLength: 100),
+      type: const StringType(),
+      requiredDuringInsert: true);
   final VerificationMeta _createdMeta = const VerificationMeta('created');
   @override
-  late final GeneratedDateTimeColumn created = _constructCreated();
-  GeneratedDateTimeColumn _constructCreated() {
-    return GeneratedDateTimeColumn(
-      'created',
-      $tableName,
-      false,
-    );
-  }
-
+  late final GeneratedColumn<DateTime?> created = GeneratedColumn<DateTime?>(
+      'created', aliasedName, false,
+      type: const IntType(), requiredDuringInsert: true);
   @override
   List<GeneratedColumn> get $columns => [shouldSync, uuid, id, name, created];
   @override
-  $TestMoorEntitiesTable get asDslTable => this;
+  String get aliasedName => _alias ?? 'test_moor_entities';
   @override
-  String get $tableName => _alias ?? 'test_moor_entities';
-  @override
-  final String actualTableName = 'test_moor_entities';
+  String get actualTableName => 'test_moor_entities';
   @override
   VerificationContext validateIntegrity(Insertable<TestMoorEntity> instance,
       {bool isInserting = false}) {
@@ -306,13 +292,13 @@ class $TestMoorEntitiesTable extends TestMoorEntities
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
   TestMoorEntity map(Map<String, dynamic> data, {String? tablePrefix}) {
-    return TestMoorEntity.fromData(data, _db,
+    return TestMoorEntity.fromData(data, attachedDatabase,
         prefix: tablePrefix != null ? '$tablePrefix.' : null);
   }
 
   @override
   $TestMoorEntitiesTable createAlias(String alias) {
-    return $TestMoorEntitiesTable(_db, alias);
+    return $TestMoorEntitiesTable(attachedDatabase, alias);
   }
 }
 
@@ -403,8 +389,7 @@ class FirstRelatedEntity extends DataClass
   }
 
   @override
-  int get hashCode => $mrjf($mrjc(shouldSync.hashCode,
-      $mrjc(uuid.hashCode, $mrjc(id.hashCode, relatedEntity.hashCode))));
+  int get hashCode => Object.hash(shouldSync, uuid, id, relatedEntity);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -432,7 +417,7 @@ class FirstRelatedEntitiesCompanion
     required String uuid,
     this.id = const Value.absent(),
     required String relatedEntity,
-  })   : uuid = Value(uuid),
+  })  : uuid = Value(uuid),
         relatedEntity = Value(relatedEntity);
   static Insertable<FirstRelatedEntity> custom({
     Expression<bool>? shouldSync,
@@ -493,59 +478,42 @@ class FirstRelatedEntitiesCompanion
 
 class $FirstRelatedEntitiesTable extends FirstRelatedEntities
     with TableInfo<$FirstRelatedEntitiesTable, FirstRelatedEntity> {
-  final GeneratedDatabase _db;
+  @override
+  final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $FirstRelatedEntitiesTable(this._db, [this._alias]);
+  $FirstRelatedEntitiesTable(this.attachedDatabase, [this._alias]);
   final VerificationMeta _shouldSyncMeta = const VerificationMeta('shouldSync');
   @override
-  late final GeneratedBoolColumn shouldSync = _constructShouldSync();
-  GeneratedBoolColumn _constructShouldSync() {
-    return GeneratedBoolColumn(
-      'should_sync',
-      $tableName,
-      false,
-    )..clientDefault = () => true;
-  }
-
+  late final GeneratedColumn<bool?> shouldSync = GeneratedColumn<bool?>(
+      'should_sync', aliasedName, false,
+      type: const BoolType(),
+      requiredDuringInsert: false,
+      defaultConstraints: 'CHECK (should_sync IN (0, 1))',
+      clientDefault: () => true);
   final VerificationMeta _uuidMeta = const VerificationMeta('uuid');
   @override
-  late final GeneratedTextColumn uuid = _constructUuid();
-  GeneratedTextColumn _constructUuid() {
-    return GeneratedTextColumn(
-      'uuid',
-      $tableName,
-      false,
-    );
-  }
-
+  late final GeneratedColumn<String?> uuid = GeneratedColumn<String?>(
+      'uuid', aliasedName, false,
+      type: const StringType(), requiredDuringInsert: true);
   final VerificationMeta _idMeta = const VerificationMeta('id');
   @override
-  late final GeneratedIntColumn id = _constructId();
-  GeneratedIntColumn _constructId() {
-    return GeneratedIntColumn('id', $tableName, false,
-        hasAutoIncrement: true, declaredAsPrimaryKey: true);
-  }
-
+  late final GeneratedColumn<int?> id = GeneratedColumn<int?>(
+      'id', aliasedName, false,
+      type: const IntType(),
+      requiredDuringInsert: false,
+      defaultConstraints: 'PRIMARY KEY AUTOINCREMENT');
   final VerificationMeta _relatedEntityMeta =
       const VerificationMeta('relatedEntity');
   @override
-  late final GeneratedTextColumn relatedEntity = _constructRelatedEntity();
-  GeneratedTextColumn _constructRelatedEntity() {
-    return GeneratedTextColumn(
-      'related_entity',
-      $tableName,
-      false,
-    );
-  }
-
+  late final GeneratedColumn<String?> relatedEntity = GeneratedColumn<String?>(
+      'related_entity', aliasedName, false,
+      type: const StringType(), requiredDuringInsert: true);
   @override
   List<GeneratedColumn> get $columns => [shouldSync, uuid, id, relatedEntity];
   @override
-  $FirstRelatedEntitiesTable get asDslTable => this;
+  String get aliasedName => _alias ?? 'first_related_entities';
   @override
-  String get $tableName => _alias ?? 'first_related_entities';
-  @override
-  final String actualTableName = 'first_related_entities';
+  String get actualTableName => 'first_related_entities';
   @override
   VerificationContext validateIntegrity(Insertable<FirstRelatedEntity> instance,
       {bool isInserting = false}) {
@@ -581,13 +549,13 @@ class $FirstRelatedEntitiesTable extends FirstRelatedEntities
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
   FirstRelatedEntity map(Map<String, dynamic> data, {String? tablePrefix}) {
-    return FirstRelatedEntity.fromData(data, _db,
+    return FirstRelatedEntity.fromData(data, attachedDatabase,
         prefix: tablePrefix != null ? '$tablePrefix.' : null);
   }
 
   @override
   $FirstRelatedEntitiesTable createAlias(String alias) {
-    return $FirstRelatedEntitiesTable(_db, alias);
+    return $FirstRelatedEntitiesTable(attachedDatabase, alias);
   }
 }
 
@@ -665,8 +633,7 @@ class SecondRelatedEntity extends DataClass
   }
 
   @override
-  int get hashCode =>
-      $mrjf($mrjc(shouldSync.hashCode, $mrjc(uuid.hashCode, id.hashCode)));
+  int get hashCode => Object.hash(shouldSync, uuid, id);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -740,47 +707,36 @@ class SecondRelatedEntitiesCompanion
 
 class $SecondRelatedEntitiesTable extends SecondRelatedEntities
     with TableInfo<$SecondRelatedEntitiesTable, SecondRelatedEntity> {
-  final GeneratedDatabase _db;
+  @override
+  final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $SecondRelatedEntitiesTable(this._db, [this._alias]);
+  $SecondRelatedEntitiesTable(this.attachedDatabase, [this._alias]);
   final VerificationMeta _shouldSyncMeta = const VerificationMeta('shouldSync');
   @override
-  late final GeneratedBoolColumn shouldSync = _constructShouldSync();
-  GeneratedBoolColumn _constructShouldSync() {
-    return GeneratedBoolColumn(
-      'should_sync',
-      $tableName,
-      false,
-    )..clientDefault = () => true;
-  }
-
+  late final GeneratedColumn<bool?> shouldSync = GeneratedColumn<bool?>(
+      'should_sync', aliasedName, false,
+      type: const BoolType(),
+      requiredDuringInsert: false,
+      defaultConstraints: 'CHECK (should_sync IN (0, 1))',
+      clientDefault: () => true);
   final VerificationMeta _uuidMeta = const VerificationMeta('uuid');
   @override
-  late final GeneratedTextColumn uuid = _constructUuid();
-  GeneratedTextColumn _constructUuid() {
-    return GeneratedTextColumn(
-      'uuid',
-      $tableName,
-      false,
-    );
-  }
-
+  late final GeneratedColumn<String?> uuid = GeneratedColumn<String?>(
+      'uuid', aliasedName, false,
+      type: const StringType(), requiredDuringInsert: true);
   final VerificationMeta _idMeta = const VerificationMeta('id');
   @override
-  late final GeneratedIntColumn id = _constructId();
-  GeneratedIntColumn _constructId() {
-    return GeneratedIntColumn('id', $tableName, false,
-        hasAutoIncrement: true, declaredAsPrimaryKey: true);
-  }
-
+  late final GeneratedColumn<int?> id = GeneratedColumn<int?>(
+      'id', aliasedName, false,
+      type: const IntType(),
+      requiredDuringInsert: false,
+      defaultConstraints: 'PRIMARY KEY AUTOINCREMENT');
   @override
   List<GeneratedColumn> get $columns => [shouldSync, uuid, id];
   @override
-  $SecondRelatedEntitiesTable get asDslTable => this;
+  String get aliasedName => _alias ?? 'second_related_entities';
   @override
-  String get $tableName => _alias ?? 'second_related_entities';
-  @override
-  final String actualTableName = 'second_related_entities';
+  String get actualTableName => 'second_related_entities';
   @override
   VerificationContext validateIntegrity(
       Insertable<SecondRelatedEntity> instance,
@@ -809,13 +765,13 @@ class $SecondRelatedEntitiesTable extends SecondRelatedEntities
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
   SecondRelatedEntity map(Map<String, dynamic> data, {String? tablePrefix}) {
-    return SecondRelatedEntity.fromData(data, _db,
+    return SecondRelatedEntity.fromData(data, attachedDatabase,
         prefix: tablePrefix != null ? '$tablePrefix.' : null);
   }
 
   @override
   $SecondRelatedEntitiesTable createAlias(String alias) {
-    return $SecondRelatedEntitiesTable(_db, alias);
+    return $SecondRelatedEntitiesTable(attachedDatabase, alias);
   }
 }
 

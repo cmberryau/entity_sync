@@ -23,29 +23,29 @@ class FirstRelatedEntityProxy extends FirstRelatedEntitiesCompanion
   @override
   Map<String, dynamic> toMap() {
     return {
-      'shouldSync': shouldSync.value,
-      'uuid': uuid.value,
-      'id': id.value,
-      'relatedEntity': relatedEntity.value,
+      'shouldSync': shouldSync.present ? shouldSync.value : null,
+      'uuid': uuid.present ? uuid.value : null,
+      'id': id.present ? id.value : null,
+      'relatedEntity': relatedEntity.present ? relatedEntity.value : null,
     };
   }
 
   @override
   FirstRelatedEntityProxy copyFromMap(Map<String, dynamic> data) {
     return FirstRelatedEntityProxy(
-      shouldSync: Value<bool>(data['shouldSync']),
-      uuid: Value<String>(data['uuid']),
-      id: Value<int>(data['id']),
-      relatedEntity: Value<String>(data['relatedEntity']),
+      shouldSync: Value<bool>(data['shouldSync'] as bool),
+      uuid: Value<String>(data['uuid'] as String),
+      id: Value<int>(data['id'] as int),
+      relatedEntity: Value<String>(data['relatedEntity'] as String),
     );
   }
 
   @override
-  final keyField = IntegerField('id', source: 'id');
+  final keyField = const IntegerField('id', source: 'id');
   @override
-  final remoteKeyField = StringField('uuid', source: 'uuid');
+  final remoteKeyField = const StringField('uuid', source: 'uuid');
   @override
-  final flagField = BoolField('shouldSync', source: 'shouldSync');
+  final flagField = const BoolField('shouldSync', source: 'shouldSync');
   factory FirstRelatedEntityProxy.fromEntity(FirstRelatedEntity instance) {
     return FirstRelatedEntityProxy(
       shouldSync: Value<bool>(instance.shouldSync),
@@ -66,9 +66,9 @@ class BaseFirstRelatedEntitySerializer
 
   @override
   final fields = [
-    StringField('uuid', source: 'uuid'),
-    IntegerField('id', source: 'id'),
-    StringField('relatedEntity', source: 'relatedEntity'),
+    const StringField('uuid', source: 'uuid'),
+    const IntegerField('id', source: 'id'),
+    const StringField('relatedEntity', source: 'relatedEntity'),
   ];
   String? validateUuid(String? value) {
     return value;
@@ -94,10 +94,10 @@ class BaseFirstRelatedEntitySerializer
   @override
   FirstRelatedEntityProxy createInstance(Map<String, dynamic> data) {
     return FirstRelatedEntityProxy(
-      uuid: Value<String>(data['uuid']),
-      id: Value<int>(data['id']),
-      relatedEntity: Value<String>(data['relatedEntity']),
-      shouldSync: Value<bool>(false),
+      uuid: Value<String>(data['uuid'] as String),
+      id: Value<int>(data['id'] as int),
+      relatedEntity: Value<String>(data['relatedEntity'] as String),
+      shouldSync: const Value<bool>(false),
     );
   }
 }
@@ -127,27 +127,27 @@ class SecondRelatedEntityProxy extends SecondRelatedEntitiesCompanion
   @override
   Map<String, dynamic> toMap() {
     return {
-      'shouldSync': shouldSync.value,
-      'uuid': uuid.value,
-      'id': id.value,
+      'shouldSync': shouldSync.present ? shouldSync.value : null,
+      'uuid': uuid.present ? uuid.value : null,
+      'id': id.present ? id.value : null,
     };
   }
 
   @override
   SecondRelatedEntityProxy copyFromMap(Map<String, dynamic> data) {
     return SecondRelatedEntityProxy(
-      shouldSync: Value<bool>(data['shouldSync']),
-      uuid: Value<String>(data['uuid']),
-      id: Value<int>(data['id']),
+      shouldSync: Value<bool>(data['shouldSync'] as bool),
+      uuid: Value<String>(data['uuid'] as String),
+      id: Value<int>(data['id'] as int),
     );
   }
 
   @override
-  final keyField = IntegerField('id', source: 'id');
+  final keyField = const IntegerField('id', source: 'id');
   @override
-  final remoteKeyField = StringField('uuid', source: 'uuid');
+  final remoteKeyField = const StringField('uuid', source: 'uuid');
   @override
-  final flagField = BoolField('shouldSync', source: 'shouldSync');
+  final flagField = const BoolField('shouldSync', source: 'shouldSync');
   factory SecondRelatedEntityProxy.fromEntity(SecondRelatedEntity instance) {
     return SecondRelatedEntityProxy(
       shouldSync: Value<bool>(instance.shouldSync),
@@ -167,8 +167,8 @@ class BaseSecondRelatedEntitySerializer
 
   @override
   final fields = [
-    StringField('uuid', source: 'uuid'),
-    IntegerField('id', source: 'id'),
+    const StringField('uuid', source: 'uuid'),
+    const IntegerField('id', source: 'id'),
   ];
   String? validateUuid(String? value) {
     return value;
@@ -189,9 +189,9 @@ class BaseSecondRelatedEntitySerializer
   @override
   SecondRelatedEntityProxy createInstance(Map<String, dynamic> data) {
     return SecondRelatedEntityProxy(
-      uuid: Value<String>(data['uuid']),
-      id: Value<int>(data['id']),
-      shouldSync: Value<bool>(false),
+      uuid: Value<String>(data['uuid'] as String),
+      id: Value<int>(data['id'] as int),
+      shouldSync: const Value<bool>(false),
     );
   }
 }

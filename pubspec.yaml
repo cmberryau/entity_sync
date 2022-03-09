@@ -8,14 +8,14 @@ environment:
 
 dependencies:
   http: ^0.13.3
-  moor: ^4.1.0
+  drift: ^1.4.0
 
 dev_dependencies:
   pedantic: ^1.9.0
   test: ^1.14.4
-  mockito: 5.0.3
-  build_runner: ^1.10.1
-  moor_generator: ^4.2.1
+  mockito: ^5.1.0
+  build_runner: ^2.1.7
+  moor_generator: ^4.6.0
   entity_sync_generator:
     git:
       url: https://github.com/lodlaw/entity_sync_generator

@@ -105,7 +105,15 @@ class SyncController<TSyncable extends SyncableMixin> {
 
   final List<SyncControllerRelation> relations;
 
-  SyncController(this.endpoint, this.storage, {this.relations = const []});
+  /// The default instances when there are no instances or errors from the server
+  final List<TSyncable> defaultInstances;
+
+  SyncController(
+    this.endpoint,
+    this.storage, {
+    this.relations = const [],
+    this.defaultInstances = const [],
+  });
 
   Future<SyncResult<TSyncable>> sync([DateTime? since]) async {
     /// get all instances to sync
@@ -116,6 +124,21 @@ class SyncController<TSyncable extends SyncableMixin> {
 
     /// pull all from endpoint since last sync
     final endpointPullAll = await endpoint.pullAll(since: since);
+
+    if (defaultInstances.isNotEmpty) {
+      // sub in the default instances if the storage is empty and no data on the response
+      if (endpointPullAll.instances.isEmpty && await storage.isEmpty()) {
+        for (final instance in defaultInstances) {
+          await storage.insert(instance);
+        }
+      }
+      // remove the default instances
+      else if (endpointPullAll.instances.isNotEmpty &&
+          !(await storage.isEmpty()) &&
+          (await storage.containsOnlyInstances(defaultInstances))) {
+        await storage.clear();
+      }
+    }
 
     /// Insert all into local db
     for (final instance in endpointPullAll.instances) {

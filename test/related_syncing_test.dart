@@ -33,14 +33,15 @@ void main() {
         'id': 2,
         'uuid': '2',
       });
-      when(client.get(Uri.parse('${secondRelatedUrl}1'), headers: {}))
+
+      when(client.get(Uri.parse('${secondRelatedUrl}1/'), headers: {}))
           .thenAnswer(
         (a) async => http.Response(
           secondRelatedResponseBody1,
           statusCode,
         ),
       );
-      when(client.get(Uri.parse('${secondRelatedUrl}2'), headers: {}))
+      when(client.get(Uri.parse('${secondRelatedUrl}2/'), headers: {}))
           .thenAnswer(
         (a) async => http.Response(
           secondRelatedResponseBody2,

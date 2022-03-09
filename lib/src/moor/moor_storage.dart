@@ -73,4 +73,44 @@ class MoorStorage<TProxy extends ProxyMixin<DataClass>>
 
     return StorageResult<TProxy>(successful: true);
   }
+
+  @override
+  Future<bool> isEmpty() async {
+    return (await count()) == 0;
+  }
+
+  @override
+  Future<bool> containsOnlyInstances(Iterable<TProxy> instances) async {
+    if (await count() != instances.length) {
+      return false;
+    }
+
+    final result = await (database.select(table.actualTable() as TableInfo)
+          ..where(
+            (_) => table.remoteKeyColumn().isIn(
+                  List<String>.from(instances
+                      .map(
+                        (e) => e.remoteKeyField.getValue(e),
+                      )
+                      .toList()),
+                ),
+          ))
+        .get();
+
+    return result.length == instances.length;
+  }
+
+  @override
+  Future<int> count() async {
+    final countExp = table.localKeyColumn().count();
+    final query = database.selectOnly(table.actualTable() as TableInfo)
+      ..addColumns([countExp]);
+
+    return await query.map((row) => row.read(countExp)).getSingle();
+  }
+
+  @override
+  Future clear() async {
+    await database.delete(table.actualTable() as TableInfo).go();
+  }
 }

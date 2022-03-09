@@ -36,7 +36,7 @@ class TestMoorEntities extends SyncableTable {
     StringField('name'),
     DateTimeField('created'),
   ],
-  remoteKeyField: StringField('remote_uuid'),
+  remoteKeyField: StringField('uuid'),
   keyField: IntegerField('id'),
   flagField: BoolField('shouldSync'),
 )
