@@ -113,4 +113,9 @@ class MoorStorage<TProxy extends ProxyMixin<DataClass>>
   Future clear() async {
     await database.delete(table.actualTable() as TableInfo).go();
   }
+
+  @override
+  String getStorageName() {
+    return (table.actualTable() as TableInfo).actualTableName;
+  }
 }

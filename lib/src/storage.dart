@@ -1,5 +1,5 @@
 import 'package:entity_sync/moor_sync.dart';
-import 'package:moor/moor.dart';
+import 'package:drift/drift.dart';
 
 import 'sync.dart';
 
@@ -37,6 +37,8 @@ abstract class Storage<TSyncable extends SyncableMixin> {
   Future<bool> isEmpty();
 
   Future<bool> containsOnlyInstances(List<TSyncable> instances);
+
+  String getStorageName();
 
   Future clear();
 }

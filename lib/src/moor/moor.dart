@@ -1,5 +1,5 @@
 import 'package:entity_sync/entity_sync.dart';
-import 'package:moor/moor.dart';
+import 'package:drift/drift.dart';
 
 part 'moor_storage.dart';
 

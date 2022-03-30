@@ -89,6 +89,16 @@ class SyncResult<TSyncable extends SyncableMixin> {
 
   SyncResult(this.pushResults, this.pullResults);
 
+  bool get hasError {
+    for (final result in pushResults) {
+      if (result.errors.isNotEmpty) {
+        return true;
+      }
+    }
+
+    return pullResults.errors.isNotEmpty || !pullResults.successful;
+  }
+
   @override
   String toString() {
     return 'SyncResult(pushResults: $pushResults, pullResults: $pullResults)';
@@ -108,12 +118,11 @@ class SyncController<TSyncable extends SyncableMixin> {
   /// The default instances when there are no instances or errors from the server
   final List<TSyncable> defaultInstances;
 
-  SyncController(
-    this.endpoint,
-    this.storage, {
-    this.relations = const [],
-    this.defaultInstances = const [],
-  });
+  SyncController(this.endpoint,
+      this.storage, {
+        this.relations = const [],
+        this.defaultInstances = const [],
+      });
 
   Future<SyncResult<TSyncable>> sync([DateTime? since]) async {
     /// get all instances to sync
@@ -188,8 +197,7 @@ class SyncController<TSyncable extends SyncableMixin> {
   }
 
   Future<List<EndpointResult<TSyncable>>> push(
-    Iterable<TSyncable> instances,
-  ) async {
+      Iterable<TSyncable> instances,) async {
     final results = <EndpointResult<TSyncable>>[];
 
     /// push to endpoint
