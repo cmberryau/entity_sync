@@ -236,6 +236,7 @@ class SyncController<TSyncable extends SyncableMixin> {
               await storage.update(
                 returnedInstance,
                 localKey: instanceToPush.getLocalKey(),
+                remoteKey: instanceToPush.getRemoteKey(),
               );
             } on Exception catch (err) {
               endpointResult.addError(err);

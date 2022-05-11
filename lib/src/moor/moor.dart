@@ -1,3 +1,4 @@
+import 'package:drift/native.dart';
 import 'package:entity_sync/entity_sync.dart';
 import 'package:drift/drift.dart';
 

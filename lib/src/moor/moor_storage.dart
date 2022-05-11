@@ -71,10 +71,19 @@ class MoorStorage<TProxy extends ProxyMixin<DataClass>>
     final localInstance = await get(remoteKey: remoteKey, localKey: localKey);
 
     if (localInstance != null) {
-      await (database.update(table.actualTable() as TableInfo)
-            ..where((t) =>
-                table.localKeyColumn().equals(localInstance.getLocalKey())))
-          .write(instance);
+      try {
+        await (database.update(table.actualTable() as TableInfo)
+              ..where((t) =>
+                  table.localKeyColumn().equals(localInstance.getLocalKey())))
+            .write(instance);
+      } on SqliteException catch (e) {
+        if (remoteKey != null) {
+          await (database.update(table.actualTable() as TableInfo)
+                ..where((t) => table.remoteKeyColumn().equals(remoteKey)))
+              .write((instance as dynamic).copyWith(id: Value<int>.absent()));
+        }
+        rethrow;
+      }
     } else {
       throw ArgumentError('Could not find a local instance');
     }
