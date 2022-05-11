@@ -228,7 +228,8 @@ class $TestMoorEntitiesTable extends TestMoorEntities
       additionalChecks:
           GeneratedColumn.checkTextLength(minTextLength: 36, maxTextLength: 36),
       type: const StringType(),
-      requiredDuringInsert: false);
+      requiredDuringInsert: false,
+      $customConstraints: 'UNIQUE');
   final VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int?> id = GeneratedColumn<int?>(
@@ -494,7 +495,9 @@ class $FirstRelatedEntitiesTable extends FirstRelatedEntities
   @override
   late final GeneratedColumn<String?> uuid = GeneratedColumn<String?>(
       'uuid', aliasedName, false,
-      type: const StringType(), requiredDuringInsert: true);
+      type: const StringType(),
+      requiredDuringInsert: true,
+      $customConstraints: 'UNIQUE');
   final VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int?> id = GeneratedColumn<int?>(
@@ -723,7 +726,9 @@ class $SecondRelatedEntitiesTable extends SecondRelatedEntities
   @override
   late final GeneratedColumn<String?> uuid = GeneratedColumn<String?>(
       'uuid', aliasedName, false,
-      type: const StringType(), requiredDuringInsert: true);
+      type: const StringType(),
+      requiredDuringInsert: true,
+      $customConstraints: 'UNIQUE');
   final VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int?> id = GeneratedColumn<int?>(
