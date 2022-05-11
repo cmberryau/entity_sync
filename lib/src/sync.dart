@@ -118,11 +118,12 @@ class SyncController<TSyncable extends SyncableMixin> {
   /// The default instances when there are no instances or errors from the server
   final List<TSyncable> defaultInstances;
 
-  SyncController(this.endpoint,
-      this.storage, {
-        this.relations = const [],
-        this.defaultInstances = const [],
-      });
+  SyncController(
+    this.endpoint,
+    this.storage, {
+    this.relations = const [],
+    this.defaultInstances = const [],
+  });
 
   Future<SyncResult<TSyncable>> sync([DateTime? since]) async {
     /// get all instances to sync
@@ -160,14 +161,23 @@ class SyncController<TSyncable extends SyncableMixin> {
 
       /// New instance, insert it
       if (localInstance == null) {
-        await storage.insert(
-          instance,
-        );
-
+        try {
+          await storage.insert(
+            instance,
+          );
+        } on Exception catch (err) {
+          endpointPullAll.errors.add(err);
+          continue;
+        }
         isChanged = true;
       } else if (!localInstance.isDataEqualTo(instance)) {
         /// Existing instance, update it if it differs
-        await storage.update(instance, remoteKey: instance.getRemoteKey());
+        try {
+          await storage.update(instance, remoteKey: instance.getRemoteKey());
+        } on Exception catch (err) {
+          endpointPullAll.errors.add(err);
+          continue;
+        }
         isChanged = true;
       }
 
@@ -197,7 +207,8 @@ class SyncController<TSyncable extends SyncableMixin> {
   }
 
   Future<List<EndpointResult<TSyncable>>> push(
-      Iterable<TSyncable> instances,) async {
+    Iterable<TSyncable> instances,
+  ) async {
     final results = <EndpointResult<TSyncable>>[];
 
     /// push to endpoint
@@ -221,10 +232,14 @@ class SyncController<TSyncable extends SyncableMixin> {
           /// Compare data equality, ignoring local keys
           if (!instanceToPush.isDataEqualTo(returnedInstance)) {
             /// We have a local key because we pushed
-            await storage.update(
-              returnedInstance,
-              localKey: instanceToPush.getLocalKey(),
-            );
+            try {
+              await storage.update(
+                returnedInstance,
+                localKey: instanceToPush.getLocalKey(),
+              );
+            } on Exception catch (err) {
+              endpointResult.addError(err);
+            }
           }
         } else {
           endpointResult.addError(HttpException('Push result is null.'));
