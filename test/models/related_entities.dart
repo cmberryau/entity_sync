@@ -8,7 +8,7 @@ part 'related_entities.g.dart';
 
 @DataClassName('FirstRelatedEntity')
 class FirstRelatedEntities extends SyncableTable {
-  TextColumn get uuid => text()();
+  TextColumn get uuid => text().customConstraint('UNIQUE')();
 
   IntColumn get id => integer().autoIncrement()();
 
@@ -26,7 +26,7 @@ class FirstRelatedEntities extends SyncableTable {
 
 @DataClassName('SecondRelatedEntity')
 class SecondRelatedEntities extends SyncableTable {
-  TextColumn get uuid => text()();
+  TextColumn get uuid => text().customConstraint('UNIQUE')();
 
   IntColumn get id => integer().autoIncrement()();
 

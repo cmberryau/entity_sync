@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart' hide isNotNull;
 import 'package:entity_sync/entity_sync.dart';
 import 'package:entity_sync/moor_sync.dart';
 import 'package:http/http.dart' as http;
@@ -26,7 +27,11 @@ void main() {
       /// Validate the synced entities
       final entities = await database.getTestMoorEntities();
       expect(entities, isNotNull);
-      expect(entities.length, equals(3));
+      expect(entities.length, equals(4));
+
+      expect(entities[3].id, equals(4));
+      expect(entities[3].uuid, equals('00000000-0000-0000-0000-000000000004'));
+      expect(entities[3].name, equals('UpdatedTestName'));
 
       /// Validate that entity with id == 1 has updated name
       expect(entities[0].uuid, equals('00000000-0000-0000-0000-000000000001'));
@@ -57,7 +62,7 @@ void main() {
       /// Validate the synced entities
       final entities = await database.getTestMoorEntities();
       expect(entities, isNotNull);
-      expect(entities.length, equals(3));
+      expect(entities.length, equals(4));
 
       /// Validate that entity with id == 1 has updated name
       expect(entities[0].id, equals(1));
@@ -78,7 +83,78 @@ void main() {
       expect(entities[2].id, equals(3));
     });
 
-    test('Test syncing multiple entities with partial failure', () async {});
+    test('Test storage.isEmpty', () async {
+      expect(
+        await MoorStorage(
+          database.testMoorEntities,
+          database,
+          TestMoorEntityProxyFactory(),
+        ).isEmpty(),
+        true,
+      );
+      await database.into(database.testMoorEntities).insert(
+            TestMoorEntitiesCompanion.insert(
+              name: 'test1',
+              created: DateTime.now(),
+            ),
+          );
+
+      expect(
+        await MoorStorage(
+          database.testMoorEntities,
+          database,
+          TestMoorEntityProxyFactory(),
+        ).isEmpty(),
+        false,
+      );
+    });
+
+    test('Test MoorStorage.containsOnlyInstances', () async {
+      final defaultInstances = [
+        TestMoorEntityProxy(
+          created: Value(DateTime.now()),
+          name: Value('test'),
+          shouldSync: Value(true),
+          uuid: Value('39c9499b-4db1-423f-9400-18d43ff1436e'),
+        ),
+        TestMoorEntityProxy(
+          created: Value(DateTime.now()),
+          name: Value('test'),
+          shouldSync: Value(true),
+          uuid: Value('39c9499b-4db1-423f-9400-18d43ff1436d'),
+        ),
+      ];
+      expect(
+        await MoorStorage(
+          database.testMoorEntities,
+          database,
+          TestMoorEntityProxyFactory(),
+        ).containsOnlyInstances(defaultInstances),
+        false,
+      );
+      await database
+          .into(database.testMoorEntities)
+          .insert(defaultInstances.first);
+      expect(
+        await MoorStorage(
+          database.testMoorEntities,
+          database,
+          TestMoorEntityProxyFactory(),
+        ).containsOnlyInstances(defaultInstances),
+        false,
+      );
+      await database
+          .into(database.testMoorEntities)
+          .insert(defaultInstances.last);
+      expect(
+        await MoorStorage(
+          database.testMoorEntities,
+          database,
+          TestMoorEntityProxyFactory(),
+        ).containsOnlyInstances(defaultInstances),
+        true,
+      );
+    });
 
     tearDown(() async {
       await database.close();
@@ -112,6 +188,26 @@ Future<SyncResult> localOutdatedDataSync(
       BaseTestMoorEntitySerializer(instance: postTestProxy);
   final postTestRepresentation = postTestSerializer.toRepresentationString();
 
+  final postTestEntityUpdated = TestMoorEntity(
+    id: 4,
+    name: 'OutdatedTestName',
+    created: nowWithoutSubsecondPrecision,
+    shouldSync: true,
+    uuid: '00000000-0000-0000-0000-000000000004',
+  ).toCompanion(true);
+  final postTestProxyUpdated = TestMoorEntityProxy(
+    id: postTestEntityUpdated.id,
+    name: postTestEntityUpdated.name,
+    created: postTestEntityUpdated.created,
+    shouldSync: postTestEntityUpdated.shouldSync,
+    uuid: postTestEntityUpdated.uuid,
+  );
+  final postTestSerializerUpdated = BaseTestMoorEntitySerializer(
+    instance: postTestProxyUpdated,
+  );
+  final postTestRepresentationUpdated =
+      postTestSerializerUpdated.toRepresentationString();
+
   final postFailureTestEntity = TestMoorEntity(
     id: 3,
     name: 'FailedTestName',
@@ -142,6 +238,12 @@ Future<SyncResult> localOutdatedDataSync(
       '"name": "UpdatedTestName", '
       '"created": "2020-08-07T12:45:15.123456"'
       '}';
+  final postUpdatedResponseBody = '{'
+      '"uuid": "00000000-0000-0000-0000-000000000004", '
+      '"id": 4, '
+      '"name": "UpdatedTestName", '
+      '"created": "2020-08-07T12:45:15.123456"'
+      '}';
   final postFailureResponseBody = '{}';
 
   final statusCode = 200;
@@ -152,6 +254,8 @@ Future<SyncResult> localOutdatedDataSync(
       .thenAnswer((a) async => http.Response(getResponseBody, statusCode));
   when(client.get(Uri.parse('${url}1'), headers: {}))
       .thenAnswer((a) async => http.Response(postResponseBody, statusCode));
+  when(client.get(Uri.parse('${url}4'), headers: {}))
+      .thenAnswer((a) async => http.Response(postUpdatedResponseBody, statusCode));
   when(client.get(Uri.parse('${url}3'), headers: {})).thenAnswer(
     (a) async => http.Response(
       postFailureResponseBody,
@@ -160,6 +264,10 @@ Future<SyncResult> localOutdatedDataSync(
   );
   when(client.post(Uri.parse(url), body: postTestRepresentation, headers: {}))
       .thenAnswer((a) async => http.Response(postResponseBody, statusCode));
+  when(client.post(Uri.parse(url),
+          body: postTestRepresentationUpdated, headers: {}))
+      .thenAnswer(
+          (a) async => http.Response(postUpdatedResponseBody, statusCode));
   when(client.post(
     Uri.parse(url),
     body: postFailureTestRepresentation,
@@ -187,6 +295,11 @@ Future<SyncResult> localOutdatedDataSync(
   entities = await database.getTestMoorEntities();
   expect(entities, isNotNull);
   expect(entities.length, equals(2));
+
+  await database.into(database.testMoorEntities).insert(postTestEntityUpdated);
+  entities = await database.getTestMoorEntities();
+  expect(entities, isNotNull);
+  expect(entities.length, equals(3));
 
   /// Create the endpoint, storage and sync controller
   final endpoint = RestfulApiEndpoint<TestMoorEntityProxy>(

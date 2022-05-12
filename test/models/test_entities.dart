@@ -9,7 +9,10 @@ part 'test_entities.g.dart';
 
 @DataClassName('TestMoorEntity')
 class TestMoorEntities extends SyncableTable {
-  TextColumn get uuid => text().withLength(min: 36, max: 36).nullable()();
+  TextColumn get uuid => text()
+      .withLength(min: 36, max: 36)
+      .nullable()
+      .customConstraint('UNIQUE')();
 
   IntColumn get id => integer().autoIncrement()();
 
@@ -36,7 +39,7 @@ class TestMoorEntities extends SyncableTable {
     StringField('name'),
     DateTimeField('created'),
   ],
-  remoteKeyField: StringField('remote_uuid'),
+  remoteKeyField: StringField('uuid'),
   keyField: IntegerField('id'),
   flagField: BoolField('shouldSync'),
 )

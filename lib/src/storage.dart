@@ -1,5 +1,5 @@
 import 'package:entity_sync/moor_sync.dart';
-import 'package:moor/moor.dart';
+import 'package:drift/drift.dart';
 
 import 'sync.dart';
 
@@ -32,11 +32,15 @@ abstract class Storage<TSyncable extends SyncableMixin> {
     dynamic localKey,
   });
 
-  /// Gets the last updated time of the storage
-  Future<DateTime> getLastUpdated();
+  Future<int> count();
 
-  /// Sets the last updated time of the storage
-  Future setLastUpdated(DateTime lastUpdate);
+  Future<bool> isEmpty();
+
+  Future<bool> containsOnlyInstances(List<TSyncable> instances);
+
+  String getStorageName();
+
+  Future clear();
 }
 
 /// The relation between syncable entities

@@ -89,6 +89,16 @@ class SyncResult<TSyncable extends SyncableMixin> {
 
   SyncResult(this.pushResults, this.pullResults);
 
+  bool get hasError {
+    for (final result in pushResults) {
+      if (result.errors.isNotEmpty) {
+        return true;
+      }
+    }
+
+    return pullResults.errors.isNotEmpty || !pullResults.successful;
+  }
+
   @override
   String toString() {
     return 'SyncResult(pushResults: $pushResults, pullResults: $pullResults)';
@@ -105,7 +115,15 @@ class SyncController<TSyncable extends SyncableMixin> {
 
   final List<SyncControllerRelation> relations;
 
-  SyncController(this.endpoint, this.storage, {this.relations = const []});
+  /// The default instances when there are no instances or errors from the server
+  final List<TSyncable> defaultInstances;
+
+  SyncController(
+    this.endpoint,
+    this.storage, {
+    this.relations = const [],
+    this.defaultInstances = const [],
+  });
 
   Future<SyncResult<TSyncable>> sync([DateTime? since]) async {
     /// get all instances to sync
@@ -122,6 +140,21 @@ class SyncController<TSyncable extends SyncableMixin> {
     /// pull all from endpoint since last sync
     final endpointPullAll = await endpoint.pullAll(since: since);
 
+    if (defaultInstances.isNotEmpty) {
+      // sub in the default instances if the storage is empty and no data on the response
+      if (endpointPullAll.instances.isEmpty && await storage.isEmpty()) {
+        for (final instance in defaultInstances) {
+          await storage.insert(instance);
+        }
+      }
+      // remove the default instances
+      else if (endpointPullAll.instances.isNotEmpty &&
+          !(await storage.isEmpty()) &&
+          (await storage.containsOnlyInstances(defaultInstances))) {
+        await storage.clear();
+      }
+    }
+
     /// Insert all into local db
     for (final instance in endpointPullAll.instances) {
       /// Check if local storage has the instance
@@ -133,14 +166,23 @@ class SyncController<TSyncable extends SyncableMixin> {
 
       /// New instance, insert it
       if (localInstance == null) {
-        await storage.insert(
-          instance,
-        );
-
+        try {
+          await storage.insert(
+            instance,
+          );
+        } on Exception catch (err) {
+          endpointPullAll.errors.add(err);
+          continue;
+        }
         isChanged = true;
       } else if (!localInstance.isDataEqualTo(instance)) {
         /// Existing instance, update it if it differs
-        await storage.update(instance, remoteKey: instance.getRemoteKey());
+        try {
+          await storage.update(instance, remoteKey: instance.getRemoteKey());
+        } on Exception catch (err) {
+          endpointPullAll.errors.add(err);
+          continue;
+        }
         isChanged = true;
       }
 
@@ -199,10 +241,15 @@ class SyncController<TSyncable extends SyncableMixin> {
           /// Compare data equality, ignoring local keys
           if (!instanceToPush.isDataEqualTo(returnedInstance)) {
             /// We have a local key because we pushed
-            await storage.update(
-              returnedInstance,
-              localKey: instanceToPush.getLocalKey(),
-            );
+            try {
+              await storage.update(
+                returnedInstance,
+                localKey: instanceToPush.getLocalKey(),
+                remoteKey: instanceToPush.getRemoteKey(),
+              );
+            } on Exception catch (err) {
+              endpointResult.addError(err);
+            }
           }
         } else {
           endpointResult.addError(HttpException('Push result is null.'));

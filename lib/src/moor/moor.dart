@@ -1,6 +1,6 @@
+import 'package:drift/native.dart';
 import 'package:entity_sync/entity_sync.dart';
-import 'package:moor/moor.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:drift/drift.dart';
 
 part 'moor_storage.dart';
 

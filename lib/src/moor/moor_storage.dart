@@ -53,7 +53,15 @@ class MoorStorage<TProxy extends ProxyMixin<DataClass>>
   @override
   Future<StorageResult<TProxy>> insert(TProxy instance,
       {dynamic remoteKey, dynamic localKey}) async {
-    await database.into(table.actualTable() as TableInfo).insert(instance);
+    await database.into(table.actualTable() as TableInfo).insert(
+          instance,
+          onConflict: DoUpdate(
+            (_) => instance,
+            target: [
+              table.actualTable().remoteKeyColumn(),
+            ],
+          ),
+        );
     return StorageResult<TProxy>(successful: true);
   }
 
@@ -63,10 +71,19 @@ class MoorStorage<TProxy extends ProxyMixin<DataClass>>
     final localInstance = await get(remoteKey: remoteKey, localKey: localKey);
 
     if (localInstance != null) {
-      await (database.update(table.actualTable() as TableInfo)
-            ..where((t) =>
-                table.localKeyColumn().equals(localInstance.getLocalKey())))
-          .write(instance);
+      try {
+        await (database.update(table.actualTable() as TableInfo)
+              ..where((t) =>
+                  table.localKeyColumn().equals(localInstance.getLocalKey())))
+            .write(instance);
+      } on SqliteException catch (e) {
+        if (remoteKey != null) {
+          await (database.update(table.actualTable() as TableInfo)
+                ..where((t) => table.remoteKeyColumn().equals(remoteKey)))
+              .write((instance as dynamic).copyWith(id: Value<int>.absent()));
+        }
+        rethrow;
+      }
     } else {
       throw ArgumentError('Could not find a local instance');
     }
@@ -75,28 +92,47 @@ class MoorStorage<TProxy extends ProxyMixin<DataClass>>
   }
 
   @override
-  Future<DateTime> getLastUpdated() async {
-    final prefs = await SharedPreferences.getInstance();
-
-    if (prefs.containsKey(_getLastUpdateTableNameKey())) {
-      final lastUpdatedString = prefs.getString(_getLastUpdateTableNameKey());
-      return DateTime.parse(lastUpdatedString!);
-    }
-
-    await setLastUpdated(DateTime(1900));
-    return DateTime(1900);
+  Future<bool> isEmpty() async {
+    return (await count()) == 0;
   }
 
   @override
-  Future setLastUpdated(DateTime lastUpdated) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      _getLastUpdateTableNameKey(),
-      lastUpdated.toIso8601String(),
-    );
+  Future<bool> containsOnlyInstances(Iterable<TProxy> instances) async {
+    if (await count() != instances.length) {
+      return false;
+    }
+
+    final result = await (database.select(table.actualTable() as TableInfo)
+          ..where(
+            (_) => table.remoteKeyColumn().isIn(
+                  List<String>.from(instances
+                      .map(
+                        (e) => e.remoteKeyField.getValue(e),
+                      )
+                      .toList()),
+                ),
+          ))
+        .get();
+
+    return result.length == instances.length;
   }
 
-  String _getLastUpdateTableNameKey() {
-    return (table.actualTable() as TableInfo).actualTableName + '_lastUpdate';
+  @override
+  Future<int> count() async {
+    final countExp = table.localKeyColumn().count();
+    final query = database.selectOnly(table.actualTable() as TableInfo)
+      ..addColumns([countExp]);
+
+    return await query.map((row) => row.read(countExp)).getSingle();
+  }
+
+  @override
+  Future clear() async {
+    await database.delete(table.actualTable() as TableInfo).go();
+  }
+
+  @override
+  String getStorageName() {
+    return (table.actualTable() as TableInfo).actualTableName;
   }
 }
