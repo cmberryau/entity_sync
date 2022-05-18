@@ -76,7 +76,7 @@ class MoorStorage<TProxy extends ProxyMixin<DataClass>>
               ..where((t) =>
                   table.localKeyColumn().equals(localInstance.getLocalKey())))
             .write(instance);
-      } on SqliteException catch (e) {
+      } on DriftRemoteException catch (_) {
         if (remoteKey != null) {
           await (database.update(table.actualTable() as TableInfo)
                 ..where((t) => table.remoteKeyColumn().equals(remoteKey)))
