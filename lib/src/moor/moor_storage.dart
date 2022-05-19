@@ -76,12 +76,35 @@ class MoorStorage<TProxy extends ProxyMixin<DataClass>>
               ..where((t) =>
                   table.localKeyColumn().equals(localInstance.getLocalKey())))
             .write(instance);
-      } on SqliteException catch (e) {
-        if (remoteKey != null) {
-          await (database.update(table.actualTable() as TableInfo)
+      } on DriftRemoteException catch (e) {
+        final remoteCause = e.remoteCause;
+        if (remoteCause is String) {
+          if (remoteCause.contains(
+            'SqliteException(2067): UNIQUE constraint failed: ${'${(table
+                .actualTable() as TableInfo).actualTableName}.${instance
+                .remoteKeyField.name}'}',
+          )) {
+            final remoteKey = instance.getRemoteKey();
+            if (remoteKey != null) {
+              // update the instance based on the key without the id
+              await (database.update(table.actualTable() as TableInfo)
                 ..where((t) => table.remoteKeyColumn().equals(remoteKey)))
-              .write((instance as dynamic).copyWith(id: Value<int>.absent()));
+                  .write(
+                (instance as dynamic).copyWith(
+                  id: Value<int>.absent(),
+                ),
+              );
+
+              // delete the duplicate instance
+              await (database.delete(table.actualTable() as TableInfo)
+                ..where((tbl) =>
+                    table.localKeyColumn().equals(
+                        localInstance.getLocalKey()))).go();
+
+            }
+          }
         }
+
         rethrow;
       }
     } else {
