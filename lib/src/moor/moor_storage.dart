@@ -73,25 +73,6 @@ class MoorStorage<TProxy extends ProxyMixin<DataClass>>
 
     if (localInstance != null) {
       try {
-        // if (remoteKey == null) {
-        //   final remoteKeyInstance = await get(remoteKey: instance.getRemoteKey());
-        //
-        //   if (remoteKeyInstance != null) {
-        //     if (remoteKeyInstance.getLocalKey() != localInstance.getLocalKey()) {
-        //       print('Deleted local instance for ID ${localInstance.getLocalKey()}');
-        //
-        //       await delete(localKey: localInstance.getLocalKey());
-        //
-        //       await (database.update(table.actualTable() as TableInfo)
-        //         ..where((t) =>
-        //             table.remoteKeyColumn().equals(instance.getRemoteKey())))
-        //           .write(instance);
-        //
-        //       return StorageResult<TProxy>(successful: true);
-        //     }
-        //   }
-        // }
-
         await (database.update(table.actualTable() as TableInfo)
               ..where((t) =>
                   table.localKeyColumn().equals(localInstance.getLocalKey())))
