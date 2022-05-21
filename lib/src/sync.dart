@@ -161,7 +161,6 @@ class SyncController<TSyncable extends SyncableMixin> {
 
       /// New instance, insert it
       if (localInstance == null) {
-        print("SyncController.sync found remote instance we do not have");
         try {
           await storage.insert(
             instance,
@@ -230,40 +229,58 @@ class SyncController<TSyncable extends SyncableMixin> {
 
           final returnedInstance = endpointResult.instances[0];
 
-          /// Ensure that returned remote key matches local remote key (if exists)
-          if(instanceToPush.getRemoteKey() != null && instanceToPush.getRemoteKey()
-              != returnedInstance.getRemoteKey()) {
-            endpointResult.addError(HttpException(
-              'Push result returned instance remote id '
-                  '${returnedInstance.getRemoteKey()} '
-                  'does not match locally stored remote id '
-                  '${instanceToPush.getRemoteKey()}',
-            ));
-          } else {
+          /// If local instance has no remote key
+          if(instanceToPush.getRemoteKey() == null) {
             final remoteKey = returnedInstance.getRemoteKey();
+            final remoteKeyLocalInstance = await storage.get(remoteKey: remoteKey);
 
-            /// Check for mismatched local duplicate instance with returned remote key
-            final remoteKeyInstance = await storage.get(remoteKey: remoteKey);
-            if (remoteKeyInstance != null && remoteKeyInstance.getLocalKey() != instanceToPush.getLocalKey()){
-              print('Local duplicate detected for local id ${instanceToPush.getLocalKey()} remote id ${remoteKey}');
-
-              /// remove the duplicate
+            /// Check for local duplicate
+            if(remoteKeyLocalInstance != null && (remoteKeyLocalInstance.getLocalKey() != instanceToPush.getLocalKey())) {
+              /// Remove the local duplicate
               await storage.delete(localKey: instanceToPush.getLocalKey());
 
-              try {
-                await storage.update(
-                  returnedInstance,
-                  localKey: remoteKeyInstance.getLocalKey(),
-                  remoteKey: remoteKey,
-                );
-              } on Exception catch (err) {
-                endpointResult.addError(err);
+              /// Compare data equality
+              if (!remoteKeyLocalInstance.isDataEqualTo(returnedInstance)) {
+                try {
+                  /// Update case where local duplicate exists
+                  await storage.update(
+                    returnedInstance,
+                    localKey: remoteKeyLocalInstance.getLocalKey(),
+                    remoteKey: remoteKey,
+                  );
+                } on Exception catch (err) {
+                  endpointResult.addError(err);
+                }
               }
             } else {
-              /// Compare data equality, ignoring local keys
+              /// Compare data equality
               if (!instanceToPush.isDataEqualTo(returnedInstance)) {
-                /// We have a local key because we pushed
                 try {
+                  /// Update case where instance to push has no remote key but no duplicate
+                  await storage.update(
+                    returnedInstance,
+                    localKey: instanceToPush.getLocalKey(),
+                    remoteKey: instanceToPush.getRemoteKey(),
+                  );
+                } on Exception catch (err) {
+                  endpointResult.addError(err);
+                }
+              }
+            }
+          } else {
+            /// Ensure that returned remote key matches
+            if(instanceToPush.getRemoteKey() != returnedInstance.getRemoteKey()) {
+              endpointResult.addError(HttpException(
+                'Push result returned instance remote id '
+                    '${returnedInstance.getRemoteKey()} '
+                    'does not match locally stored remote id '
+                    '${instanceToPush.getRemoteKey()}',
+              ));
+            } else {
+              /// Compare data equality
+              if (!instanceToPush.isDataEqualTo(returnedInstance)) {
+                try {
+                  /// Update case where instance to push has remote key and no mismatch
                   await storage.update(
                     returnedInstance,
                     localKey: instanceToPush.getLocalKey(),
