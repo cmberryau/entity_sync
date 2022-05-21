@@ -27,14 +27,6 @@ class MoorStorage<TProxy extends ProxyMixin<DataClass>>
               ..where((t) => flagColumn.equals(true)))
             .get();
 
-    if (table.runtimeType.toString().contains("ActivityTimesTable")) {
-      final allInstances =
-      await (database.select(table.actualTable() as TableInfo))
-          .get();
-
-      print("MoorStorage.getInstancesToSync - ${allInstances.length} rows in ActivityTimesTable");
-    }
-
     return toSyncInstances.map((e) => proxyFactory.fromInstance(e) as TProxy);
   }
 
@@ -61,16 +53,6 @@ class MoorStorage<TProxy extends ProxyMixin<DataClass>>
   @override
   Future<StorageResult<TProxy>> insert(TProxy instance,
       {dynamic remoteKey, dynamic localKey}) async {
-    print("MoorStorage.insert into ${table.runtimeType.toString()}");
-
-    if (table.runtimeType.toString().contains("ActivityTimesTable")) {
-      final allInstances =
-      await (database.select(table.actualTable() as TableInfo))
-          .get();
-
-      print("MoorStorage.insert - ${allInstances.length} rows in ActivityTimesTable");
-    }
-
     await database.into(table.actualTable() as TableInfo).insert(
           instance,
           onConflict: DoUpdate(
@@ -81,24 +63,6 @@ class MoorStorage<TProxy extends ProxyMixin<DataClass>>
           ),
         );
 
-    if (table.runtimeType.toString().contains("ActivityTimesTable")) {
-      final allInstances =
-      await (database.select(table.actualTable() as TableInfo))
-          .get();
-
-      print("MoorStorage.insert - ${allInstances.length} rows in ActivityTimesTable");
-    }
-
-    // await database.into(table.actualTable() as TableInfo).insert(
-    //       instance,
-    //       onConflict: DoUpdate(
-    //         (_) => instance,
-    //         target: [
-    //           table.actualTable().remoteKeyColumn(),
-    //         ],
-    //       ),
-    //     );
-
     return StorageResult<TProxy>(successful: true);
   }
 
@@ -106,14 +70,6 @@ class MoorStorage<TProxy extends ProxyMixin<DataClass>>
   Future<StorageResult<TProxy>> update(TProxy instance,
       {dynamic remoteKey, dynamic localKey}) async {
     final localInstance = await get(remoteKey: remoteKey, localKey: localKey);
-
-    if (table.runtimeType.toString().contains('ActivityTimesTable')) {
-      final allInstances =
-      await (database.select(table.actualTable() as TableInfo))
-          .get();
-
-      print('MoorStorage.update - ${allInstances.length} rows in ActivityTimesTable');
-    }
 
     if (localInstance != null) {
       try {
@@ -235,8 +191,6 @@ class MoorStorage<TProxy extends ProxyMixin<DataClass>>
         ..where((t) =>
             table.localKeyColumn().equals(localKey))).go();
     }
-
-    print(result);
 
     return StorageResult<TProxy>(successful: true);
   }
