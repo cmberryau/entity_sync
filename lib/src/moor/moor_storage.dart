@@ -107,37 +107,34 @@ class MoorStorage<TProxy extends ProxyMixin<DataClass>>
       {dynamic remoteKey, dynamic localKey}) async {
     final localInstance = await get(remoteKey: remoteKey, localKey: localKey);
 
-    if (table.runtimeType.toString().contains("ActivityTimesTable")) {
+    if (table.runtimeType.toString().contains('ActivityTimesTable')) {
       final allInstances =
       await (database.select(table.actualTable() as TableInfo))
           .get();
 
-      print("MoorStorage.update - ${allInstances.length} rows in ActivityTimesTable");
+      print('MoorStorage.update - ${allInstances.length} rows in ActivityTimesTable');
     }
 
     if (localInstance != null) {
       try {
-        if (remoteKey == null) {
-          final remoteKeyInstance = await get(remoteKey: instance.getRemoteKey());
-
-          if (remoteKeyInstance != null) {
-            if (remoteKeyInstance.getLocalKey() != localInstance.getLocalKey()) {
-              print("Deleted local instance for ID ${localInstance.getLocalKey()}");
-
-              await (database.delete(table.actualTable() as TableInfo)
-                ..where((t) =>
-                    table.localKeyColumn().equals(
-                        localInstance.getLocalKey()))).go();
-
-              await (database.update(table.actualTable() as TableInfo)
-                ..where((t) =>
-                    table.remoteKeyColumn().equals(instance.getRemoteKey())))
-                  .write(instance);
-
-              return StorageResult<TProxy>(successful: true);
-            }
-          }
-        }
+        // if (remoteKey == null) {
+        //   final remoteKeyInstance = await get(remoteKey: instance.getRemoteKey());
+        //
+        //   if (remoteKeyInstance != null) {
+        //     if (remoteKeyInstance.getLocalKey() != localInstance.getLocalKey()) {
+        //       print('Deleted local instance for ID ${localInstance.getLocalKey()}');
+        //
+        //       await delete(localKey: localInstance.getLocalKey());
+        //
+        //       await (database.update(table.actualTable() as TableInfo)
+        //         ..where((t) =>
+        //             table.remoteKeyColumn().equals(instance.getRemoteKey())))
+        //           .write(instance);
+        //
+        //       return StorageResult<TProxy>(successful: true);
+        //     }
+        //   }
+        // }
 
         await (database.update(table.actualTable() as TableInfo)
               ..where((t) =>
@@ -175,7 +172,7 @@ class MoorStorage<TProxy extends ProxyMixin<DataClass>>
         rethrow;
       }
     } else {
-      throw ArgumentError('Could not find a local instance for ID ${localKey}');
+      throw ArgumentError('Could not find a local instance for ID $localKey');
     }
 
     return StorageResult<TProxy>(successful: true);
@@ -224,5 +221,23 @@ class MoorStorage<TProxy extends ProxyMixin<DataClass>>
   @override
   String getStorageName() {
     return (table.actualTable() as TableInfo).actualTableName;
+  }
+
+  @override
+  Future<StorageResult<TProxy>> delete({dynamic remoteKey, dynamic localKey}) async {
+    var result = 0;
+    if (remoteKey != null) {
+      result = await (database.delete(table.actualTable() as TableInfo)
+        ..where((t) =>
+            table.remoteKeyColumn().equals(remoteKey))).go();
+    } else if (localKey != null) {
+      result = await (database.delete(table.actualTable() as TableInfo)
+        ..where((t) =>
+            table.localKeyColumn().equals(localKey))).go();
+    }
+
+    print(result);
+
+    return StorageResult<TProxy>(successful: true);
   }
 }
