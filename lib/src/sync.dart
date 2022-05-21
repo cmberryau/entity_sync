@@ -161,6 +161,7 @@ class SyncController<TSyncable extends SyncableMixin> {
 
       /// New instance, insert it
       if (localInstance == null) {
+        print("SyncController.sync found remote instance we do not have");
         try {
           await storage.insert(
             instance,
