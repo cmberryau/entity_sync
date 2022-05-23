@@ -62,6 +62,7 @@ class MoorStorage<TProxy extends ProxyMixin<DataClass>>
             ],
           ),
         );
+
     return StorageResult<TProxy>(successful: true);
   }
 
@@ -108,7 +109,7 @@ class MoorStorage<TProxy extends ProxyMixin<DataClass>>
         rethrow;
       }
     } else {
-      throw ArgumentError('Could not find a local instance');
+      throw ArgumentError('Could not find a local instance for ID $localKey');
     }
 
     return StorageResult<TProxy>(successful: true);
@@ -157,5 +158,21 @@ class MoorStorage<TProxy extends ProxyMixin<DataClass>>
   @override
   String getStorageName() {
     return (table.actualTable() as TableInfo).actualTableName;
+  }
+
+  @override
+  Future<StorageResult<TProxy>> delete({dynamic remoteKey, dynamic localKey}) async {
+    var result = 0;
+    if (remoteKey != null) {
+      result = await (database.delete(table.actualTable() as TableInfo)
+        ..where((t) =>
+            table.remoteKeyColumn().equals(remoteKey))).go();
+    } else if (localKey != null) {
+      result = await (database.delete(table.actualTable() as TableInfo)
+        ..where((t) =>
+            table.localKeyColumn().equals(localKey))).go();
+    }
+
+    return StorageResult<TProxy>(successful: true);
   }
 }

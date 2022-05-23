@@ -16,21 +16,26 @@ class StorageResult<TSyncable extends SyncableMixin> {
 
 /// Responsible for local storage of syncable entities
 abstract class Storage<TSyncable extends SyncableMixin> {
-  /// Gets the instances to sync
+  /// Get the instances to sync
   Future<Iterable<TSyncable>> getInstancesToSync();
 
-  /// Gets an instance matching the remote key, or null
+  /// Get an instance matching the remote key first, local key second if
+  /// no remote key provided, or null
   Future<TSyncable?> get({dynamic remoteKey, dynamic localKey});
 
-  /// Upserts an instance using an optional local key
+  /// Upsert an instance using an optional local key
   Future<StorageResult<TSyncable>> insert(TSyncable instance);
 
-  /// Upserts an instance using an optional local key
+  /// Update an instance using an optional local key
   Future<StorageResult<TSyncable>> update(
     TSyncable instance, {
     dynamic remoteKey,
     dynamic localKey,
   });
+
+  /// Deletes an instance matching the remote key first, local key second if
+  /// no remote key provided, or null
+  Future<StorageResult<TSyncable>> delete({dynamic remoteKey, dynamic localKey});
 
   Future<int> count();
 
